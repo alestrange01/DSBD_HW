@@ -47,13 +47,16 @@ class CircuitBreaker:
         self.state = new_state
         if new_state == CircuitState.CLOSED:
             self.failure_count = 0
+        #TODO: da aggiungere?
+        #elif new_state == CircuitState.HALF_OPEN:
+        #    self.failure_count = 0 
             
     def __failure_management(self):
         self.failure_count += 1
         self.success_count = 0
         self.last_failure_time = time.time()                 
         if (self.state == CircuitState.HALF_OPEN) and (self.failure_count >= self.failure_threshold - self.difference_failure_open_half_open):
-            self.__set_state(CircuitState.HALF_OPEN)
+            self.__set_state(CircuitState.HALF_OPEN) #TODO: perchè aggiornare lo stato a HALF_OPEN se è già HALF_OPEN? forse dovrebbere essere OPEN?
         if (self.state == CircuitState.CLOSED) and (self.failure_count >= self.failure_threshold):
             self.__set_state(CircuitState.OPEN)
             
