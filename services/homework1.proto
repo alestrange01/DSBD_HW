@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package homework1;
+
+// Services for users management
+
+service ServerService {
+  rpc Register(RegisterRequest) returns (Reply) {}
+  rpc Login(LoginRequest) returns (Reply) {}
+  rpc Update(UpdateRequest) returns (Reply) {}
+  rpc Delete(DeleteRequest) returns(Reply) {}
+  rpc GetValueShare(NoneRequest) returns (Reply) {}
+  rpc GetMeanShare(MeanRequest) returns (Reply) {}
+}
+
+// Messages for users management
+message NoneRequest {
+
+}
+
+message RegisterRequest {
+    string email = 1;
+    string password = 2;
+    string share = 3;
+}
+
+message LoginRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message UpdateRequest {
+    string email = 1;
+    string share = 2;
+}
+
+message DeleteRequest {
+    string email = 1;
+}
+
+message MeanRequest {
+    string n = 1;
+}
+
+// Reply for users management
+
+message Reply {
+    string statusCode = 1;
+    string message = 2;
+    string content = 3;
+}

@@ -1,0 +1,28 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: securepassword
+      POSTGRES_DB: my_database
+    ports:
+      - "5532:5532"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+  # app:
+  #   image: python:3.10
+  #   container_name: python_app
+  #   working_dir: /app
+  #   volumes:
+  #     - .:/app
+  #   environment:
+  #     DB_URL: "postgresql+psycopg2://admin:securepassword@postgres:5432/my_database"
+  #   command: python main.py
+  #   depends_on:
+  #     - postgres
+  #TODO Manca avvio dei tre file python con i loro relativi Dockerfile dove saranno presenti le librerie da installare e i comandi da lanciare per fare in modo che server e data collector stampino a video e il client rimanga con il prompt attivo
+volumes:
+  pg_data:
