@@ -17,23 +17,22 @@ circuit_breaker = CircuitBreaker(failure_threshold=5, difference_failure_open_ha
 share_dict = {}
 while True:
     users = user_repository.get_all_users()
-    for user in range(users):
-        #prendo lo share value dell'utente
+    for user in users:
         share = user.share_int
-        if(share_dict[share]):
+        if(share in share_dict):
             share_repository.create_share(user.id, share, share_dict[share], func.now())
-            break
+            continue
         try:
-            share_value = circuit_breaker.call(retrieve_share_value)
+            share_value = circuit_breaker.call(retrieve_share_value, share)
         except CBOpenException as e:
-            print(f"Call {i+1}: Circuit is open. Skipping call.")
+            print(f"Circuit is open. Skipping call.")
         except CBException as e:
-            print(f"Call {i+1}: Circuit is open. Skipping call.")
+            print(f"Circuit breaker exception occurred: {e}")
         except Exception as e:
-            print(f"Call {i+1}: Exception occurred - {e}")
+            print(f"Exception occurred: {e}")
         share_dict[share] = share_value
         share_repository.create_share(user.id, share, share_dict[share], func.now())
-        print(f"Call {i+1}: {share_value}")
-    share_dict= {}
+        print(f"Share value for {share}: {share_value}")
+    share_dict= {} 
     time.sleep(300)
 
