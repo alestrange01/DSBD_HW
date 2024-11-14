@@ -8,26 +8,30 @@ email = ""
 password = ""
 
 def run():
-    print("Running")
-    print("0 - Update user")
-    print("1 - Delete user")
-    print("2 - Last value share")
-    print("3 - Mean share")
-    print("4 - Exit")
-    choice = input("Inserisci la tua scelta: ")
-    if choice == "0":
-        update()
-    elif choice == "1":
-        delete()
-    elif choice == "2":
-        get_value_share()
-    elif choice == "3":
-        get_mean_share()
-    elif choice == "4":
-        return
-    else:
-        print("Scelta non valida")
-    run()
+    while True:
+        print("Running")
+        print("Logged in as: ", email)
+        print("Choose an option:")
+        print("0 - Update user")
+        print("1 - Delete user")
+        print("2 - Last value share")
+        print("3 - Mean share")
+        print("4 - Exit")
+        
+        choice = input("Inserisci la tua scelta: ")
+        
+        if choice == "0":
+            update()
+        elif choice == "1":
+            delete()
+        elif choice == "2":
+            get_value_share()
+        elif choice == "3":
+            get_mean_share()
+        elif choice == "4":
+            break
+        else:
+            print("Scelta non valida")
     
 def update():
     share = input("Inserisci il tuo nuovo share d'interesse: ")
@@ -74,14 +78,16 @@ def get_value_share():
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
 def get_mean_share():
-    n = input("Inserisci il numero di share value da considerare: ")
-    if not n.isdigit():
-        print("Inserire un numero valido")
-        get_mean_share()
-    if int(n) < 1:
-        print("Inserire un numero maggiore di 0")
-        get_mean_share()
-        
+    while True:
+        n = input("Inserisci il numero di share value da considerare: ")
+        if not n.isdigit():
+            print("Inserire un numero valido")
+            continue
+        if int(n) < 1:
+            print("Inserire un numero maggiore di 0")
+            continue
+        break
+    
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.MeanRequest(n = n)
@@ -129,7 +135,7 @@ def login():
 def register(): 
     email = input("Inserisci la tua email: ")
     password = input("Inserisci la tua password: ")
-    share = input("Inserisci il tuo share: ")
+    share = input("Inserisci il Ticker: ")
     
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
