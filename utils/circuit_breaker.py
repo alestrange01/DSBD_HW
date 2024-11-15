@@ -56,7 +56,7 @@ class CircuitBreaker:
         self.success_count = 0
         self.last_failure_time = time.time()                 
         if (self.state == CircuitState.HALF_OPEN) and (self.failure_count >= self.failure_threshold - self.difference_failure_open_half_open):
-            self.__set_state(CircuitState.HALF_OPEN) #TODO: perchè aggiornare lo stato a HALF_OPEN se è già HALF_OPEN? forse dovrebbere essere OPEN?
+            self.__set_state(CircuitState.OPEN)
         if (self.state == CircuitState.CLOSED) and (self.failure_count >= self.failure_threshold):
             self.__set_state(CircuitState.OPEN)
             
