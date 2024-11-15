@@ -48,7 +48,7 @@ class CircuitBreaker:
         if new_state == CircuitState.CLOSED:
             self.failure_count = 0
         #TODO: da aggiungere?
-        #elif new_state == CircuitState.HALF_OPEN:
+        #elif new_state == CircuitState.HALF_OPEN/OPEN:
         #    self.failure_count = 0 
             
     def __failure_management(self):
