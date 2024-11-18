@@ -19,7 +19,7 @@ Base = declarative_base()
 
 def initialize_database():
     from models.user_model import User
-    Base.metadata.create_all(engine)
+    Base.metadata.create_all(engine, tables=[User.__table__])
     users = user_repository.get_all_users()
     if not users:
         user_repository.create_user("admin@gmail.com", bcrypt.hashpw("admin".encode('utf-8'), bcrypt.gensalt()), "AAPL")

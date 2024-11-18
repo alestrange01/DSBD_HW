@@ -1,7 +1,7 @@
 from concurrent import futures
 import grpc
-import services.homework1_pb2 as homework1_pb2
-import services.homework1_pb2_grpc as homework1_pb2_grpc
+import server.services.homework1_pb2 as homework1_pb2
+import server.services.homework1_pb2_grpc as homework1_pb2_grpc
 import bcrypt
 from threading import Lock
 from repositories import user_repository

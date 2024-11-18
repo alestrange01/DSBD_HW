@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from services import homework1_pb2 as services_dot_homework1__pb2
+from server.services import homework1_pb2 as server_dot_services_dot_homework1__pb2
 
 GRPC_GENERATED_VERSION = '1.67.0'
 GRPC_VERSION = grpc.__version__
@@ -18,7 +18,7 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in services/homework1_pb2_grpc.py depends on'
+        + f' but the generated code in server/services/homework1_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -38,33 +38,33 @@ class ServerServiceStub(object):
         """
         self.Register = channel.unary_unary(
                 '/homework1.ServerService/Register',
-                request_serializer=services_dot_homework1__pb2.RegisterRequest.SerializeToString,
-                response_deserializer=services_dot_homework1__pb2.Reply.FromString,
+                request_serializer=server_dot_services_dot_homework1__pb2.RegisterRequest.SerializeToString,
+                response_deserializer=server_dot_services_dot_homework1__pb2.Reply.FromString,
                 _registered_method=True)
         self.Login = channel.unary_unary(
                 '/homework1.ServerService/Login',
-                request_serializer=services_dot_homework1__pb2.LoginRequest.SerializeToString,
-                response_deserializer=services_dot_homework1__pb2.Reply.FromString,
+                request_serializer=server_dot_services_dot_homework1__pb2.LoginRequest.SerializeToString,
+                response_deserializer=server_dot_services_dot_homework1__pb2.Reply.FromString,
                 _registered_method=True)
         self.Update = channel.unary_unary(
                 '/homework1.ServerService/Update',
-                request_serializer=services_dot_homework1__pb2.UpdateRequest.SerializeToString,
-                response_deserializer=services_dot_homework1__pb2.Reply.FromString,
+                request_serializer=server_dot_services_dot_homework1__pb2.UpdateRequest.SerializeToString,
+                response_deserializer=server_dot_services_dot_homework1__pb2.Reply.FromString,
                 _registered_method=True)
         self.Delete = channel.unary_unary(
                 '/homework1.ServerService/Delete',
-                request_serializer=services_dot_homework1__pb2.DeleteRequest.SerializeToString,
-                response_deserializer=services_dot_homework1__pb2.Reply.FromString,
+                request_serializer=server_dot_services_dot_homework1__pb2.DeleteRequest.SerializeToString,
+                response_deserializer=server_dot_services_dot_homework1__pb2.Reply.FromString,
                 _registered_method=True)
         self.GetValueShare = channel.unary_unary(
                 '/homework1.ServerService/GetValueShare',
-                request_serializer=services_dot_homework1__pb2.NoneRequest.SerializeToString,
-                response_deserializer=services_dot_homework1__pb2.Reply.FromString,
+                request_serializer=server_dot_services_dot_homework1__pb2.NoneRequest.SerializeToString,
+                response_deserializer=server_dot_services_dot_homework1__pb2.Reply.FromString,
                 _registered_method=True)
         self.GetMeanShare = channel.unary_unary(
                 '/homework1.ServerService/GetMeanShare',
-                request_serializer=services_dot_homework1__pb2.MeanRequest.SerializeToString,
-                response_deserializer=services_dot_homework1__pb2.Reply.FromString,
+                request_serializer=server_dot_services_dot_homework1__pb2.MeanRequest.SerializeToString,
+                response_deserializer=server_dot_services_dot_homework1__pb2.Reply.FromString,
                 _registered_method=True)
 
 
@@ -114,33 +114,33 @@ def add_ServerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Register': grpc.unary_unary_rpc_method_handler(
                     servicer.Register,
-                    request_deserializer=services_dot_homework1__pb2.RegisterRequest.FromString,
-                    response_serializer=services_dot_homework1__pb2.Reply.SerializeToString,
+                    request_deserializer=server_dot_services_dot_homework1__pb2.RegisterRequest.FromString,
+                    response_serializer=server_dot_services_dot_homework1__pb2.Reply.SerializeToString,
             ),
             'Login': grpc.unary_unary_rpc_method_handler(
                     servicer.Login,
-                    request_deserializer=services_dot_homework1__pb2.LoginRequest.FromString,
-                    response_serializer=services_dot_homework1__pb2.Reply.SerializeToString,
+                    request_deserializer=server_dot_services_dot_homework1__pb2.LoginRequest.FromString,
+                    response_serializer=server_dot_services_dot_homework1__pb2.Reply.SerializeToString,
             ),
             'Update': grpc.unary_unary_rpc_method_handler(
                     servicer.Update,
-                    request_deserializer=services_dot_homework1__pb2.UpdateRequest.FromString,
-                    response_serializer=services_dot_homework1__pb2.Reply.SerializeToString,
+                    request_deserializer=server_dot_services_dot_homework1__pb2.UpdateRequest.FromString,
+                    response_serializer=server_dot_services_dot_homework1__pb2.Reply.SerializeToString,
             ),
             'Delete': grpc.unary_unary_rpc_method_handler(
                     servicer.Delete,
-                    request_deserializer=services_dot_homework1__pb2.DeleteRequest.FromString,
-                    response_serializer=services_dot_homework1__pb2.Reply.SerializeToString,
+                    request_deserializer=server_dot_services_dot_homework1__pb2.DeleteRequest.FromString,
+                    response_serializer=server_dot_services_dot_homework1__pb2.Reply.SerializeToString,
             ),
             'GetValueShare': grpc.unary_unary_rpc_method_handler(
                     servicer.GetValueShare,
-                    request_deserializer=services_dot_homework1__pb2.NoneRequest.FromString,
-                    response_serializer=services_dot_homework1__pb2.Reply.SerializeToString,
+                    request_deserializer=server_dot_services_dot_homework1__pb2.NoneRequest.FromString,
+                    response_serializer=server_dot_services_dot_homework1__pb2.Reply.SerializeToString,
             ),
             'GetMeanShare': grpc.unary_unary_rpc_method_handler(
                     servicer.GetMeanShare,
-                    request_deserializer=services_dot_homework1__pb2.MeanRequest.FromString,
-                    response_serializer=services_dot_homework1__pb2.Reply.SerializeToString,
+                    request_deserializer=server_dot_services_dot_homework1__pb2.MeanRequest.FromString,
+                    response_serializer=server_dot_services_dot_homework1__pb2.Reply.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -170,8 +170,8 @@ class ServerService(object):
             request,
             target,
             '/homework1.ServerService/Register',
-            services_dot_homework1__pb2.RegisterRequest.SerializeToString,
-            services_dot_homework1__pb2.Reply.FromString,
+            server_dot_services_dot_homework1__pb2.RegisterRequest.SerializeToString,
+            server_dot_services_dot_homework1__pb2.Reply.FromString,
             options,
             channel_credentials,
             insecure,
@@ -197,8 +197,8 @@ class ServerService(object):
             request,
             target,
             '/homework1.ServerService/Login',
-            services_dot_homework1__pb2.LoginRequest.SerializeToString,
-            services_dot_homework1__pb2.Reply.FromString,
+            server_dot_services_dot_homework1__pb2.LoginRequest.SerializeToString,
+            server_dot_services_dot_homework1__pb2.Reply.FromString,
             options,
             channel_credentials,
             insecure,
@@ -224,8 +224,8 @@ class ServerService(object):
             request,
             target,
             '/homework1.ServerService/Update',
-            services_dot_homework1__pb2.UpdateRequest.SerializeToString,
-            services_dot_homework1__pb2.Reply.FromString,
+            server_dot_services_dot_homework1__pb2.UpdateRequest.SerializeToString,
+            server_dot_services_dot_homework1__pb2.Reply.FromString,
             options,
             channel_credentials,
             insecure,
@@ -251,8 +251,8 @@ class ServerService(object):
             request,
             target,
             '/homework1.ServerService/Delete',
-            services_dot_homework1__pb2.DeleteRequest.SerializeToString,
-            services_dot_homework1__pb2.Reply.FromString,
+            server_dot_services_dot_homework1__pb2.DeleteRequest.SerializeToString,
+            server_dot_services_dot_homework1__pb2.Reply.FromString,
             options,
             channel_credentials,
             insecure,
@@ -278,8 +278,8 @@ class ServerService(object):
             request,
             target,
             '/homework1.ServerService/GetValueShare',
-            services_dot_homework1__pb2.NoneRequest.SerializeToString,
-            services_dot_homework1__pb2.Reply.FromString,
+            server_dot_services_dot_homework1__pb2.NoneRequest.SerializeToString,
+            server_dot_services_dot_homework1__pb2.Reply.FromString,
             options,
             channel_credentials,
             insecure,
@@ -305,8 +305,8 @@ class ServerService(object):
             request,
             target,
             '/homework1.ServerService/GetMeanShare',
-            services_dot_homework1__pb2.MeanRequest.SerializeToString,
-            services_dot_homework1__pb2.Reply.FromString,
+            server_dot_services_dot_homework1__pb2.MeanRequest.SerializeToString,
+            server_dot_services_dot_homework1__pb2.Reply.FromString,
             options,
             channel_credentials,
             insecure,

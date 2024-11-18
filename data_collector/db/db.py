@@ -19,7 +19,7 @@ Base = declarative_base()
 
 def initialize_database():
     from models.share_model import Share
-    Base.metadata.create_all(engine)
+    Base.metadata.create_all(engine, tables=[Share.__table__])
 
 @contextmanager
 def get_db_session():

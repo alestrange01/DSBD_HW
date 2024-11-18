@@ -1,6 +1,6 @@
 import grpc
-import homework1_pb2
-import homework1_pb2_grpc
+import server.services.homework1_pb2 as homework1_pb2
+import server.services.homework1_pb2_grpc as homework1_pb2_grpc
 import random
 target = 'localhost:50051'
 email = ""
@@ -153,6 +153,6 @@ def register():
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
 
-if __name__ == '__main__':
+def client_run():
     login_or_register()
     run()
