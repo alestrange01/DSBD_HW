@@ -3,13 +3,13 @@ import services.homework1_pb2 as homework1_pb2
 import services.homework1_pb2_grpc as homework1_pb2_grpc
 import random
 target = 'localhost:50051'
-email = ""
+logged_email = ""
 password = ""
 
 def run():
     while True:
         print("Running")
-        print("Logged in as: ", email)
+        print("Logged in as: ", logged_email)
         print("Choose an option:")
         print("0 - Update user")
         print("1 - Delete user")
@@ -37,9 +37,9 @@ def update():
     # Valutare se rimuovere un ticker o sostituirlo obbligatoriamente con un altro
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.UpdateRequest(email=email, share=share)
+        request = homework1_pb2.UpdateRequest(email=logged_email, share=share)
         metadata = [
-            ('userid', email),
+            ('userid', logged_email),
             ('requestid', str(random.randint(1, 1000))),
             ('opcode', 'PUT')
         ]
@@ -51,9 +51,9 @@ def update():
 def delete():  
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.DeleteRequest(email=email)
+        request = homework1_pb2.DeleteRequest(email=logged_email)
         metadata = [
-            ('userid', email),
+            ('userid', logged_email),
             ('requestid', str(random.randint(1, 1000))),
             ('opcode', 'DEL')
         ]
@@ -67,7 +67,7 @@ def get_value_share():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.NoneRequest()
         metadata = [
-            ('userid', email),
+            ('userid', logged_email),
             ('requestid', str(random.randint(1, 1000))),
             ('opcode', 'GET')
         ]
@@ -91,7 +91,7 @@ def get_mean_share():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.MeanRequest(n = n)
         metadata = [
-            ('userid', email),
+            ('userid', logged_email),
             ('requestid', str(random.randint(1, 1000))),
             ('opcode', 'GET')
         ]
@@ -102,7 +102,8 @@ def get_mean_share():
             print(f"RPC failed with code {e.code()}: {e.details()}")
 
 def login_or_register():
-    while True:
+    choice = ""
+    while choice != "0" and choice != "1":
         print("0 - Login")
         print("1 - Register")
         print("2 - Exit")
@@ -112,11 +113,12 @@ def login_or_register():
         elif choice == "1":
             register()
         elif choice == "2":
-            break
+            exit()
         else:
             print("Scelta non valida")
              
 def login(): 
+    global logged_email
     email = input("Inserisci la tua email: ")
     password = input("Inserisci la tua password: ")
     
@@ -131,6 +133,8 @@ def login():
         try:
             response = stub.Login(request, metadata=metadata)
             print("Response received: ", response)
+            if response.statusCode == "200":
+                logged_email = email  
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
             
