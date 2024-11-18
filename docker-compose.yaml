@@ -5,11 +5,11 @@ services:
     image: postgres:15
     container_name: postgres_db
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: securepassword
-      POSTGRES_DB: my_database
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: toor
+      POSTGRES_DB: postgres
     ports:
-      - "5532:5532"
+      - "5532:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
   # app:

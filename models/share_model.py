@@ -1,8 +1,7 @@
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.sql import func
-
-Base = declarative_base()
+from db.db import Base 
 
 class Share(Base):
     __tablename__ = 'shares' 

@@ -1,14 +1,14 @@
-from models import User
-from db import get_db_session
+from models.user_model import User
+from db.db import get_db_session
 
 def get_user_by_email(email):
     with get_db_session() as session:
         user = session.query(User).filter_by(email=email).first()
         return user
 
-def create_user(email, password, share_int):
+def create_user(email, password, share_cod):
     with get_db_session() as session:
-        user = User(email=email, password=password, share_int=share_int)
+        user = User(email=email, password=password, share_cod=share_cod)
         try:
             session.add(user)
             session.commit()
@@ -19,15 +19,15 @@ def create_user(email, password, share_int):
             raise
         return user
 
-def update_user(email, new_password=None, new_share_int=None):
+def update_user(email, new_password=None, new_share_cod=None):
     with get_db_session() as session:
         user = session.query(User).filter_by(email=email).first()
         if user:
             try:
                 if new_password:
                     user.password = new_password
-                if new_share_int is not None:
-                    user.share_int = new_share_int
+                if new_share_cod is not None:
+                    user.share_cod = new_share_cod
                 session.commit()
                 print(f"Utente aggiornato: {user}")
             except Exception as e:

@@ -1,14 +1,11 @@
 from concurrent import futures
-import logging
 import grpc
-import homework1_pb2
-import homework1_pb2_grpc
-import time
+import services.homework1_pb2 as homework1_pb2
+import services.homework1_pb2_grpc as homework1_pb2_grpc
 import bcrypt
 from threading import Lock
-from ..db import db
-from ..repositories import user_repository
-from ..repositories import share_repository
+from repositories import user_repository
+from repositories import share_repository
 
 request_cache = []
 
@@ -162,12 +159,16 @@ def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     homework1_pb2_grpc.add_ServerServiceServicer_to_server(ServerService(), server)
     server.add_insecure_port('[::]:' + port)
-    server.start()
-    print("Echo Service started, listening on " + port)
-    server.wait_for_termination()
-
-
-if __name__ == '__main__':
-    db.initialize_database() 
     
-    serve()
+    try:
+        server.start()
+        print(f"Server started, listening on port {port}")
+        server.wait_for_termination() 
+    except KeyboardInterrupt:
+        print("Server interrupted by user.")
+    finally:
+        server.stop(0)  
+        print("Server stopped.")
+
+
+

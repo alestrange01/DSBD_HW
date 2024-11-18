@@ -1,4 +1,3 @@
-import logging
 import grpc
 import homework1_pb2
 import homework1_pb2_grpc
@@ -103,16 +102,19 @@ def get_mean_share():
             print(f"RPC failed with code {e.code()}: {e.details()}")
 
 def login_or_register():
-    print("0 - Login")
-    print("1 - Register")
-    choice = input("Inserisci la tua scelta: ")
-    if choice == "0":
-        login()
-    elif choice == "1":
-        register()
-    else:
-        print("Scelta non valida")
-        login_or_register()  
+    while True:
+        print("0 - Login")
+        print("1 - Register")
+        print("2 - Exit")
+        choice = input("Inserisci la tua scelta: ")
+        if choice == "0":
+            login()
+        elif choice == "1":
+            register()
+        elif choice == "2":
+            break
+        else:
+            print("Scelta non valida")
              
 def login(): 
     email = input("Inserisci la tua email: ")
