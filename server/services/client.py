@@ -1,6 +1,6 @@
 import grpc
-import server.services.homework1_pb2 as homework1_pb2
-import server.services.homework1_pb2_grpc as homework1_pb2_grpc
+import services.homework1_pb2 as homework1_pb2
+import services.homework1_pb2_grpc as homework1_pb2_grpc
 import random
 target = 'localhost:50051'
 email = ""
@@ -41,7 +41,7 @@ def update():
         metadata = [
             ('userid', email),
             ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 2)
+            ('opcode', 'PUT')
         ]
         try:
             response = stub.Update(request, metadata=metadata)
@@ -55,7 +55,7 @@ def delete():
         metadata = [
             ('userid', email),
             ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 2)
+            ('opcode', 'DEL')
         ]
         try:
             response = stub.Delete(request, metadata=metadata)
@@ -69,7 +69,7 @@ def get_value_share():
         metadata = [
             ('userid', email),
             ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 3)
+            ('opcode', 'GET')
         ]
         try:
             response = stub.GetValueShare(request, metadata=metadata)
@@ -93,7 +93,7 @@ def get_mean_share():
         metadata = [
             ('userid', email),
             ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 4)
+            ('opcode', 'GET')
         ]
         try:
             response = stub.GetMeanShare(request, metadata=metadata)
@@ -126,7 +126,7 @@ def login():
         metadata = [
             ('userid', email),
             ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 0)
+            ('opcode', 'GET')
         ]
         try:
             response = stub.Login(request, metadata=metadata)
@@ -145,7 +145,7 @@ def register():
         metadata = [
             ('userid', email),
             ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 1)
+            ('opcode', 'POST')
         ]
         try:
             response = stub.Register(request, metadata=metadata)

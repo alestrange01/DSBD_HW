@@ -1,13 +1,13 @@
 from concurrent import futures
 import grpc
-import server.services.homework1_pb2 as homework1_pb2
-import server.services.homework1_pb2_grpc as homework1_pb2_grpc
+import services.homework1_pb2 as homework1_pb2
+import services.homework1_pb2_grpc as homework1_pb2_grpc
 import bcrypt
 from threading import Lock
 from repositories import user_repository
 from repositories import share_repository
 
-request_cache = []
+request_cache = {'GET': {}, 'POST': {}, 'PUT': {}, 'DEL': {}}
 
 cache_lock = Lock()
 
@@ -20,6 +20,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             print("Login cached response")
             return cached_response
         else:
+            print(request)
             user = user_repository.get_user_by_email(request.email)
             if (user is None) or (not bcrypt.checkpw(request.password.encode('utf-8'), user.password)):
                 response = homework1_pb2.Reply(statusCode=401, message="Unauthorized", content="Login failed")
@@ -140,12 +141,15 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
         return user_id, request_id, op_code
 
     def __GetFromCache(self, user_id, request_id, op_code):
+        print(f"Checking cache for RequestID {request_id}")
         user_request_id = user_id + "_" + request_id
         with cache_lock:
+            print(request_cache)
             if user_request_id in request_cache[op_code]:
                 print(f"Returning cached response for RequestID {request_id}")
                 return request_cache[op_code][user_request_id]
             else:
+                print(f"No cached response for RequestID {request_id}")
                 return None
             
     def __StoreInCache(self, user_id, request_id, op_code, response):
