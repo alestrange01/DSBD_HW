@@ -102,7 +102,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             print("Get value share cached response")
             return cached_response
         else:
-            user = user_repository.get_user_by_email(request.email)
+            user = user_repository.get_user_by_email(user_id)
             shares = share_repository.get_shares_by_user_id(user.id)
             if shares is None:
                 response = homework1_pb2.Reply(statusCode="404", message="Bad request", content="Retrieve value share failed")
@@ -115,21 +115,30 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 print("Get value share")
                 return response
     
-    def GetValueShare(self, request, context):
+    def GetMeanShare(self, request, context):
         user_id, request_id, op_code = self.__GetMetadata(context)
         cached_response = self.__GetFromCache(user_id, request_id, op_code)
         if cached_response is not None:
             print("Get mean share cached response")
             return cached_response
         else:
-            user = user_repository.get_user_by_email(request.email)
+            user = user_repository.get_user_by_email(user_id)
             shares = share_repository.get_shares_by_user_id(user.id)
             if shares is None:
                 response = homework1_pb2.Reply(statusCode="404", message="Bad request", content="Retrieve mean share failed")
                 print("Get value share failed")
                 return response
             else:
-                mean = sum([share.value for share in shares]) / len(shares)
+                try:
+                    n = int(request.n)
+                    if n < 1:
+                        raise ValueError("Invalid n")
+                except ValueError:
+                    response = homework1_pb2.Reply(statusCode="400", message="Bad request", content="Invalid value for n")
+                    print("Invalid value for n")
+                    return response
+                limited_shares = shares[:n] if len(shares) > n else shares
+                mean = sum([share.value for share in limited_shares]) / len(limited_shares)
                 response = homework1_pb2.Reply(statusCode="200", message="OK", content="Retrieved mean share successfully: " + str(mean))
                 self.__StoreInCache(user_id, request_id, op_code, response)
                 print("Get mean share")

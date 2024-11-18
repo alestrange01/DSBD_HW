@@ -89,7 +89,7 @@ def get_mean_share():
     
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.MeanRequest(n = n)
+        request = homework1_pb2.MeanRequest(n=n)
         metadata = [
             ('userid', logged_email),
             ('requestid', str(random.randint(1, 1000))),
