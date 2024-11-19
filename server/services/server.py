@@ -23,8 +23,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             print(request)
             user = user_repository.get_user_by_email(request.email)
             print(user)
-            #if (user is None) or (not bcrypt.checkpw(request.password.encode('utf-8'), user.password)):
-            if (user is None) or (request.password != user.password):
+            if (user is None) or (not bcrypt.checkpw(request.password.encode('utf-8'), user.password.encode('utf-8'))):
                 response = homework1_pb2.Reply(statusCode="401", message="Unauthorized", content="Login failed: wrong email or password")
                 print("Login failed")
                 return response
@@ -48,8 +47,8 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 print("Register failed")
                 return response
             else:
-                #hashed_password = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt())
-                user_repository.create_user(request.email, request.password, request.share)
+                hashed_password = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                user_repository.create_user(request.email, hashed_password, request.share)
                 response = homework1_pb2.Reply(statusCode="204", message="OK", content="User registered successfully")
                 self.__StoreInCache(user_id, request_id, op_code, response)
                 print("Register")

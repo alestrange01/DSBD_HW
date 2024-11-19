@@ -2,7 +2,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from contextlib import contextmanager
 from repositories import user_repository
-import bcrypt
 
 # if env.get("DATABASE_URL"):
 #     DATABASE_URL = env.get("DATABASE_URL")
