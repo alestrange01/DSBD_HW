@@ -6,7 +6,11 @@ from db.db import get_db_session
 def get_shares_by_user_id(user_id):
     with get_db_session() as session:
         shares = session.query(Share).filter_by(user_id=user_id).all()
-        return shares
+        if shares:
+            return shares
+        else:
+            print(f"Nessuno share trovato per l'utente con ID {user_id}.")
+            return None
 
 def create_share(user_id, share_name, value, timestamp):
     share = Share(share_name=share_name, value=value, user_id=user_id, timestamp=timestamp)
@@ -24,7 +28,11 @@ def create_share(user_id, share_name, value, timestamp):
 def get_share_by_id(share_id):
     with get_db_session() as session:
         share = session.query(Share).filter_by(id=share_id).first()
-        return share
+        if share:
+            return share
+        else:
+            print(f"Share con ID {share_id} non trovato.")
+            return None
 
 def delete_share(share_id):
     with get_db_session() as session:
