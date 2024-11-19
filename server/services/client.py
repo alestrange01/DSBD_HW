@@ -22,7 +22,15 @@ def run():
         if choice == "0":
             update()
         elif choice == "1":
-            delete()
+            print("Sei sicuro di voler eliminare il tuo account? ")
+            print("0 - No")
+            print("1 - Si")
+            choice = input("Inserisci la tua scelta: ")
+            if choice == "1":
+                delete()
+                break
+            else:
+                print("Operazione annullata")
         elif choice == "2":
             get_value_share()
         elif choice == "3":
@@ -163,7 +171,7 @@ def register():
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
         else:
-            if response.statusCode == "200":
+            if response.statusCode == "204":
                 login()
             else:
                 print("Registrazione fallita")

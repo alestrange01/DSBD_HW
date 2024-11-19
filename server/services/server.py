@@ -68,12 +68,18 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 print("Update failed")
                 return response
             else:
-                user_repository.update_user(request.email, None, request.share) #TODO: vorresti aggiornare anche la password?
-                share_repository.delete_shares_by_user(user.id)
-                response = homework1_pb2.Reply(statusCode="201", message="OK", content="User updated successfully")
-                self.__StoreInCache(user_id, request_id, op_code, response)
-                print("Update")
-                return response
+                if request.share == user.share_cod:
+                    response = homework1_pb2.Reply(statusCode="200", message="OK", content="Share already updated")
+                    self.__StoreInCache(user_id, request_id, op_code, response)
+                    print("Update: Share already updated")
+                    return response
+                else:
+                    user_repository.update_user(request.email, None, request.share) #TODO: vorresti aggiornare anche la password?
+                    share_repository.delete_shares_by_user(user.id)
+                    response = homework1_pb2.Reply(statusCode="201", message="OK", content="User updated successfully")
+                    self.__StoreInCache(user_id, request_id, op_code, response)
+                    print("Update")
+                    return response
 
     def Delete(self, request, context):        
         user_id, request_id, op_code = self.__GetMetadata(context)
@@ -83,7 +89,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             return cached_response
         else:
             user = user_repository.get_user_by_email(request.email)
-            if user is not None:
+            if user is None:
                 response = homework1_pb2.Reply(statusCode="401", message="Unauthorized", content="User deleting failed")
                 print("Delete failed")
                 return response
