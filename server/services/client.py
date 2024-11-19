@@ -40,7 +40,7 @@ def run():
         else:
             print("Scelta non valida")
     
-def update():   #TODO: quando si aggiorna il TICKER, sicuramente non avrà subito un valore: gestire
+def update():
     share = input("Inserisci il tuo nuovo share d'interesse: ")
     # Valutare se rimuovere un ticker o sostituirlo obbligatoriamente con un altro
     with grpc.insecure_channel(target) as channel:
