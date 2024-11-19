@@ -39,6 +39,35 @@ def run():
             break
         else:
             print("Scelta non valida")
+
+def admin_run():
+    while True:
+        print("Running")
+        print("Logged in as: ADMIN")
+        print("Choose an option:")
+        print("0 - Update user X")
+        print("1 - Delete user X")
+        print("2 - Last value share")
+        print("3 - Mean share")
+        print("4 - View all users")
+        print("5 - Exit")
+        
+        choice = input("Inserisci la tua scelta: ")
+        
+        if choice == "0":
+            admin_update()
+        elif choice == "1":
+            admin_delete()
+        elif choice == "2":
+            get_value_share()
+        elif choice == "3":
+            get_mean_share()
+        elif choice == "4":
+            view_all_users()
+        elif choice == "5":
+            break
+        else:
+            print("Scelta non valida")
     
 def update():
     share = input("Inserisci il tuo nuovo share d'interesse: ")
@@ -56,6 +85,24 @@ def update():
             print("Response received: ", response)
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
+
+def admin_update():
+    email = input("Inserisci l'email dell'utente da modificare: ")
+    share = input("Inserisci il nuovo share d'interesse: ")
+    with grpc.insecure_channel(target) as channel:
+        stub = homework1_pb2_grpc.ServerServiceStub(channel)
+        request = homework1_pb2.UpdateRequest(email=email, share=share)
+        metadata = [
+            ('userid', logged_email),
+            ('requestid', str(random.randint(1, 1000))),
+            ('opcode', 'PUT')
+        ]
+        try:
+            response = stub.Update(request, metadata=metadata)
+            print("Response received: ", response)
+        except grpc.RpcError as e:
+            print(f"RPC failed with code {e.code()}: {e.details()}")
+
 def delete():  
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
@@ -70,6 +117,30 @@ def delete():
             print("Response received: ", response)
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
+
+def admin_delete():
+    email = input("Inserisci l'email dell'utente da eliminare: ")
+    print("Sei sicuro di voler eliminare l'account dell'utente con email: ", email)
+    print("0 - No")
+    print("1 - Si")
+    choice = input("Inserisci la tua scelta: ")
+    if choice == "1":
+        with grpc.insecure_channel(target) as channel:
+            stub = homework1_pb2_grpc.ServerServiceStub(channel)
+            request = homework1_pb2.DeleteRequest(email=email)
+            metadata = [
+                ('userid', logged_email),
+                ('requestid', str(random.randint(1, 1000))),
+                ('opcode', 'DEL')
+            ]
+            try:
+                response = stub.Delete(request, metadata=metadata)
+                print("Response received: ", response)
+            except grpc.RpcError as e:
+                print(f"RPC failed with code {e.code()}: {e.details()}")
+    else:
+        print("Operazione annullata")
+
 def get_value_share():
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
@@ -108,6 +179,52 @@ def get_mean_share():
             print("Response received: ", response)
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
+
+def view_all_users():
+    with grpc.insecure_channel(target) as channel:
+        stub = homework1_pb2_grpc.ServerServiceStub(channel)
+        request = homework1_pb2.NoneRequest()
+        metadata = [
+            ('userid', logged_email),
+            ('requestid', str(random.randint(1, 1000))),
+            ('opcode', 'GET')
+        ]
+        try:
+            response = stub.ViewAllUsers(request, metadata=metadata)
+            print("Response received: ", response)
+            raw_content = response.content.split(": ", 1)[-1]
+            users = parse_users(raw_content)
+            print("\nLista degli utenti registrati:")
+            for user in users:
+                print(f"- ID: {user['id']}, Email: {user['email']}, Share: {user['share_cod']}")
+        except grpc.RpcError as e:
+            print(f"RPC failed with code {e.code()}: {e.details()}")
+        except Exception as e:
+            print(f"Error parsing users: {e}")
+
+def parse_users(raw_content):
+    try:
+        start_index = raw_content.find("[")
+        end_index = raw_content.find("]")
+        users_raw = raw_content[start_index + 1 : end_index]
+        users = []
+        for user_raw in users_raw.split(", <User("):
+            user_raw = user_raw.replace("<User(", "").replace(")>", "").strip()
+            if not user_raw:
+                continue
+            user_dict = {}
+            for field in user_raw.split(", "):
+                key, value = field.split("=")
+                user_dict[key.strip()] = value.strip().strip("'")
+            users.append(user_dict)
+
+        return users
+    except Exception as e:
+        print(f"Error parsing user data: {e}")
+        return []
+
+
+
 
 def login_or_register():
     choice = ""
@@ -148,7 +265,11 @@ def login():
             print(f"RPC failed with code {e.code()}: {e.details()}")
         else:
             if response.statusCode == "200":
-                run()
+                if logged_email == "admin@gmail.com":
+                    #admin
+                    admin_run()
+                else:
+                    run()
             else:
                 login_or_register()
             

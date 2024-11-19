@@ -66,6 +66,11 @@ class ServerServiceStub(object):
                 request_serializer=services_dot_homework1__pb2.MeanRequest.SerializeToString,
                 response_deserializer=services_dot_homework1__pb2.Reply.FromString,
                 _registered_method=True)
+        self.ViewAllUsers = channel.unary_unary(
+                '/homework1.ServerService/ViewAllUsers',
+                request_serializer=services_dot_homework1__pb2.NoneRequest.SerializeToString,
+                response_deserializer=services_dot_homework1__pb2.Reply.FromString,
+                _registered_method=True)
 
 
 class ServerServiceServicer(object):
@@ -109,6 +114,12 @@ class ServerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ViewAllUsers(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ServerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -140,6 +151,11 @@ def add_ServerServiceServicer_to_server(servicer, server):
             'GetMeanShare': grpc.unary_unary_rpc_method_handler(
                     servicer.GetMeanShare,
                     request_deserializer=services_dot_homework1__pb2.MeanRequest.FromString,
+                    response_serializer=services_dot_homework1__pb2.Reply.SerializeToString,
+            ),
+            'ViewAllUsers': grpc.unary_unary_rpc_method_handler(
+                    servicer.ViewAllUsers,
+                    request_deserializer=services_dot_homework1__pb2.NoneRequest.FromString,
                     response_serializer=services_dot_homework1__pb2.Reply.SerializeToString,
             ),
     }
@@ -306,6 +322,33 @@ class ServerService(object):
             target,
             '/homework1.ServerService/GetMeanShare',
             services_dot_homework1__pb2.MeanRequest.SerializeToString,
+            services_dot_homework1__pb2.Reply.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ViewAllUsers(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/homework1.ServerService/ViewAllUsers',
+            services_dot_homework1__pb2.NoneRequest.SerializeToString,
             services_dot_homework1__pb2.Reply.FromString,
             options,
             channel_credentials,

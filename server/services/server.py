@@ -148,6 +148,24 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 self.__StoreInCache(user_id, request_id, op_code, response)
                 print("Get mean share")
                 return response
+            
+    def ViewAllUsers(self, request, context):
+        user_id, request_id, op_code = self.__GetMetadata(context)
+        cached_response = self.__GetFromCache(user_id, request_id, op_code)
+        if cached_response is not None:
+            print("View all users cached response")
+            return cached_response
+        else:
+            users = user_repository.get_all_users()
+            if users is None:
+                response = homework1_pb2.Reply(statusCode="404", message="Bad request", content="Retrieve all users failed")
+                print("View all users failed")
+                return response
+            else:
+                response = homework1_pb2.Reply(statusCode="200", message="OK", content="Retrieved all users successfully: " + str(users))
+                self.__StoreInCache(user_id, request_id, op_code, response)
+                print("View all users")
+                return response
 
     def __GetMetadata(self, context): 
         meta = dict(context.invocation_metadata())

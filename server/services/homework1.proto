@@ -11,6 +11,7 @@ service ServerService {
   rpc Delete(DeleteRequest) returns(Reply) {}
   rpc GetValueShare(NoneRequest) returns (Reply) {}
   rpc GetMeanShare(MeanRequest) returns (Reply) {}
+  rpc ViewAllUsers(NoneRequest) returns (Reply) {}
 }
 
 // Messages for users management
