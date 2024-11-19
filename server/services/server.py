@@ -25,7 +25,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             print(user)
             #if (user is None) or (not bcrypt.checkpw(request.password.encode('utf-8'), user.password)):
             if (user is None) or (request.password != user.password):
-                response = homework1_pb2.Reply(statusCode="401", message="Unauthorized", content="Login failed")
+                response = homework1_pb2.Reply(statusCode="401", message="Unauthorized", content="Login failed: wrong email or password")
                 print("Login failed")
                 return response
             else:
@@ -63,7 +63,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             return cached_response
         else:
             user = user_repository.get_user_by_email(request.email)
-            if user is not None:
+            if user is None:
                 response = homework1_pb2.Reply(statusCode="401", message="Unauthorized", content="User updating failed")
                 print("Update failed")
                 return response

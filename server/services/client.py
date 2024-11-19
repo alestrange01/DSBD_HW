@@ -32,7 +32,7 @@ def run():
         else:
             print("Scelta non valida")
     
-def update():
+def update():   #TODO: quando si aggiorna il TICKER, sicuramente non avrà subito un valore: gestire
     share = input("Inserisci il tuo nuovo share d'interesse: ")
     # Valutare se rimuovere un ticker o sostituirlo obbligatoriamente con un altro
     with grpc.insecure_channel(target) as channel:
@@ -119,6 +119,7 @@ def login_or_register():
              
 def login(): 
     global logged_email
+    print("LOGIN:")
     email = input("Inserisci la tua email: ")
     password = input("Inserisci la tua password: ")
     
@@ -137,6 +138,11 @@ def login():
                 logged_email = email  
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
+        else:
+            if response.statusCode == "200":
+                run()
+            else:
+                login_or_register()
             
 def register(): 
     email = input("Inserisci la tua email: ")
@@ -156,7 +162,11 @@ def register():
             print("Response received: ", response)
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
+        else:
+            if response.statusCode == "200":
+                login()
+            else:
+                print("Registrazione fallita")
 
 def client_run():
     login_or_register()
-    run()
