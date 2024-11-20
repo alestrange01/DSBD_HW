@@ -2,6 +2,8 @@ import grpc
 import services.homework1_pb2 as homework1_pb2
 import services.homework1_pb2_grpc as homework1_pb2_grpc
 import random
+import re
+
 target = 'localhost:50051'
 logged_email = ""
 password = ""
@@ -274,6 +276,13 @@ def login():
                 login_or_register()
             
 def register(): 
+    email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+    while True:
+        email = input("Inserisci la tua email: ")
+        if re.match(email_pattern, email):
+            break
+        else:
+            print("Formato email non valido. Riprova.")
     email = input("Inserisci la tua email: ")
     password = input("Inserisci la tua password: ")
     share = input("Inserisci il Ticker: ") #TODO: valutare se controllare la correttezza del Ticker inserito (cercare una lista di ticker validi)

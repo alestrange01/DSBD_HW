@@ -21,25 +21,19 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             print("Login cached response")
             return cached_response
         else:
-            email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
-            if not re.match(email_pattern, request.email):
-                print("Invalid email format")
-                response = homework1_pb2.Reply(statusCode="404", message="Bad Request", content="Invalid email format")
+            print(request)
+            user = user_repository.get_user_by_email(request.email)
+            print(user)
+            if (user is None) or (not bcrypt.checkpw(request.password.encode('utf-8'), user.password.encode('utf-8'))):
+                response = homework1_pb2.Reply(statusCode="401", message="Unauthorized", content="Login failed: wrong email or password")
+                print("Login failed")
                 return response
             else:
-                print(request)
-                user = user_repository.get_user_by_email(request.email)
-                print(user)
-                if (user is None) or (not bcrypt.checkpw(request.password.encode('utf-8'), user.password.encode('utf-8'))):
-                    response = homework1_pb2.Reply(statusCode="401", message="Unauthorized", content="Login failed: wrong email or password")
-                    print("Login failed")
-                    return response
-                else:
-                    print("Login successful")
-                    response = homework1_pb2.Reply(statusCode="200", message="OK", content="Login successful")
-                    self.__StoreInCache(user_id, request_id, op_code, response)
-                    print("Login")
-                    return response
+                print("Login successful")
+                response = homework1_pb2.Reply(statusCode="200", message="OK", content="Login successful")
+                self.__StoreInCache(user_id, request_id, op_code, response)
+                print("Login")
+                return response
     
 
     def Register(self, request, context):        
