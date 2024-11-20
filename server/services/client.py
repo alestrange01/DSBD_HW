@@ -299,3 +299,6 @@ def register():
 
 def client_run():
     login_or_register()
+
+
+#TODO: aggiungere funzionalità per testare at-most-once con timeout e retry e lato server un time.sleep per simulare un ritardo

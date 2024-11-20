@@ -13,6 +13,7 @@ cache_lock = Lock()
 
 class ServerService(homework1_pb2_grpc.ServerServiceServicer):
 
+    #TODO: aggiungere controlli regex per email
     def Login(self, request, context): 
         user_id, request_id, op_code = self.__GetMetadata(context)
         cached_response = self.__GetFromCache(user_id, request_id, op_code)
@@ -34,6 +35,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 print("Login")
                 return response
     
+    #TODO: aggiungere controlli regex per email
     def Register(self, request, context):        
         user_id, request_id, op_code = self.__GetMetadata(context)
         cached_response = self.__GetFromCache(user_id, request_id, op_code)
@@ -54,6 +56,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 print("Register")
                 return response
     
+    #TODO: aggiungere controlli sulla validità del Ticker
     def Update(self, request, context):        
         user_id, request_id, op_code = self.__GetMetadata(context)
         cached_response = self.__GetFromCache(user_id, request_id, op_code)
