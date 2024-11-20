@@ -7,8 +7,10 @@ from threading import Lock
 from repositories import user_repository
 from repositories import share_repository
 import re
+import time
 
 request_cache = {'GET': {}, 'POST': {}, 'PUT': {}, 'DEL': {}}
+request_attempts = {}
 
 cache_lock = Lock()
 
@@ -197,9 +199,38 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 return None
             
     def __StoreInCache(self, user_id, request_id, op_code, response):
-        user_request_id = user_id + "_" + request_id + "_" + op_code
+        user_request_id = user_id + "_" + request_id
         with cache_lock:
             request_cache[op_code][user_request_id] = response
+
+    def TestCache(self, request, context):
+        user_id, request_id, op_code = self.__GetMetadata(context)
+        cached_response = self.__GetFromCache(user_id, request_id, op_code)
+        if cached_response is not None:
+            print("Returning cached response")
+            del request_attempts[request_id]
+            return cached_response
+
+        if request_id not in request_attempts:
+            request_attempts[request_id] = 0
+        
+        request_attempts[request_id] += 1
+        attempt_count = request_attempts[request_id]
+
+        if attempt_count == 1:
+            print(f"Simulating delay for attempt {attempt_count}")
+            time.sleep(10) 
+        elif attempt_count == 2:
+            print(f"Simulating delay for attempt {attempt_count}")
+            time.sleep(5)
+
+        response = homework1_pb2.Reply(
+            statusCode="200",
+            message="Processed successfully",
+            content=f"Hello {user_id}, your request {request_id} has been processed."
+        )
+        self.__StoreInCache(user_id, request_id, op_code, response)
+        return response
 
 
 def serve():

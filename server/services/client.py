@@ -52,7 +52,8 @@ def admin_run():
         print("2 - Last value share")
         print("3 - Mean share")
         print("4 - View all users")
-        print("5 - Exit")
+        print("5 - Test cache")
+        print("6 - Exit")
         
         choice = input("Inserisci la tua scelta: ")
         
@@ -67,6 +68,8 @@ def admin_run():
         elif choice == "4":
             view_all_users()
         elif choice == "5":
+            test_cache()
+        elif choice == "6":
             break
         else:
             print("Scelta non valida")
@@ -310,3 +313,31 @@ def client_run():
 
 
 #TODO: aggiungere funzionalità per testare at-most-once con timeout e retry e lato server un time.sleep per simulare un ritardo
+def test_cache():
+    max_num_retry = 3
+    timeout = 8 
+    retries = 0
+    requestid = str(random.randint(1, 1000))
+
+    while retries < max_num_retry:
+        try:
+            with grpc.insecure_channel(target) as channel:
+                stub = homework1_pb2_grpc.ServerServiceStub(channel)
+                metadata = [
+                    ('userid', 'test_user'), 
+                    ('requestid', requestid),
+                    ('opcode', 'GET')
+                ]
+                request = homework1_pb2.NoneRequest()
+                response = stub.TestCache(request, timeout=timeout, metadata=metadata)
+                print("Response received:", response.content) #mettere num retry
+        except grpc.RpcError as e:
+            if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
+                print(f"Request timed out, retrying... ({retries + 1}/{max_num_retry})")
+            else:
+                print(f"RPC failed: {e}")
+                break
+        finally:
+            retries += 1
+    else:
+        print("All retries done.")
