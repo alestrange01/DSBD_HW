@@ -292,7 +292,7 @@ def register():
         request = homework1_pb2.RegisterRequest(email=email, password=password, share=share)
         metadata = [
             ('userid', email),
-            ('requestid', str(random.randint(1, 1000))), #TODO: il fatto che sia randomico come viene gestito per capire se è gia stata fatta la richesta nella cache? Tipo registrazione dello stesso utente? Viene gestito così solo lato DB con la chiave già presente?
+            ('requestid', str(random.randint(1, 1000))), 
             ('opcode', 'POST')
         ]
         try:
