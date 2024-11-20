@@ -283,7 +283,6 @@ def register():
             break
         else:
             print("Formato email non valido. Riprova.")
-    email = input("Inserisci la tua email: ")
     password = input("Inserisci la tua password: ")
     share = input("Inserisci il Ticker: ") #TODO: valutare se controllare la correttezza del Ticker inserito (cercare una lista di ticker validi)
     
