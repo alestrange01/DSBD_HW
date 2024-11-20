@@ -271,7 +271,7 @@ def login():
         else:
             if response.statusCode == "200":
                 if logged_email == "admin@gmail.com":
-                    #admin
+                    #ADMIN
                     admin_run()
                 else:
                     run()
@@ -312,7 +312,6 @@ def client_run():
     login_or_register()
 
 
-#TODO: aggiungere funzionalità per testare at-most-once con timeout e retry e lato server un time.sleep per simulare un ritardo
 def test_cache():
     max_num_retry = 3
     timeout = 8 
