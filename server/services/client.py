@@ -276,7 +276,7 @@ def login():
 def register(): 
     email = input("Inserisci la tua email: ")
     password = input("Inserisci la tua password: ")
-    share = input("Inserisci il Ticker: ")
+    share = input("Inserisci il Ticker: ") #TODO: valutare se controllare la correttezza del Ticker inserito (cercare una lista di ticker validi)
     
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
