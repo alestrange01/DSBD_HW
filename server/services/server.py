@@ -6,6 +6,7 @@ import bcrypt
 from threading import Lock
 from repositories import user_repository
 from repositories import share_repository
+import re
 
 request_cache = {'GET': {}, 'POST': {}, 'PUT': {}, 'DEL': {}}
 
@@ -13,7 +14,6 @@ cache_lock = Lock()
 
 class ServerService(homework1_pb2_grpc.ServerServiceServicer):
 
-    #TODO: aggiungere controlli regex per email
     def Login(self, request, context): 
         user_id, request_id, op_code = self.__GetMetadata(context)
         cached_response = self.__GetFromCache(user_id, request_id, op_code)
@@ -21,21 +21,27 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             print("Login cached response")
             return cached_response
         else:
-            print(request)
-            user = user_repository.get_user_by_email(request.email)
-            print(user)
-            if (user is None) or (not bcrypt.checkpw(request.password.encode('utf-8'), user.password.encode('utf-8'))):
-                response = homework1_pb2.Reply(statusCode="401", message="Unauthorized", content="Login failed: wrong email or password")
-                print("Login failed")
+            email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+            if not re.match(email_pattern, request.email):
+                print("Invalid email format")
+                response = homework1_pb2.Reply(statusCode="404", message="Bad Request", content="Invalid email format")
                 return response
             else:
-                print("Login successful")
-                response = homework1_pb2.Reply(statusCode="200", message="OK", content="Login successful")
-                self.__StoreInCache(user_id, request_id, op_code, response)
-                print("Login")
-                return response
+                print(request)
+                user = user_repository.get_user_by_email(request.email)
+                print(user)
+                if (user is None) or (not bcrypt.checkpw(request.password.encode('utf-8'), user.password.encode('utf-8'))):
+                    response = homework1_pb2.Reply(statusCode="401", message="Unauthorized", content="Login failed: wrong email or password")
+                    print("Login failed")
+                    return response
+                else:
+                    print("Login successful")
+                    response = homework1_pb2.Reply(statusCode="200", message="OK", content="Login successful")
+                    self.__StoreInCache(user_id, request_id, op_code, response)
+                    print("Login")
+                    return response
     
-    #TODO: aggiungere controlli regex per email
+
     def Register(self, request, context):        
         user_id, request_id, op_code = self.__GetMetadata(context)
         cached_response = self.__GetFromCache(user_id, request_id, op_code)
@@ -43,18 +49,24 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             print("Register cached response")
             return cached_response
         else:
-            user = user_repository.get_user_by_email(request.email)
-            if user is not None:
-                response = homework1_pb2.Reply(statusCode="401", message="Unauthorized", content="User registration failed")
-                print("Register failed")
+            email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+            if not re.match(email_pattern, request.email):
+                print("Invalid email format")
+                response = homework1_pb2.Reply(statusCode="404", message="Bad Request", content="Invalid email format")
                 return response
             else:
-                hashed_password = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-                user_repository.create_user(request.email, hashed_password, request.share)
-                response = homework1_pb2.Reply(statusCode="204", message="OK", content="User registered successfully")
-                self.__StoreInCache(user_id, request_id, op_code, response)
-                print("Register")
-                return response
+                user = user_repository.get_user_by_email(request.email)
+                if user is not None:
+                    response = homework1_pb2.Reply(statusCode="401", message="Unauthorized", content="User registration failed")
+                    print("Register failed")
+                    return response
+                else:
+                    hashed_password = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                    user_repository.create_user(request.email, hashed_password, request.share)
+                    response = homework1_pb2.Reply(statusCode="204", message="OK", content="User registered successfully")
+                    self.__StoreInCache(user_id, request_id, op_code, response)
+                    print("Register")
+                    return response
     
     #TODO: aggiungere controlli sulla validità del Ticker
     def Update(self, request, context):        
