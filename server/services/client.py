@@ -340,3 +340,6 @@ def test_cache():
             retries += 1
     else:
         print("All retries done.")
+
+
+#TODO: gesione errore canale chiuso dal server mentre il client è in attesa di una risposta
