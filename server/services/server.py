@@ -63,6 +63,8 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                     ticker_management = ticker_management_repository.get_ticker_management_by_code(request.share)
                     if ticker_management is None:
                         ticker_management_repository.create_ticker_management(request.share)
+                    else:
+                        ticker_management_repository.update_ticker_management(request.share, ticker_management.counter + 1)
                     response = homework1_pb2.Reply(statusCode=204, message="OK", content="User registered successfully")
                     self.__StoreInCache(user_email, request_id, op_code, response)
                     print("Register")

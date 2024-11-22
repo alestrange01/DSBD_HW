@@ -12,7 +12,7 @@ def get_all_ticker_management():
         ticker_managements = session.query(TickerManagement).all()
         return ticker_managements
 
-def create_ticker_management(share_cod, counter = 0):
+def create_ticker_management(share_cod, counter = 1):
     with get_db_session() as session:
         ticker_management = TickerManagement(share_cod=share_cod, counter=counter)
         try:

@@ -1,14 +1,13 @@
-import random
 import time
 from repositories import ticker_management_repository
 from repositories import share_repository
-from sqlalchemy import func
+from datetime import datetime, timedelta
 
 def clean():
     while True:
         shares = share_repository.get_all_shares()
         for share in shares:
-            if share.timestamp < func.now() - 14:
+            if share.timestamp < datetime.now() - timedelta(days=14):
                 share_repository.delete_share(share)
         ticker_management = ticker_management_repository.get_all_ticker_management()
         for ticker in ticker_management:
