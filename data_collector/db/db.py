@@ -2,7 +2,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from contextlib import contextmanager
 from repositories import user_repository
-import bcrypt
 
 # if env.get("DATABASE_URL"):
 #     DATABASE_URL = env.get("DATABASE_URL")
@@ -19,12 +18,7 @@ Base = declarative_base()
 
 def initialize_database():
     from models.share_model import Share
-    from models.user_model import User
-    Base.metadata.create_all(engine)
-    users = user_repository.get_all_users()
-    if not users:
-        user_repository.create_user("admin@gmail.com", bcrypt.hashpw("admin".encode('utf-8'), bcrypt.gensalt()), "AAPL")
-        user_repository.create_user("user1@gmail.com", bcrypt.hashpw("user1".encode('utf-8'), bcrypt.gensalt()), "TSLA")
+    Base.metadata.create_all(engine, tables=[Share.__table__])
 
 @contextmanager
 def get_db_session():

@@ -45,11 +45,11 @@ class CircuitBreaker:
             
     def __set_state(self, new_state):
         self.state = new_state
-        if new_state == CircuitState.CLOSED:
-            self.failure_count = 0
+        #if new_state == CircuitState.CLOSED:
+        #    self.failure_count = 0
         #TODO: da aggiungere?
         #elif new_state == CircuitState.HALF_OPEN/OPEN:
-        #    self.failure_count = 0 
+        self.failure_count = 0 
             
     def __failure_management(self):
         self.failure_count += 1
