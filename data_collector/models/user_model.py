@@ -10,8 +10,7 @@ class User(Base):
     email = Column(String, nullable=False, unique=True) 
     password = Column(String, nullable=False)
     share_cod = Column(String, nullable=False) 
+    role = Column(String, nullable=False)
     
-    shares = relationship("Share", back_populates="user", cascade="all, delete-orphan")
-
     def __repr__(self):
-        return f"<User(id={self.id}, email='{self.email}', share_cod='{self.share_cod}')>"
+        return f"<User(id={self.id}, email='{self.email}', role='{self.role}', share_cod='{self.share_cod}')>"

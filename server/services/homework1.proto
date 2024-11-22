@@ -23,7 +23,8 @@ message NoneRequest {
 message RegisterRequest {
     string email = 1;
     string password = 2;
-    string share = 3;
+    string role = 3;
+    string share = 4;
 }
 
 message LoginRequest {
@@ -41,13 +42,13 @@ message DeleteRequest {
 }
 
 message MeanRequest {
-    string n = 1;
+    int32 n = 1;
 }
 
 // Reply for users management
 
 message Reply {
-    string statusCode = 1;
+    int32 statusCode = 1;
     string message = 2;
     string content = 3;
 }
