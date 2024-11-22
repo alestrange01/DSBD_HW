@@ -7,6 +7,7 @@ import bcrypt
 from threading import Lock
 from repositories import user_repository
 from repositories import share_repository
+from repositories import ticker_management_repository
 import re
 import time
 
@@ -59,6 +60,9 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 else:
                     hashed_password = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
                     user_repository.create_user(request.email, hashed_password, request.role, request.share)
+                    ticker_management = ticker_management_repository.get_ticker_management_by_code(request.share)
+                    if ticker_management is None:
+                        ticker_management_repository.create_ticker_management(request.share)
                     response = homework1_pb2.Reply(statusCode=204, message="OK", content="User registered successfully")
                     self.__StoreInCache(user_email, request_id, op_code, response)
                     print("Register")
@@ -81,6 +85,13 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                     content = "Share already updated"
                 else:  
                     user_repository.update_user(request.email, None, request.share) #TODO: vorresti aggiornare anche la password?
+                    old_ticker_management = ticker_management_repository.get_ticker_management_by_code(user.share_cod)
+                    ticker_management_repository.update_ticker_management(user.share_cod, old_ticker_management.counter - 1)
+                    new_ticker_management = ticker_management_repository.get_ticker_management_by_code(request.share)
+                    if new_ticker_management is None:
+                        ticker_management_repository.create_ticker_management(request.share)
+                    else:
+                        ticker_management_repository.update_ticker_management(request.share, new_ticker_management.counter + 1)
                     content = "User updated successfully"
 
                 response = homework1_pb2.Reply(statusCode=200, message="OK", content=content)
@@ -105,7 +116,8 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 if response is not None:
                     return response                
                 user_repository.delete_user(user.email)
-                share_repository.delete_shares_by_user(user.id)
+                ticker_management = ticker_management_repository.get_ticker_management_by_code(user.share_cod)
+                ticker_management_repository.update_ticker_management(user.share_cod, ticker_management.counter - 1)
                 response = homework1_pb2.Reply(statusCode=201, message="OK", content="User deleted successfully")
                 self.__StoreInCache(user_email, request_id, op_code, response)
                 print("Delete")

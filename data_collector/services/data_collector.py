@@ -11,7 +11,6 @@ def retrieve_share_value(share):
     last_price = msft.info['currentPrice']
     return last_price
 
-
 def collect():
     circuit_breaker = CircuitBreaker(failure_threshold=5, difference_failure_open_half_open=2, success_threshold=5, recovery_timeout=30, expected_exception=Exception)
     share_dict = {}
