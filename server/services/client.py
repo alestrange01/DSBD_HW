@@ -318,13 +318,13 @@ def admin_register_user():
             break
         else:
             print("Formato email non valido. Riprova.")
-    ruolo = input("Inserisci il ruolo: ")
+    role = input("Inserisci il ruolo: ")
     password = input("Inserisci la password: ")
     share = input("Inserisci il Ticker: ") 
     
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.RegisterRequest(email=email, password=password, role=ruolo, share=share)
+        request = homework1_pb2.RegisterRequest(email=email, password=password, role=role, share=share)
         metadata = [
             ('user_email', email),
             ('request_id', str(random.randint(1, 1000))), 
