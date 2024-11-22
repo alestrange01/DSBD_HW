@@ -203,7 +203,7 @@ def view_all_users():
             users = parse_users(raw_content)
             print("\nLista degli utenti registrati:")
             for user in users:
-                print(f"- ID: {user['id']}, Email: {user['email']}, Share: {user['share_cod']}")
+                print(f"- ID: {user['id']}, Email: {user['email']}, Role: {user['role']}, Share: {user['share_cod']}")
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
         except Exception as e:
