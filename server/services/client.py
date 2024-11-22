@@ -272,7 +272,8 @@ def login():
             print(f"RPC failed with code {e.code()}: {e.details()}")
         else:
             if response.statusCode == 200:
-                if logged_email == "admin@gmail.com":
+                role = response.content.split(": ", 1)[-1]
+                if role == "admin":
                     #ADMIN
                     admin_run()
                 else:

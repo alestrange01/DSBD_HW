@@ -32,7 +32,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 return response
             else:
                 print("Login successful")
-                response = homework1_pb2.Reply(statusCode=200, message="OK", content="Login successful")
+                response = homework1_pb2.Reply(statusCode=200, message="OK", content="Login successful: " + user.role)
                 self.__StoreInCache(user_email, request_id, op_code, response)
                 print("Login")
                 return response
