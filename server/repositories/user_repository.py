@@ -6,9 +6,9 @@ def get_user_by_email(email):
         user = session.query(User).filter_by(email=email).first()
         return user
 
-def create_user(email, password, share_cod):
+def create_user(email, password, share_cod, role="user"):
     with get_db_session() as session:
-        user = User(email=email, password=password, share_cod=share_cod)
+        user = User(email=email, password=password, role=role, share_cod=share_cod)
         try:
             session.add(user)
             session.commit()

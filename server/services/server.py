@@ -1,4 +1,5 @@
 from concurrent import futures
+import json
 import grpc
 import services.homework1_pb2 as homework1_pb2
 import services.homework1_pb2_grpc as homework1_pb2_grpc
@@ -11,14 +12,13 @@ import time
 
 request_cache = {'GET': {}, 'POST': {}, 'PUT': {}, 'DEL': {}}
 request_attempts = {}
-
 cache_lock = Lock()
 
 class ServerService(homework1_pb2_grpc.ServerServiceServicer):
 
     def Login(self, request, context): 
-        user_id, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_id, request_id, op_code)
+        user_email, request_id, op_code = self.__GetMetadata(context)
+        cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
             print("Login cached response")
             return cached_response
@@ -27,20 +27,20 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             user = user_repository.get_user_by_email(request.email)
             print(user)
             if (user is None) or (not bcrypt.checkpw(request.password.encode('utf-8'), user.password.encode('utf-8'))):
-                response = homework1_pb2.Reply(statusCode="401", message="Unauthorized", content="Login failed: wrong email or password")
+                response = homework1_pb2.Reply(statusCode=401, message="Unauthorized", content="Login failed: wrong email or password")
                 print("Login failed")
                 return response
             else:
                 print("Login successful")
-                response = homework1_pb2.Reply(statusCode="200", message="OK", content="Login successful")
-                self.__StoreInCache(user_id, request_id, op_code, response)
+                response = homework1_pb2.Reply(statusCode=200, message="OK", content="Login successful: " + user.role)
+                self.__StoreInCache(user_email, request_id, op_code, response)
                 print("Login")
                 return response
     
 
     def Register(self, request, context):        
-        user_id, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_id, request_id, op_code)
+        user_email, request_id, op_code = self.__GetMetadata(context)
+        cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
             print("Register cached response")
             return cached_response
@@ -48,149 +48,157 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
             if not re.match(email_pattern, request.email):
                 print("Invalid email format")
-                response = homework1_pb2.Reply(statusCode="404", message="Bad Request", content="Invalid email format")
+                response = homework1_pb2.Reply(statusCode=404, message="Bad Request", content="Invalid email format")
                 return response
             else:
                 user = user_repository.get_user_by_email(request.email)
                 if user is not None:
-                    response = homework1_pb2.Reply(statusCode="401", message="Unauthorized", content="User registration failed")
+                    response = homework1_pb2.Reply(statusCode=401, message="Unauthorized", content="User registration failed")
                     print("Register failed")
                     return response
                 else:
                     hashed_password = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-                    user_repository.create_user(request.email, hashed_password, request.share)
-                    response = homework1_pb2.Reply(statusCode="204", message="OK", content="User registered successfully")
-                    self.__StoreInCache(user_id, request_id, op_code, response)
+                    user_repository.create_user(request.email, hashed_password, request.role, request.share)
+                    response = homework1_pb2.Reply(statusCode=204, message="OK", content="User registered successfully")
+                    self.__StoreInCache(user_email, request_id, op_code, response)
                     print("Register")
                     return response
     
-    #TODO: aggiungere controlli sulla validità del Ticker
     def Update(self, request, context):        
-        user_id, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_id, request_id, op_code)
+        user_email, request_id, op_code = self.__GetMetadata(context)
+        cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
             print("Update cached response")
             return cached_response
         else:
             user = user_repository.get_user_by_email(request.email)
-            if user is None:
-                response = homework1_pb2.Reply(statusCode="401", message="Unauthorized", content="User updating failed")
+            if user is None or not self.__IsAuthorized(request.email, user_email):
+                response = homework1_pb2.Reply(statusCode=401, message="Unauthorized", content="User updating failed")
                 print("Update failed")
                 return response
             else:
                 if request.share == user.share_cod:
-                    response = homework1_pb2.Reply(statusCode="200", message="OK", content="Share already updated")
-                    self.__StoreInCache(user_id, request_id, op_code, response)
-                    print("Update: Share already updated")
-                    return response
-                else:
+                    content = "Share already updated"
+                else:  
                     user_repository.update_user(request.email, None, request.share) #TODO: vorresti aggiornare anche la password?
-                    share_repository.delete_shares_by_user(user.id)
-                    response = homework1_pb2.Reply(statusCode="201", message="OK", content="User updated successfully")
-                    self.__StoreInCache(user_id, request_id, op_code, response)
-                    print("Update")
-                    return response
+                    content = "User updated successfully"
+
+                response = homework1_pb2.Reply(statusCode=200, message="OK", content=content)
+                self.__StoreInCache(user_email, request_id, op_code, response)
+                print("Update")
+                return response
 
     def Delete(self, request, context):        
-        user_id, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_id, request_id, op_code)
+        user_email, request_id, op_code = self.__GetMetadata(context)
+        cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
             print("Delete cached response")
             return cached_response
         else:
             user = user_repository.get_user_by_email(request.email)
             if user is None:
-                response = homework1_pb2.Reply(statusCode="401", message="Unauthorized", content="User deleting failed")
+                response = homework1_pb2.Reply(statusCode=401, message="Unauthorized", content="User deleting failed")
                 print("Delete failed")
                 return response
             else:
+                response = self.__AdminCheck(request.email, request_id)
+                if response is not None:
+                    return response                
                 user_repository.delete_user(user.email)
                 share_repository.delete_shares_by_user(user.id)
-                response = homework1_pb2.Reply(statusCode="201", message="OK", content="User deleted successfully")
-                self.__StoreInCache(user_id, request_id, op_code, response)
+                response = homework1_pb2.Reply(statusCode=201, message="OK", content="User deleted successfully")
+                self.__StoreInCache(user_email, request_id, op_code, response)
                 print("Delete")
                 return response
         
     def GetValueShare(self, request, context):
-        user_id, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_id, request_id, op_code)
+        user_email, request_id, op_code = self.__GetMetadata(context)
+        cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
             print("Get value share cached response")
             return cached_response
         else:
-            user = user_repository.get_user_by_email(user_id)
+            user = user_repository.get_user_by_email(user_email)
             shares = share_repository.get_shares_by_user_id(user.id)
             if shares is None:
-                response = homework1_pb2.Reply(statusCode="404", message="Bad request", content="Retrieve value share failed")
+                response = homework1_pb2.Reply(statusCode=404, message="Bad request", content="Retrieve value share failed")
                 print("Get value share failed")
                 return response
             else:
+                #TODO: Può richiederlo un admin o ognuno il suo?
                 last_share = shares[-1]
-                response = homework1_pb2.Reply(statusCode="200", message="OK", content="Retrieved value share successfully: " + str(last_share.value))
-                self.__StoreInCache(user_id, request_id, op_code, response)
+                response = homework1_pb2.Reply(statusCode=200, message="OK", content="Retrieved value share successfully: " + str(last_share.value))
+                self.__StoreInCache(user_email, request_id, op_code, response)
                 print("Get value share")
                 return response
     
     def GetMeanShare(self, request, context):
-        user_id, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_id, request_id, op_code)
+        user_email, request_id, op_code = self.__GetMetadata(context)
+        cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
             print("Get mean share cached response")
             return cached_response
         else:
-            user = user_repository.get_user_by_email(user_id)
+            user = user_repository.get_user_by_email(user_email)
             shares = share_repository.get_shares_by_user_id(user.id)
             if shares is None:
-                response = homework1_pb2.Reply(statusCode="404", message="Bad request", content="Retrieve mean share failed")
+                response = homework1_pb2.Reply(statusCode=404, message="Bad request", content="Retrieve mean share failed")
                 print("Get value share failed")
                 return response
             else:
+                #TODO: Può richiederlo un admin o ognuno il suo?
                 try:
                     n = int(request.n)
                     if n < 1:
                         raise ValueError("Invalid n")
                 except ValueError:
-                    response = homework1_pb2.Reply(statusCode="400", message="Bad request", content="Invalid value for n")
+                    response = homework1_pb2.Reply(statusCode=400, message="Bad request", content="Invalid value for n")
                     print("Invalid value for n")
                     return response
                 limited_shares = shares[:n] if len(shares) > n else shares
                 mean = sum([share.value for share in limited_shares]) / len(limited_shares)
-                response = homework1_pb2.Reply(statusCode="200", message="OK", content="Retrieved mean share successfully: " + str(mean))
-                self.__StoreInCache(user_id, request_id, op_code, response)
+                response = homework1_pb2.Reply(statusCode=200, message="OK", content="Retrieved mean share successfully: " + str(mean))
+                self.__StoreInCache(user_email, request_id, op_code, response)
                 print("Get mean share")
                 return response
             
     def ViewAllUsers(self, request, context):
-        user_id, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_id, request_id, op_code)
+        user_email, request_id, op_code = self.__GetMetadata(context)
+
+        if not self.__IsAuthorized(target_email=None, request_email=user_email, required_role="admin"):
+            response = homework1_pb2.Reply(statusCode=401, message="Unauthorized", content="Only admin can view all users")
+            print("View all users failed.")
+            return response
+
+        cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
             print("View all users cached response")
             return cached_response
         else:
             users = user_repository.get_all_users()
             if users is None:
-                response = homework1_pb2.Reply(statusCode="404", message="Bad request", content="Retrieve all users failed")
+                response = homework1_pb2.Reply(statusCode=404, message="Bad request", content="Retrieve all users failed")
                 print("View all users failed")
                 return response
             else:
-                response = homework1_pb2.Reply(statusCode="200", message="OK", content="Retrieved all users successfully: " + str(users))
-                self.__StoreInCache(user_id, request_id, op_code, response)
+                response = homework1_pb2.Reply(statusCode=200, message="OK", content="Retrieved all users successfully: " + str(users))
+                self.__StoreInCache(user_email, request_id, op_code, response)
                 print("View all users")
                 return response
 
     def __GetMetadata(self, context): 
         meta = dict(context.invocation_metadata())
         print(meta)
-        user_id = meta.get('userid', 'unknown')   
-        request_id = meta.get('requestid', 'unknown')  
-        op_code = meta.get('opcode', 'unknown') 
-        return user_id, request_id, op_code
+        user_email = meta.get('user_email', 'unknown')   
+        request_id = meta.get('request_id', 'unknown')  
+        op_code = meta.get('op_code', 'unknown') 
+        return user_email, request_id, op_code
 
-    def __GetFromCache(self, user_id, request_id, op_code):
+    def __GetFromCache(self, user_email, request_id, op_code):
         print(f"Checking cache for RequestID {request_id}")
-        user_request_id = user_id + "_" + request_id
+        user_request_id = user_email + "_" + request_id
         with cache_lock:
-            print(request_cache)
+            print(json.dumps(request_cache, indent=4))
             if user_request_id in request_cache[op_code]:
                 print(f"Returning cached response for RequestID {request_id}")
                 return request_cache[op_code][user_request_id]
@@ -198,14 +206,14 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 print(f"No cached response for RequestID {request_id}")
                 return None
             
-    def __StoreInCache(self, user_id, request_id, op_code, response):
-        user_request_id = user_id + "_" + request_id
+    def __StoreInCache(self, user_email, request_id, op_code, response):
+        user_request_id = user_email + "_" + request_id
         with cache_lock:
             request_cache[op_code][user_request_id] = response
 
     def TestCache(self, request, context):
-        user_id, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_id, request_id, op_code)
+        user_email, request_id, op_code = self.__GetMetadata(context)
+        cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
             print("Returning cached response")
             del request_attempts[request_id]
@@ -225,13 +233,18 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             time.sleep(5)
 
         response = homework1_pb2.Reply(
-            statusCode="200",
+            statusCode=200,
             message="Processed successfully",
-            content=f"Hello {user_id}, your request {request_id} has been processed."
+            content=f"Hello {user_email}, your request {request_id} has been processed."
         )
-        self.__StoreInCache(user_id, request_id, op_code, response)
+        self.__StoreInCache(user_email, request_id, op_code, response)
         return response
 
+    def __IsAuthorized(self, request_email, user_email, required_role=None):
+        logged_user = user_repository.get_user_by_email(user_email)
+        if required_role and logged_user.role != required_role:
+            return False
+        return request_email == user_email or logged_user.role == "admin"
 
 def serve():
     port = '50051'

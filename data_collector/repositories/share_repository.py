@@ -2,14 +2,8 @@ from sqlalchemy.orm import sessionmaker
 from models.share_model import Share
 from db.db import get_db_session
 
-
-def get_shares_by_user_id(user_id):
-    with get_db_session() as session:
-        shares = session.query(Share).filter_by(user_id=user_id).all()
-        return shares
-
-def create_share(user_id, share_name, value, timestamp):
-    share = Share(share_name=share_name, value=value, user_id=user_id, timestamp=timestamp)
+def create_share(share_name, value, timestamp):
+    share = Share(share_name=share_name, value=value, timestamp=timestamp)
     with get_db_session() as session:
         try:
             session.add(share)
@@ -41,21 +35,30 @@ def delete_share(share_id):
         else:
             print("Share non trovato.")
 
-def delete_shares_by_user(user_id):
+def get_shares_by_share_name(share_name):
     with get_db_session() as session:
-        shares = session.query(Share).filter_by(user_id=user_id).all()
+        shares = session.query(Share).filter_by(share_name=share_name).all()
         if shares:
-            try:
-                for share in shares:
-                    session.delete(share)
-                session.commit()
-                print(f"Tutti gli share per l'utente {user_id} sono stati eliminati.")
-            except Exception as e:
-                session.rollback()
-                print(f"Errore durante l'eliminazione degli share per l'utente {user_id}: {e}")
-                raise
+            return shares
         else:
-            print(f"Nessun share trovato per l'utente con ID {user_id}.")
+            print(f"Nessuno share trovato per l'utente con ID {share_name}.")
+            return None
+
+# def delete_shares_by_share_name(share_name):
+#     with get_db_session() as session:
+#         shares = session.query(Share).filter_by(share_name=share_name).all()
+#         if shares:
+#             try:
+#                 for share in shares:
+#                     session.delete(share)
+#                 session.commit()
+#                 print(f"Tutti gli share per l'utente {share_name} sono stati eliminati.")
+#             except Exception as e:
+#                 session.rollback()
+#                 print(f"Errore durante l'eliminazione degli share per l'utente {share_name}: {e}")
+#                 raise
+#         else:
+#             print(f"Nessun share trovato per l'utente con ID {share_name}.")
 
 def close_session():
     with get_db_session() as session:

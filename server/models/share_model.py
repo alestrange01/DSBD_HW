@@ -11,9 +11,5 @@ class Share(Base):
     value = Column(Integer, nullable=False)
     timestamp = Column(DateTime, default=func.now(), nullable=False)
 
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False) 
-
-    user = relationship("User", back_populates="shares")
-
     def __repr__(self):
         return f"<Share(id={self.id}, share='{self.share_name}', value={self.value}, user_id={self.user_id})>"

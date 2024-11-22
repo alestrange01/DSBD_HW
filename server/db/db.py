@@ -22,7 +22,7 @@ def initialize_database():
     Base.metadata.create_all(engine, tables=[User.__table__])
     users = user_repository.get_all_users()
     if not users:
-        user_repository.create_user("admin@gmail.com", bcrypt.hashpw("admin".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), "AAPL")
+        user_repository.create_user("admin@gmail.com", bcrypt.hashpw("admin".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), "admin", "AAPL")
         user_repository.create_user("user1@gmail.com", bcrypt.hashpw("user1".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), "TSLA")
         #user_repository.create_user("admin@gmail.com", "admin", "AAPL")
         #user_repository.create_user("user1@gmail.com", "user1", "TSLA")

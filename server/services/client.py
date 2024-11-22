@@ -47,43 +47,44 @@ def admin_run():
         print("Running")
         print("Logged in as: ADMIN")
         print("Choose an option:")
-        print("0 - Update user X")
-        print("1 - Delete user X")
-        print("2 - Last value share")
-        print("3 - Mean share")
-        print("4 - View all users")
-        print("5 - Test cache")
-        print("6 - Exit")
+        print("0 - Register a user")
+        print("1 - Update user X")
+        print("2 - Delete user X")
+        print("3 - Last value share")
+        print("4 - Mean share")
+        print("5 - View all users")
+        print("6 - Test cache")
+        print("7 - Exit")
         
         choice = input("Inserisci la tua scelta: ")
-        
         if choice == "0":
-            admin_update()
+            admin_register_user()
         elif choice == "1":
-            admin_delete()
+            admin_update()
         elif choice == "2":
-            get_value_share()
+            admin_delete()
         elif choice == "3":
-            get_mean_share()
+            get_value_share()
         elif choice == "4":
-            view_all_users()
+            get_mean_share()
         elif choice == "5":
-            test_cache()
+            view_all_users()
         elif choice == "6":
+            test_cache()
+        elif choice == "7":
             break
         else:
             print("Scelta non valida")
     
 def update():
     share = input("Inserisci il tuo nuovo share d'interesse: ")
-    # Valutare se rimuovere un ticker o sostituirlo obbligatoriamente con un altro
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.UpdateRequest(email=logged_email, share=share)
         metadata = [
-            ('userid', logged_email),
-            ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 'PUT')
+            ('user_email', logged_email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'PUT')
         ]
         try:
             response = stub.Update(request, metadata=metadata)
@@ -98,9 +99,9 @@ def admin_update():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.UpdateRequest(email=email, share=share)
         metadata = [
-            ('userid', logged_email),
-            ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 'PUT')
+            ('user_email', logged_email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'PUT')
         ]
         try:
             response = stub.Update(request, metadata=metadata)
@@ -113,9 +114,9 @@ def delete():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.DeleteRequest(email=logged_email)
         metadata = [
-            ('userid', logged_email),
-            ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 'DEL')
+            ('user_email', logged_email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'DEL')
         ]
         try:
             response = stub.Delete(request, metadata=metadata)
@@ -134,9 +135,9 @@ def admin_delete():
             stub = homework1_pb2_grpc.ServerServiceStub(channel)
             request = homework1_pb2.DeleteRequest(email=email)
             metadata = [
-                ('userid', logged_email),
-                ('requestid', str(random.randint(1, 1000))),
-                ('opcode', 'DEL')
+                ('user_email', logged_email),
+                ('request_id', str(random.randint(1, 1000))),
+                ('op_code', 'DEL')
             ]
             try:
                 response = stub.Delete(request, metadata=metadata)
@@ -151,9 +152,9 @@ def get_value_share():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.NoneRequest()
         metadata = [
-            ('userid', logged_email),
-            ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 'GET')
+            ('user_email', logged_email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'GET')
         ]
         try:
             response = stub.GetValueShare(request, metadata=metadata)
@@ -170,14 +171,15 @@ def get_mean_share():
             print("Inserire un numero maggiore di 0")
             continue
         break
+    n = int(n)
     
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.MeanRequest(n=n)
         metadata = [
-            ('userid', logged_email),
-            ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 'GET')
+            ('user_email', logged_email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'GET')
         ]
         try:
             response = stub.GetMeanShare(request, metadata=metadata)
@@ -190,9 +192,9 @@ def view_all_users():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.NoneRequest()
         metadata = [
-            ('userid', logged_email),
-            ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 'GET')
+            ('user_email', logged_email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'GET')
         ]
         try:
             response = stub.ViewAllUsers(request, metadata=metadata)
@@ -257,20 +259,21 @@ def login():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.LoginRequest(email=email, password=password)
         metadata = [
-            ('userid', email),
-            ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 'GET')
+            ('user_email', email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'GET')
         ]
         try:
             response = stub.Login(request, metadata=metadata)
             print("Response received: ", response)
-            if response.statusCode == "200":
+            if response.statusCode == 200:
                 logged_email = email  
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
         else:
-            if response.statusCode == "200":
-                if logged_email == "admin@gmail.com":
+            if response.statusCode == 200:
+                role = response.content.split(": ", 1)[-1]
+                if role == "admin":
                     #ADMIN
                     admin_run()
                 else:
@@ -287,15 +290,15 @@ def register():
         else:
             print("Formato email non valido. Riprova.")
     password = input("Inserisci la tua password: ")
-    share = input("Inserisci il Ticker: ") #TODO: valutare se controllare la correttezza del Ticker inserito (cercare una lista di ticker validi)
+    share = input("Inserisci il Ticker: ")
     
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.RegisterRequest(email=email, password=password, share=share)
+        request = homework1_pb2.RegisterRequest(email=email, password=password, role="user", share=share)
         metadata = [
-            ('userid', email),
-            ('requestid', str(random.randint(1, 1000))), 
-            ('opcode', 'POST')
+            ('user_email', email),
+            ('request_id', str(random.randint(1, 1000))), 
+            ('op_code', 'POST')
         ]
         try:
             response = stub.Register(request, metadata=metadata)
@@ -303,7 +306,38 @@ def register():
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
         else:
-            if response.statusCode == "204":
+            if response.statusCode == 204:
+                login()
+            else:
+                print("Registrazione fallita")
+
+def admin_register_user(): 
+    email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+    while True:
+        email = input("Inserisci la tua email: ")
+        if re.match(email_pattern, email):
+            break
+        else:
+            print("Formato email non valido. Riprova.")
+    role = input("Inserisci il ruolo: ")
+    password = input("Inserisci la password: ")
+    share = input("Inserisci il Ticker: ") 
+    
+    with grpc.insecure_channel(target) as channel:
+        stub = homework1_pb2_grpc.ServerServiceStub(channel)
+        request = homework1_pb2.RegisterRequest(email=email, password=password, role=role, share=share)
+        metadata = [
+            ('user_email', email),
+            ('request_id', str(random.randint(1, 1000))), 
+            ('op_code', 'POST')
+        ]
+        try:
+            response = stub.Register(request, metadata=metadata)
+            print("Response received: ", response)
+        except grpc.RpcError as e:
+            print(f"RPC failed with code {e.code()}: {e.details()}")
+        else:
+            if response.statusCode == 204:
                 login()
             else:
                 print("Registrazione fallita")
@@ -316,16 +350,16 @@ def test_cache():
     max_num_retry = 3
     timeout = 8 
     retries = 0
-    requestid = str(random.randint(1, 1000))
+    request_id = str(random.randint(1, 1000))
 
     while retries < max_num_retry:
         try:
             with grpc.insecure_channel(target) as channel:
                 stub = homework1_pb2_grpc.ServerServiceStub(channel)
                 metadata = [
-                    ('userid', 'test_user'), 
-                    ('requestid', requestid),
-                    ('opcode', 'GET')
+                    ('user_email', logged_email), 
+                    ('request_id', request_id),
+                    ('op_code', 'GET')
                 ]
                 request = homework1_pb2.NoneRequest()
                 response = stub.TestCache(request, timeout=timeout, metadata=metadata)
@@ -340,6 +374,5 @@ def test_cache():
             retries += 1
     else:
         print("All retries done.")
-
 
 #TODO: gesione errore canale chiuso dal server mentre il client è in attesa di una risposta
