@@ -82,9 +82,9 @@ def update():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.UpdateRequest(email=logged_email, share=share)
         metadata = [
-            ('userid', logged_email),
-            ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 'PUT')
+            ('user_email', logged_email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'PUT')
         ]
         try:
             response = stub.Update(request, metadata=metadata)
@@ -99,9 +99,9 @@ def admin_update():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.UpdateRequest(email=email, share=share)
         metadata = [
-            ('userid', logged_email),
-            ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 'PUT')
+            ('user_email', logged_email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'PUT')
         ]
         try:
             response = stub.Update(request, metadata=metadata)
@@ -114,9 +114,9 @@ def delete():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.DeleteRequest(email=logged_email)
         metadata = [
-            ('userid', logged_email),
-            ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 'DEL')
+            ('user_email', logged_email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'DEL')
         ]
         try:
             response = stub.Delete(request, metadata=metadata)
@@ -135,9 +135,9 @@ def admin_delete():
             stub = homework1_pb2_grpc.ServerServiceStub(channel)
             request = homework1_pb2.DeleteRequest(email=email)
             metadata = [
-                ('userid', logged_email),
-                ('requestid', str(random.randint(1, 1000))),
-                ('opcode', 'DEL')
+                ('user_email', logged_email),
+                ('request_id', str(random.randint(1, 1000))),
+                ('op_code', 'DEL')
             ]
             try:
                 response = stub.Delete(request, metadata=metadata)
@@ -152,9 +152,9 @@ def get_value_share():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.NoneRequest()
         metadata = [
-            ('userid', logged_email),
-            ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 'GET')
+            ('user_email', logged_email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'GET')
         ]
         try:
             response = stub.GetValueShare(request, metadata=metadata)
@@ -177,9 +177,9 @@ def get_mean_share():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.MeanRequest(n=n)
         metadata = [
-            ('userid', logged_email),
-            ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 'GET')
+            ('user_email', logged_email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'GET')
         ]
         try:
             response = stub.GetMeanShare(request, metadata=metadata)
@@ -192,9 +192,9 @@ def view_all_users():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.NoneRequest()
         metadata = [
-            ('userid', logged_email),
-            ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 'GET')
+            ('user_email', logged_email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'GET')
         ]
         try:
             response = stub.ViewAllUsers(request, metadata=metadata)
@@ -259,9 +259,9 @@ def login():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.LoginRequest(email=email, password=password)
         metadata = [
-            ('userid', email),
-            ('requestid', str(random.randint(1, 1000))),
-            ('opcode', 'GET')
+            ('user_email', email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'GET')
         ]
         try:
             response = stub.Login(request, metadata=metadata)
@@ -295,9 +295,9 @@ def register():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.RegisterRequest(email=email, password=password, role="user", share=share)
         metadata = [
-            ('userid', email),
-            ('requestid', str(random.randint(1, 1000))), 
-            ('opcode', 'POST')
+            ('user_email', email),
+            ('request_id', str(random.randint(1, 1000))), 
+            ('op_code', 'POST')
         ]
         try:
             response = stub.Register(request, metadata=metadata)
@@ -326,9 +326,9 @@ def admin_register_user():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.RegisterRequest(email=email, password=password, role=ruolo, share=share)
         metadata = [
-            ('userid', email),
-            ('requestid', str(random.randint(1, 1000))), 
-            ('opcode', 'POST')
+            ('user_email', email),
+            ('request_id', str(random.randint(1, 1000))), 
+            ('op_code', 'POST')
         ]
         try:
             response = stub.Register(request, metadata=metadata)
@@ -349,16 +349,16 @@ def test_cache():
     max_num_retry = 3
     timeout = 8 
     retries = 0
-    requestid = str(random.randint(1, 1000))
+    request_id = str(random.randint(1, 1000))
 
     while retries < max_num_retry:
         try:
             with grpc.insecure_channel(target) as channel:
                 stub = homework1_pb2_grpc.ServerServiceStub(channel)
                 metadata = [
-                    ('userid', logged_email), 
-                    ('requestid', requestid),
-                    ('opcode', 'GET')
+                    ('user_email', logged_email), 
+                    ('request_id', request_id),
+                    ('op_code', 'GET')
                 ]
                 request = homework1_pb2.NoneRequest()
                 response = stub.TestCache(request, timeout=timeout, metadata=metadata)
