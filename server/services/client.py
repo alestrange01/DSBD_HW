@@ -8,10 +8,17 @@ target = 'localhost:50051'
 logged_email = ""
 password = ""
 
+class Session:
+    def __init__(self):
+        self.logged_email = None
+        self.role = None
+
+session = Session()
+
 def run():
     while True:
         print("Running")
-        print("Logged in as: ", logged_email)
+        print("Logged in as: ", session.logged_email)
         print("Choose an option:")
         print("0 - Update user")
         print("1 - Delete user")
@@ -80,9 +87,9 @@ def update():
     share = input("Inserisci il tuo nuovo share d'interesse: ")
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.UpdateRequest(email=logged_email, share=share)
+        request = homework1_pb2.UpdateRequest(email=session.logged_email, share=share)
         metadata = [
-            ('user_email', logged_email),
+            ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
             ('op_code', 'PUT')
         ]
@@ -99,7 +106,7 @@ def admin_update():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.UpdateRequest(email=email, share=share)
         metadata = [
-            ('user_email', logged_email),
+            ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
             ('op_code', 'PUT')
         ]
@@ -112,9 +119,9 @@ def admin_update():
 def delete():  
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.DeleteRequest(email=logged_email)
+        request = homework1_pb2.DeleteRequest(email=session.logged_email)
         metadata = [
-            ('user_email', logged_email),
+            ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
             ('op_code', 'DEL')
         ]
@@ -135,7 +142,7 @@ def admin_delete():
             stub = homework1_pb2_grpc.ServerServiceStub(channel)
             request = homework1_pb2.DeleteRequest(email=email)
             metadata = [
-                ('user_email', logged_email),
+                ('user_email', session.logged_email),
                 ('request_id', str(random.randint(1, 1000))),
                 ('op_code', 'DEL')
             ]
@@ -152,7 +159,7 @@ def get_value_share():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.NoneRequest()
         metadata = [
-            ('user_email', logged_email),
+            ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
             ('op_code', 'GET')
         ]
@@ -177,7 +184,7 @@ def get_mean_share():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.MeanRequest(n=n)
         metadata = [
-            ('user_email', logged_email),
+            ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
             ('op_code', 'GET')
         ]
@@ -192,7 +199,7 @@ def view_all_users():
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.NoneRequest()
         metadata = [
-            ('user_email', logged_email),
+            ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
             ('op_code', 'GET')
         ]
@@ -250,7 +257,7 @@ def login_or_register():
             print("Scelta non valida")
              
 def login(): 
-    global logged_email
+    global session
     print("LOGIN:")
     email = input("Inserisci la tua email: ")
     password = input("Inserisci la tua password: ")
@@ -266,14 +273,13 @@ def login():
         try:
             response = stub.Login(request, metadata=metadata)
             print("Response received: ", response)
-            if response.statusCode == 200:
-                logged_email = email  
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
         else:
             if response.statusCode == 200:
-                role = response.content.split(": ", 1)[-1]
-                if role == "admin":
+                session.logged_email = email
+                session.role = response.role
+                if session.role == "admin":
                     #ADMIN
                     admin_run()
                 else:
@@ -314,7 +320,7 @@ def register():
 def admin_register_user(): 
     email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
     while True:
-        email = input("Inserisci la tua email: ")
+        email = input("Inserisci l'email: ")
         if re.match(email_pattern, email):
             break
         else:

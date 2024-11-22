@@ -27,12 +27,12 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             user = user_repository.get_user_by_email(request.email)
             print(user)
             if (user is None) or (not bcrypt.checkpw(request.password.encode('utf-8'), user.password.encode('utf-8'))):
-                response = homework1_pb2.Reply(statusCode=401, message="Unauthorized", content="Login failed: wrong email or password")
+                response = homework1_pb2.Reply(statusCode=401, message="Unauthorized", content="Login failed: wrong email or password", role="unknown")
                 print("Login failed")
                 return response
             else:
                 print("Login successful")
-                response = homework1_pb2.Reply(statusCode=200, message="OK", content="Login successful: " + user.role)
+                response = homework1_pb2.Reply(statusCode=200, message="OK", content="Login successful", role=user.role)
                 self.__StoreInCache(user_email, request_id, op_code, response)
                 print("Login")
                 return response

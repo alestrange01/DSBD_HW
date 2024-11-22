@@ -44,7 +44,7 @@ class ServerServiceStub(object):
         self.Login = channel.unary_unary(
                 '/homework1.ServerService/Login',
                 request_serializer=services_dot_homework1__pb2.LoginRequest.SerializeToString,
-                response_deserializer=services_dot_homework1__pb2.Reply.FromString,
+                response_deserializer=services_dot_homework1__pb2.LoginReply.FromString,
                 _registered_method=True)
         self.Update = channel.unary_unary(
                 '/homework1.ServerService/Update',
@@ -142,7 +142,7 @@ def add_ServerServiceServicer_to_server(servicer, server):
             'Login': grpc.unary_unary_rpc_method_handler(
                     servicer.Login,
                     request_deserializer=services_dot_homework1__pb2.LoginRequest.FromString,
-                    response_serializer=services_dot_homework1__pb2.Reply.SerializeToString,
+                    response_serializer=services_dot_homework1__pb2.LoginReply.SerializeToString,
             ),
             'Update': grpc.unary_unary_rpc_method_handler(
                     servicer.Update,
@@ -230,7 +230,7 @@ class ServerService(object):
             target,
             '/homework1.ServerService/Login',
             services_dot_homework1__pb2.LoginRequest.SerializeToString,
-            services_dot_homework1__pb2.Reply.FromString,
+            services_dot_homework1__pb2.LoginReply.FromString,
             options,
             channel_credentials,
             insecure,
