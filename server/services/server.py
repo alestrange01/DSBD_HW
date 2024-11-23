@@ -135,15 +135,15 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
         else:
             user = user_repository.get_user_by_email(user_email)
             share_name = user.share_cod
-            shares = share_repository.get_shares_by_share_name(share_name)
-            if shares is None:
+            share = share_repository.get_latest_share_by_name(share_name)
+            if share is None:
                 response = homework1_pb2.Reply(statusCode=404, message="Bad request", content="Retrieve value share failed")
                 print("Get value share failed")
                 return response
             else:
                 #TODO: Può richiederlo un admin o ognuno il suo?
-                last_share = shares[-1]
-                response = homework1_pb2.Reply(statusCode=200, message="OK", content="Retrieved value share successfully: " + str(last_share.value))
+                print(share)
+                response = homework1_pb2.Reply(statusCode=200, message="OK", content="Retrieved value share successfully: " + str(share.value))
                 self.__StoreInCache(user_email, request_id, op_code, response)
                 print("Get value share")
                 return response
