@@ -13,13 +13,13 @@ def retrieve_share_value(share):
 
 def collect():
     circuit_breaker = CircuitBreaker(failure_threshold=5, difference_failure_open_half_open=2, success_threshold=5, recovery_timeout=30, expected_exception=Exception)
-    share_dict = {}
     while True:
+        share_dict = {}
         users = user_repository.get_all_users()
         for user in users:
             share = user.share_cod
             if(share in share_dict):
-                share_repository.create_share(user.id, share, share_dict[share], func.now())
+                print(f"Share value for {share}: {share_dict[share]} already retrieved.")
                 continue
             try:
                 share_value = circuit_breaker.call(retrieve_share_value, share)
@@ -31,8 +31,7 @@ def collect():
                 print(f"Exception occurred: {e}")
             else:
                 share_dict[share] = share_value
-            share_repository.create_share(user.id, share, share_dict[share], func.now())
-            print(f"Share value for {share}: {share_value}")
-        share_dict= {} 
+                share_repository.create_share(share, share_dict[share], func.now())
+                print(f"Share value for {share}: {share_value}")
         time.sleep(300)
 

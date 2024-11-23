@@ -9,6 +9,7 @@ def clean():
         for share in shares:
             if share.timestamp < datetime.now() - timedelta(days=14):
                 share_repository.delete_share(share)
+                print(f"Share eliminato: {share}, perche' vecchio di 14 giorni.")
         ticker_management = ticker_management_repository.get_all_ticker_management()
         for ticker in ticker_management:
             if ticker.counter == 0:

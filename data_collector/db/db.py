@@ -21,7 +21,7 @@ if os.getenv('POSTGRES_PORT'):
 else:
     postgres_port = 5532
 
-DATABASE_URL = "postgresql://" + postgres_user + ":" + postgres_password + "@localhost:" + postgres_port + "/" + postgres_db
+DATABASE_URL = "postgresql://" + postgres_user + ":" + postgres_password + "@localhost:" + str(postgres_port) + "/" + postgres_db
 
 
 engine = create_engine(DATABASE_URL, echo=True)

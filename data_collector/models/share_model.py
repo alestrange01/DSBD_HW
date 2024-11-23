@@ -12,4 +12,4 @@ class Share(Base):
     timestamp = Column(DateTime, default=func.now(), nullable=False)
 
     def __repr__(self):
-        return f"<Share(id={self.id}, share='{self.share_name}', value={self.value}, user_id={self.user_id})>"
+        return f"<Share(id={self.id}, share='{self.share_name}', value={self.value}, timestamp={self.timestamp})>"

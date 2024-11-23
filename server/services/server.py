@@ -28,12 +28,12 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             user = user_repository.get_user_by_email(request.email)
             print(user)
             if (user is None) or (not bcrypt.checkpw(request.password.encode('utf-8'), user.password.encode('utf-8'))):
-                response = homework1_pb2.Reply(statusCode=401, message="Unauthorized", content="Login failed: wrong email or password", role="unknown")
+                response = homework1_pb2.LoginReply(statusCode=401, message="Unauthorized", content="Login failed: wrong email or password", role="unknown")
                 print("Login failed")
                 return response
             else:
                 print("Login successful")
-                response = homework1_pb2.Reply(statusCode=200, message="OK", content="Login successful", role=user.role)
+                response = homework1_pb2.LoginReply(statusCode=200, message="OK", content="Login successful", role=user.role)
                 self.__StoreInCache(user_email, request_id, op_code, response)
                 print("Login")
                 return response
@@ -59,7 +59,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                     return response
                 else:
                     hashed_password = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-                    user_repository.create_user(request.email, hashed_password, request.role, request.share)
+                    user_repository.create_user(email=request.email, password=hashed_password, share_cod=request.share, role="user")
                     ticker_management = ticker_management_repository.get_ticker_management_by_code(request.share)
                     if ticker_management is None:
                         ticker_management_repository.create_ticker_management(request.share)
@@ -114,9 +114,10 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 print("Delete failed")
                 return response
             else:
-                response = self.__AdminCheck(request.email, request_id)
-                if response is not None:
-                    return response                
+                if not self.__IsAuthorized(request.email, user_email):
+                    response = homework1_pb2.Reply(statusCode=401, message="Unauthorized", content="User deleting failed")
+                    print("Delete failed")
+                    return response              
                 user_repository.delete_user(user.email)
                 ticker_management = ticker_management_repository.get_ticker_management_by_code(user.share_cod)
                 ticker_management_repository.update_ticker_management(user.share_cod, ticker_management.counter - 1)
@@ -179,7 +180,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
     def ViewAllUsers(self, request, context):
         user_email, request_id, op_code = self.__GetMetadata(context)
 
-        if not self.__IsAuthorized(target_email=None, request_email=user_email, required_role="admin"):
+        if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
             response = homework1_pb2.Reply(statusCode=401, message="Unauthorized", content="Only admin can view all users")
             print("View all users failed.")
             return response
@@ -212,7 +213,6 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
         print(f"Checking cache for RequestID {request_id}")
         user_request_id = user_email + "_" + request_id
         with cache_lock:
-            print(json.dumps(request_cache, indent=4))
             if user_request_id in request_cache[op_code]:
                 print(f"Returning cached response for RequestID {request_id}")
                 return request_cache[op_code][user_request_id]

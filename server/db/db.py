@@ -1,8 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from contextlib import contextmanager
-from repositories import user_repository
-from repositories import ticker_management_repository
 import bcrypt
 import os
 
@@ -23,7 +21,7 @@ if os.getenv('POSTGRES_PORT'):
 else:
     postgres_port = 5532
 
-DATABASE_URL = "postgresql://" + postgres_user + ":" + postgres_password + "@localhost:" + postgres_port + "/" + postgres_db
+DATABASE_URL = "postgresql://" + postgres_user + ":" + postgres_password + "@localhost:" + str(postgres_port) + "/" + postgres_db
 
 engine = create_engine(DATABASE_URL, echo=True)
 
@@ -34,7 +32,10 @@ Base = declarative_base()
 
 def initialize_database():
     from models.user_model import User
-    Base.metadata.create_all(engine, tables=[User.__table__])
+    from models.ticker_management import TickerManagement
+    from repositories import user_repository
+    from repositories import ticker_management_repository
+    Base.metadata.create_all(engine, tables=[User.__table__, TickerManagement.__table__])
     users = user_repository.get_all_users()
     if not users:
         user_repository.create_user("admin@gmail.com", bcrypt.hashpw("admin".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), "AAPL", "admin")

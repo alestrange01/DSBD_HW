@@ -369,7 +369,7 @@ def test_cache():
                 ]
                 request = homework1_pb2.NoneRequest()
                 response = stub.TestCache(request, timeout=timeout, metadata=metadata)
-                print("Response received after", retries + 1, "retries: ", response.content)
+                print("Response received at", retries + 1, "attempt: ", response.content)
         except grpc.RpcError as e:
             if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
                 print(f"Request timed out, retrying... ({retries + 1}/{max_num_retry})")
