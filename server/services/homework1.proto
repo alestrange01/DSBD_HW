@@ -12,6 +12,8 @@ service ServerService {
   rpc GetValueShare(NoneRequest) returns (Reply) {}
   rpc GetMeanShare(MeanRequest) returns (Reply) {}
   rpc ViewAllUsers(NoneRequest) returns (Reply) {}
+  rpc ViewTickerManagement(NoneRequest) returns (Reply) {}
+  rpc ViewAllShares(NoneRequest) returns (Reply) {}
   rpc TestCache(NoneRequest) returns (Reply) {}
 }
 

@@ -71,6 +71,16 @@ class ServerServiceStub(object):
                 request_serializer=services_dot_homework1__pb2.NoneRequest.SerializeToString,
                 response_deserializer=services_dot_homework1__pb2.Reply.FromString,
                 _registered_method=True)
+        self.ViewTickerManagement = channel.unary_unary(
+                '/homework1.ServerService/ViewTickerManagement',
+                request_serializer=services_dot_homework1__pb2.NoneRequest.SerializeToString,
+                response_deserializer=services_dot_homework1__pb2.Reply.FromString,
+                _registered_method=True)
+        self.ViewAllShares = channel.unary_unary(
+                '/homework1.ServerService/ViewAllShares',
+                request_serializer=services_dot_homework1__pb2.NoneRequest.SerializeToString,
+                response_deserializer=services_dot_homework1__pb2.Reply.FromString,
+                _registered_method=True)
         self.TestCache = channel.unary_unary(
                 '/homework1.ServerService/TestCache',
                 request_serializer=services_dot_homework1__pb2.NoneRequest.SerializeToString,
@@ -125,6 +135,18 @@ class ServerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ViewTickerManagement(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ViewAllShares(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def TestCache(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -166,6 +188,16 @@ def add_ServerServiceServicer_to_server(servicer, server):
             ),
             'ViewAllUsers': grpc.unary_unary_rpc_method_handler(
                     servicer.ViewAllUsers,
+                    request_deserializer=services_dot_homework1__pb2.NoneRequest.FromString,
+                    response_serializer=services_dot_homework1__pb2.Reply.SerializeToString,
+            ),
+            'ViewTickerManagement': grpc.unary_unary_rpc_method_handler(
+                    servicer.ViewTickerManagement,
+                    request_deserializer=services_dot_homework1__pb2.NoneRequest.FromString,
+                    response_serializer=services_dot_homework1__pb2.Reply.SerializeToString,
+            ),
+            'ViewAllShares': grpc.unary_unary_rpc_method_handler(
+                    servicer.ViewAllShares,
                     request_deserializer=services_dot_homework1__pb2.NoneRequest.FromString,
                     response_serializer=services_dot_homework1__pb2.Reply.SerializeToString,
             ),
@@ -364,6 +396,60 @@ class ServerService(object):
             request,
             target,
             '/homework1.ServerService/ViewAllUsers',
+            services_dot_homework1__pb2.NoneRequest.SerializeToString,
+            services_dot_homework1__pb2.Reply.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ViewTickerManagement(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/homework1.ServerService/ViewTickerManagement',
+            services_dot_homework1__pb2.NoneRequest.SerializeToString,
+            services_dot_homework1__pb2.Reply.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ViewAllShares(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/homework1.ServerService/ViewAllShares',
             services_dot_homework1__pb2.NoneRequest.SerializeToString,
             services_dot_homework1__pb2.Reply.FromString,
             options,

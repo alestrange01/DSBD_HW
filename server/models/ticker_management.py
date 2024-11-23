@@ -11,4 +11,4 @@ class TickerManagement(Base):
     counter = Column(Integer, nullable=False)
     
     def __repr__(self):
-        return f"TickerManagement(share_cod={self.share_cod}, counter={self.counter})"
+        return f"TickerManagement(id={self.id}, share_cod='{self.share_cod}', counter='{self.counter}')"

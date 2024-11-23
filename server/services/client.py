@@ -60,8 +60,10 @@ def admin_run():
         print("3 - Last value share")
         print("4 - Mean share")
         print("5 - View all users")
-        print("6 - Test cache")
-        print("7 - Exit")
+        print("6 - View ticker management")
+        print("7 - View all shares")
+        print("8 - Test cache")
+        print("9 - Exit")
         
         choice = input("Inserisci la tua scelta: ")
         if choice == "0":
@@ -77,8 +79,12 @@ def admin_run():
         elif choice == "5":
             view_all_users()
         elif choice == "6":
-            test_cache()
+            view_ticker_management()
         elif choice == "7":
+            view_all_shares()
+        elif choice == "8":
+            test_cache()
+        elif choice == "9":
             break
         else:
             print("Scelta non valida")
@@ -205,9 +211,8 @@ def view_all_users():
         ]
         try:
             response = stub.ViewAllUsers(request, metadata=metadata)
-            print("Response received: ", response)
-            raw_content = response.content.split(": ", 1)[-1]
-            users = parse_users(raw_content)
+            print(f"Response received: status code {response.statusCode}, message {response.message}")
+            users = parse(response.content, "User")
             print("\nLista degli utenti registrati:")
             for user in users:
                 print(f"- ID: {user['id']}, Email: {user['email']}, Role: {user['role']}, Share: {user['share_cod']}")
@@ -216,29 +221,71 @@ def view_all_users():
         except Exception as e:
             print(f"Error parsing users: {e}")
 
-def parse_users(raw_content):
+def view_ticker_management():
+    with grpc.insecure_channel(target) as channel:
+        stub = homework1_pb2_grpc.ServerServiceStub(channel)
+        request = homework1_pb2.NoneRequest()
+        metadata = [
+            ('user_email', session.logged_email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'GET')
+        ]
+        try:
+            response = stub.ViewTickerManagement(request, metadata=metadata)
+            print(f"Response received: status code {response.statusCode}, message {response.message}")
+            ticker_managements = parse(response.content, "TickerManagement")
+            print("\nTicker management:")
+            for ticker_management in ticker_managements:
+                print(f"- ID: {ticker_management['id']}, Share Cod: {ticker_management['share_cod']}, Counter: {ticker_management['counter']}")
+        except grpc.RpcError as e:
+            print(f"RPC failed with code {e.code()}: {e.details()}")
+        except Exception as e:
+            print(f"Error parsing ticker management: {e}")
+
+def view_all_shares():
+    with grpc.insecure_channel(target) as channel:
+        stub = homework1_pb2_grpc.ServerServiceStub(channel)
+        request = homework1_pb2.NoneRequest()
+        metadata = [
+            ('user_email', session.logged_email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'GET')
+        ]
+        try:
+            response = stub.ViewAllShares(request, metadata=metadata)
+            print(f"Response received: status code {response.statusCode}, message {response.message}")
+            shares = parse(response.content, "Share")
+            print("\nLista delle share:")
+            for share in shares:
+                print(f"- ID: {share['id']}, Share Cod: {share['share']}, Value: {share['value']}, Timestamp: {share['timestamp']}")
+        except grpc.RpcError as e:
+            print(f"RPC failed with code {e.code()}: {e.details()}")
+        except Exception as e:
+            print(f"Error parsing shares: {e}")
+
+def parse(raw_content, object_name):
     try:
         start_index = raw_content.find("[")
         end_index = raw_content.find("]")
-        users_raw = raw_content[start_index + 1 : end_index]
-        users = []
-        for user_raw in users_raw.split(", <User("):
-            user_raw = user_raw.replace("<User(", "").replace(")>", "").strip()
-            if not user_raw:
+        objects_raw = raw_content[start_index + 1:end_index]
+        parsed_objects = []
+        object_prefix = f"<{object_name}(" if "<" in objects_raw else f"{object_name}("
+        
+        for obj_raw in objects_raw.split(f", {object_prefix}"):
+            obj_raw = obj_raw.replace(object_prefix, "").replace(")>", "").replace(")", "").strip()
+            if not obj_raw:
                 continue
-            user_dict = {}
-            for field in user_raw.split(", "):
+            obj_dict = {}
+            for field in obj_raw.split(", "):
                 key, value = field.split("=")
-                user_dict[key.strip()] = value.strip().strip("'")
-            users.append(user_dict)
-
-        return users
+                value = value.strip().strip("'")
+                obj_dict[key.strip()] = value
+            parsed_objects.append(obj_dict)
+        
+        return parsed_objects
     except Exception as e:
-        print(f"Error parsing user data: {e}")
+        print(f"Error parsing {object_name} data: {e}")
         return []
-
-
-
 
 def login_or_register():
     choice = ""

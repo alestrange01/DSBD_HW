@@ -196,9 +196,57 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 print("View all users failed")
                 return response
             else:
-                response = homework1_pb2.Reply(statusCode=200, message="OK", content="Retrieved all users successfully: " + str(users))
+                response = homework1_pb2.Reply(statusCode=200, message="OK", content=str(users))
                 self.__StoreInCache(user_email, request_id, op_code, response)
                 print("View all users")
+                return response
+
+    def ViewTickerManagement(self, request, context):
+        user_email, request_id, op_code = self.__GetMetadata(context)
+
+        if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
+            response = homework1_pb2.Reply(statusCode=401, message="Unauthorized", content="Only admin can view ticker management")
+            print("View ticker management failed.")
+            return response
+
+        cached_response = self.__GetFromCache(user_email, request_id, op_code)
+        if cached_response is not None:
+            print("View ticker management cached response")
+            return cached_response
+        else:
+            ticker_management = ticker_management_repository.get_all_ticker_management()
+            if ticker_management is None:
+                response = homework1_pb2.Reply(statusCode=404, message="Bad request", content="Retrieve ticker management failed")
+                print("View ticker management failed")
+                return response
+            else:
+                response = homework1_pb2.Reply(statusCode=200, message="OK", content=str(ticker_management))
+                self.__StoreInCache(user_email, request_id, op_code, response)
+                print("View ticker management")
+                return response
+    
+    def ViewAllShares(self, request, context):
+        user_email, request_id, op_code = self.__GetMetadata(context)
+
+        if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
+            response = homework1_pb2.Reply(statusCode=401, message="Unauthorized", content="Only admin can view all shares")
+            print("View all shares failed.")
+            return response
+
+        cached_response = self.__GetFromCache(user_email, request_id, op_code)
+        if cached_response is not None:
+            print("View all shares cached response")
+            return cached_response
+        else:
+            shares = share_repository.get_all_shares()
+            if shares is None:
+                response = homework1_pb2.Reply(statusCode=404, message="Bad request", content="Retrieve all shares failed")
+                print("View all shares failed")
+                return response
+            else:
+                response = homework1_pb2.Reply(statusCode=200, message="OK", content=str(shares))
+                self.__StoreInCache(user_email, request_id, op_code, response)
+                print("View all shares")
                 return response
 
     def __GetMetadata(self, context): 

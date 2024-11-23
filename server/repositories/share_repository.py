@@ -28,6 +28,11 @@ def get_shares_by_share_name(share_name):
 #         else:
 #             print(f"Nessun share trovato per l'utente con ID {share_name}.")
 
+def get_all_shares():
+    with get_db_session() as session:
+        shares = session.query(Share).all()
+        return shares
+
 def close_session():
     with get_db_session() as session:
         session.close()
