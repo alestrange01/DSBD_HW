@@ -16,5 +16,6 @@ def clean():
                 shares = share_repository.get_all_shares_by_share_code(ticker.share_cod)
                 for share in shares:
                     share_repository.delete_share(share)
+                    print(f"Share eliminato: {share}, perche' non piu' utilizzato.")
         time.sleep(300)
 

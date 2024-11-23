@@ -372,7 +372,16 @@ def admin_register_user():
             break
         else:
             print("Formato email non valido. Riprova.")
-    role = input("Inserisci il ruolo: ")
+    while True:
+        choice = input("Inserisci il ruolo: user (1) o admin (2): ") 
+        if choice == "1":
+            role = "user"
+            break
+        elif choice == "2":
+            role = "admin"
+            break
+        else:
+            print("Scelta non valida")
     password = input("Inserisci la password: ")
     share = input("Inserisci il Ticker: ") 
     

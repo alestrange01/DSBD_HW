@@ -59,7 +59,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                     return response
                 else:
                     hashed_password = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-                    user_repository.create_user(email=request.email, password=hashed_password, share_cod=request.share, role="user")
+                    user_repository.create_user(email=request.email, password=hashed_password, share_cod=request.share, role=request.role)
                     ticker_management = ticker_management_repository.get_ticker_management_by_code(request.share)
                     if ticker_management is None:
                         ticker_management_repository.create_ticker_management(request.share)
@@ -134,7 +134,8 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             return cached_response
         else:
             user = user_repository.get_user_by_email(user_email)
-            shares = share_repository.get_shares_by_user_id(user.id)
+            share_name = user.share_cod
+            shares = share_repository.get_shares_by_share_name(share_name)
             if shares is None:
                 response = homework1_pb2.Reply(statusCode=404, message="Bad request", content="Retrieve value share failed")
                 print("Get value share failed")
@@ -155,7 +156,8 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             return cached_response
         else:
             user = user_repository.get_user_by_email(user_email)
-            shares = share_repository.get_shares_by_user_id(user.id)
+            share_name = user.share_cod
+            shares = share_repository.get_shares_by_share_name(share_name)
             if shares is None:
                 response = homework1_pb2.Reply(statusCode=404, message="Bad request", content="Retrieve mean share failed")
                 print("Get value share failed")
