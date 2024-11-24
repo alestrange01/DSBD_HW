@@ -1,14 +1,14 @@
 FROM python:3.13-alpine
 
-# Install PostgreSQL development dependencies se usiamo la slim o la completa non c'è bisogno
-RUN apk add --no-cache postgresql-dev
+# Installa le dipendenze di sistema necessarie
+RUN apk add --no-cache g++ gcc musl-dev libffi-dev postgresql-dev
 
-# Copy application files
+# Copia i file dell'applicazione
 WORKDIR /app
 COPY . /app
 
-# Install Python dependencies
+# Installa le dipendenze Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Command to run your app
+# Comando per eseguire l'applicazione
 CMD ["python", "app.py"]

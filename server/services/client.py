@@ -1,10 +1,11 @@
 import random
+import time
 import re
 import grpc
 import services.homework1_pb2 as homework1_pb2
 import services.homework1_pb2_grpc as homework1_pb2_grpc
 
-target = 'localhost:50051'
+target = 'localhost:50052'
 INSERT_YOUR_CHOICE = "Inserisci la tua scelta: "
 NOT_VALID_CHOICE = "Scelta non valida"
 RESPONSE_RECEIVED = "Response received: "
@@ -391,6 +392,7 @@ def test_cache():
 
     while retries < max_num_retry:
         try:
+            start_time = time.time()
             with grpc.insecure_channel(target) as channel:
                 stub = homework1_pb2_grpc.ServerServiceStub(channel)
                 metadata = [
@@ -400,7 +402,8 @@ def test_cache():
                 ]
                 request = homework1_pb2.NoneRequest()
                 response = stub.TestCache(request, timeout=timeout, metadata=metadata)
-                print("Response received at", retries + 1, "attempt: ", response.content)
+                elapsed_time = time.time() - start_time
+                print(f"Response received at {retries + 1} attempt after {elapsed_time:.5f} seconds: {response.content}")
         except grpc.RpcError as e:
             if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
                 print(f"Request timed out, retrying... ({retries + 1}/{max_num_retry})")
