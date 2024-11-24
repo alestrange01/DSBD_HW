@@ -21,10 +21,7 @@ else:
     postgres_port = 5532
 
 DATABASE_URL = f"postgresql://{postgres_user}:{postgres_password}@postgres:{postgres_port}/{postgres_db}"
-
-
 engine = create_engine(DATABASE_URL, echo=True)
-
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
 

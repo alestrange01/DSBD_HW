@@ -1,7 +1,7 @@
 import time
+from datetime import datetime, timedelta
 from repositories import ticker_management_repository
 from repositories import share_repository
-from datetime import datetime, timedelta
 
 def clean():
     while True:

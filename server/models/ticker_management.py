@@ -1,6 +1,4 @@
-from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-from sqlalchemy.sql import func
+from sqlalchemy import Column, Integer, String
 from db.db import Base 
 
 class TickerManagement(Base):
@@ -12,3 +10,4 @@ class TickerManagement(Base):
     
     def __repr__(self):
         return f"TickerManagement(id={self.id}, share_cod='{self.share_cod}', counter='{self.counter}')"
+    

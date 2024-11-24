@@ -1,12 +1,13 @@
+import random
+import re
 import grpc
 import services.homework1_pb2 as homework1_pb2
 import services.homework1_pb2_grpc as homework1_pb2_grpc
-import random
-import re
 
 target = 'localhost:50051'
-logged_email = ""
-password = ""
+INSERT_YOUR_CHOICE = "Inserisci la tua scelta: "
+NOT_VALID_CHOICE = "Scelta non valida"
+RESPONSE_RECEIVED = "Response received: "
 
 class Session:
     def __init__(self):
@@ -14,6 +15,85 @@ class Session:
         self.role = None
 
 session = Session()
+
+def client_run():
+    login_or_register()
+
+def login_or_register():
+    choice = ""
+    while choice != "0" and choice != "1":
+        print("0 - Login")
+        print("1 - Register")
+        print("2 - Exit")
+        choice = input(INSERT_YOUR_CHOICE)
+        if choice == "0":
+            login()
+        elif choice == "1":
+            register()
+        elif choice == "2":
+            exit()
+        else:
+            print(NOT_VALID_CHOICE)
+
+def login(): 
+    global session
+    print("LOGIN:")
+    email = input("Inserisci la tua email: ")
+    password = input("Inserisci la tua password: ")
+    
+    with grpc.insecure_channel(target) as channel:
+        stub = homework1_pb2_grpc.ServerServiceStub(channel)
+        request = homework1_pb2.LoginRequest(email=email, password=password)
+        metadata = [
+            ('user_email', email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'GET')
+        ]
+        try:
+            response = stub.Login(request, metadata=metadata)
+            print(RESPONSE_RECEIVED, response)
+        except grpc.RpcError as e:
+            print(f"RPC failed with code {e.code()}: {e.details()}")
+        else:
+            if response.statusCode == 200:
+                session.logged_email = email
+                session.role = response.role
+                if session.role == "admin":
+                    admin_run()
+                else:
+                    run()
+            else:
+                login_or_register()
+            
+def register(): 
+    email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+    while True:
+        email = input("Inserisci la tua email: ")
+        if re.match(email_pattern, email):
+            break
+        else:
+            print("Formato email non valido. Riprova.")
+    password = input("Inserisci la tua password: ")
+    share = input("Inserisci il Ticker: ")
+    
+    with grpc.insecure_channel(target) as channel:
+        stub = homework1_pb2_grpc.ServerServiceStub(channel)
+        request = homework1_pb2.RegisterRequest(email=email, password=password, role="user", share=share)
+        metadata = [
+            ('user_email', email),
+            ('request_id', str(random.randint(1, 1000))), 
+            ('op_code', 'POST')
+        ]
+        try:
+            response = stub.Register(request, metadata=metadata)
+            print(RESPONSE_RECEIVED, response)
+        except grpc.RpcError as e:
+            print(f"RPC failed with code {e.code()}: {e.details()}")
+        else:
+            if response.statusCode == 204:
+                login()
+            else:
+                print("Registrazione fallita")
 
 def run():
     while True:
@@ -26,7 +106,7 @@ def run():
         print("3 - Mean share")
         print("4 - Exit")
         
-        choice = input("Inserisci la tua scelta: ")
+        choice = input(INSERT_YOUR_CHOICE)
         
         if choice == "0":
             update()
@@ -34,7 +114,7 @@ def run():
             print("Sei sicuro di voler eliminare il tuo account? ")
             print("0 - No")
             print("1 - Si")
-            choice = input("Inserisci la tua scelta: ")
+            choice = input(INSERT_YOUR_CHOICE)
             if choice == "1":
                 delete()
                 break
@@ -47,7 +127,7 @@ def run():
         elif choice == "4":
             break
         else:
-            print("Scelta non valida")
+            print(NOT_VALID_CHOICE)
 
 def admin_run():
     while True:
@@ -65,7 +145,7 @@ def admin_run():
         print("8 - Test cache")
         print("9 - Exit")
         
-        choice = input("Inserisci la tua scelta: ")
+        choice = input(INSERT_YOUR_CHOICE)
         if choice == "0":
             admin_register_user()
         elif choice == "1":
@@ -87,7 +167,7 @@ def admin_run():
         elif choice == "9":
             break
         else:
-            print("Scelta non valida")
+            print(NOT_VALID_CHOICE)
     
 def update():
     share = input("Inserisci il tuo nuovo share d'interesse: ")
@@ -101,24 +181,7 @@ def update():
         ]
         try:
             response = stub.Update(request, metadata=metadata)
-            print("Response received: ", response)
-        except grpc.RpcError as e:
-            print(f"RPC failed with code {e.code()}: {e.details()}")
-
-def admin_update():
-    email = input("Inserisci l'email dell'utente da modificare: ")
-    share = input("Inserisci il nuovo share d'interesse: ")
-    with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.UpdateRequest(email=email, share=share)
-        metadata = [
-            ('user_email', session.logged_email),
-            ('request_id', str(random.randint(1, 1000))),
-            ('op_code', 'PUT')
-        ]
-        try:
-            response = stub.Update(request, metadata=metadata)
-            print("Response received: ", response)
+            print(RESPONSE_RECEIVED, response)
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
 
@@ -133,33 +196,10 @@ def delete():
         ]
         try:
             response = stub.Delete(request, metadata=metadata)
-            print("Response received: ", response)
+            print(RESPONSE_RECEIVED, response)
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
-
-def admin_delete():
-    email = input("Inserisci l'email dell'utente da eliminare: ")
-    print("Sei sicuro di voler eliminare l'account dell'utente con email: ", email)
-    print("0 - No")
-    print("1 - Si")
-    choice = input("Inserisci la tua scelta: ")
-    if choice == "1":
-        with grpc.insecure_channel(target) as channel:
-            stub = homework1_pb2_grpc.ServerServiceStub(channel)
-            request = homework1_pb2.DeleteRequest(email=email)
-            metadata = [
-                ('user_email', session.logged_email),
-                ('request_id', str(random.randint(1, 1000))),
-                ('op_code', 'DEL')
-            ]
-            try:
-                response = stub.Delete(request, metadata=metadata)
-                print("Response received: ", response)
-            except grpc.RpcError as e:
-                print(f"RPC failed with code {e.code()}: {e.details()}")
-    else:
-        print("Operazione annullata")
-
+            
 def get_value_share():
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
@@ -171,7 +211,7 @@ def get_value_share():
         ]
         try:
             response = stub.GetValueShare(request, metadata=metadata)
-            print("Response received: ", response)
+            print(RESPONSE_RECEIVED, response)
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
 def get_mean_share():
@@ -196,9 +236,89 @@ def get_mean_share():
         ]
         try:
             response = stub.GetMeanShare(request, metadata=metadata)
-            print("Response received: ", response)
+            print(RESPONSE_RECEIVED, response)
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
+
+def admin_register_user(): 
+    email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+    while True:
+        email = input("Inserisci l'email: ")
+        if re.match(email_pattern, email):
+            break
+        else:
+            print("Formato email non valido. Riprova.")
+    while True:
+        choice = input("Inserisci il ruolo: user (1) o admin (2): ") 
+        if choice == "1":
+            role = "user"
+            break
+        elif choice == "2":
+            role = "admin"
+            break
+        else:
+            print(NOT_VALID_CHOICE)
+    password = input("Inserisci la password: ")
+    share = input("Inserisci il Ticker: ") 
+    
+    with grpc.insecure_channel(target) as channel:
+        stub = homework1_pb2_grpc.ServerServiceStub(channel)
+        request = homework1_pb2.RegisterRequest(email=email, password=password, role=role, share=share)
+        metadata = [
+            ('user_email', email),
+            ('request_id', str(random.randint(1, 1000))), 
+            ('op_code', 'POST')
+        ]
+        try:
+            response = stub.Register(request, metadata=metadata)
+            print(RESPONSE_RECEIVED, response)
+        except grpc.RpcError as e:
+            print(f"RPC failed with code {e.code()}: {e.details()}")
+        else:
+            if response.statusCode == 204:
+                login()
+            else:
+                print("Registrazione fallita")
+                
+def admin_update():
+    email = input("Inserisci l'email dell'utente da modificare: ")
+    share = input("Inserisci il nuovo share d'interesse: ")
+    with grpc.insecure_channel(target) as channel:
+        stub = homework1_pb2_grpc.ServerServiceStub(channel)
+        request = homework1_pb2.UpdateRequest(email=email, share=share)
+        metadata = [
+            ('user_email', session.logged_email),
+            ('request_id', str(random.randint(1, 1000))),
+            ('op_code', 'PUT')
+        ]
+        try:
+            response = stub.Update(request, metadata=metadata)
+            print(RESPONSE_RECEIVED, response)
+        except grpc.RpcError as e:
+            print(f"RPC failed with code {e.code()}: {e.details()}")
+
+def admin_delete():
+    email = input("Inserisci l'email dell'utente da eliminare: ")
+    print("Sei sicuro di voler eliminare l'account dell'utente con email: ", email)
+    print("0 - No")
+    print("1 - Si")
+    choice = input(INSERT_YOUR_CHOICE)
+    if choice == "1":
+        with grpc.insecure_channel(target) as channel:
+            stub = homework1_pb2_grpc.ServerServiceStub(channel)
+            request = homework1_pb2.DeleteRequest(email=email)
+            metadata = [
+                ('user_email', session.logged_email),
+                ('request_id', str(random.randint(1, 1000))),
+                ('op_code', 'DEL')
+            ]
+            try:
+                response = stub.Delete(request, metadata=metadata)
+                print(RESPONSE_RECEIVED, response)
+            except grpc.RpcError as e:
+                print(f"RPC failed with code {e.code()}: {e.details()}")
+    else:
+        print("Operazione annullata")
 
 def view_all_users():
     with grpc.insecure_channel(target) as channel:
@@ -263,6 +383,35 @@ def view_all_shares():
         except Exception as e:
             print(f"Error parsing shares: {e}")
 
+def test_cache():
+    max_num_retry = 3
+    timeout = 8 
+    retries = 0
+    request_id = str(random.randint(1, 1000))
+
+    while retries < max_num_retry:
+        try:
+            with grpc.insecure_channel(target) as channel:
+                stub = homework1_pb2_grpc.ServerServiceStub(channel)
+                metadata = [
+                    ('user_email', session.logged_email), 
+                    ('request_id', request_id),
+                    ('op_code', 'GET')
+                ]
+                request = homework1_pb2.NoneRequest()
+                response = stub.TestCache(request, timeout=timeout, metadata=metadata)
+                print("Response received at", retries + 1, "attempt: ", response.content)
+        except grpc.RpcError as e:
+            if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
+                print(f"Request timed out, retrying... ({retries + 1}/{max_num_retry})")
+            else:
+                print(f"RPC failed: {e}")
+                break
+        finally:
+            retries += 1
+    else:
+        print("All retries done.")
+
 def parse(raw_content, object_name):
     try:
         start_index = raw_content.find("[")
@@ -286,155 +435,5 @@ def parse(raw_content, object_name):
     except Exception as e:
         print(f"Error parsing {object_name} data: {e}")
         return []
-
-def login_or_register():
-    choice = ""
-    while choice != "0" and choice != "1":
-        print("0 - Login")
-        print("1 - Register")
-        print("2 - Exit")
-        choice = input("Inserisci la tua scelta: ")
-        if choice == "0":
-            login()
-        elif choice == "1":
-            register()
-        elif choice == "2":
-            exit()
-        else:
-            print("Scelta non valida")
-             
-def login(): 
-    global session
-    print("LOGIN:")
-    email = input("Inserisci la tua email: ")
-    password = input("Inserisci la tua password: ")
-    
-    with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.LoginRequest(email=email, password=password)
-        metadata = [
-            ('user_email', email),
-            ('request_id', str(random.randint(1, 1000))),
-            ('op_code', 'GET')
-        ]
-        try:
-            response = stub.Login(request, metadata=metadata)
-            print("Response received: ", response)
-        except grpc.RpcError as e:
-            print(f"RPC failed with code {e.code()}: {e.details()}")
-        else:
-            if response.statusCode == 200:
-                session.logged_email = email
-                session.role = response.role
-                if session.role == "admin":
-                    #ADMIN
-                    admin_run()
-                else:
-                    run()
-            else:
-                login_or_register()
-            
-def register(): 
-    email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
-    while True:
-        email = input("Inserisci la tua email: ")
-        if re.match(email_pattern, email):
-            break
-        else:
-            print("Formato email non valido. Riprova.")
-    password = input("Inserisci la tua password: ")
-    share = input("Inserisci il Ticker: ")
-    
-    with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.RegisterRequest(email=email, password=password, role="user", share=share)
-        metadata = [
-            ('user_email', email),
-            ('request_id', str(random.randint(1, 1000))), 
-            ('op_code', 'POST')
-        ]
-        try:
-            response = stub.Register(request, metadata=metadata)
-            print("Response received: ", response)
-        except grpc.RpcError as e:
-            print(f"RPC failed with code {e.code()}: {e.details()}")
-        else:
-            if response.statusCode == 204:
-                login()
-            else:
-                print("Registrazione fallita")
-
-def admin_register_user(): 
-    email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
-    while True:
-        email = input("Inserisci l'email: ")
-        if re.match(email_pattern, email):
-            break
-        else:
-            print("Formato email non valido. Riprova.")
-    while True:
-        choice = input("Inserisci il ruolo: user (1) o admin (2): ") 
-        if choice == "1":
-            role = "user"
-            break
-        elif choice == "2":
-            role = "admin"
-            break
-        else:
-            print("Scelta non valida")
-    password = input("Inserisci la password: ")
-    share = input("Inserisci il Ticker: ") 
-    
-    with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.RegisterRequest(email=email, password=password, role=role, share=share)
-        metadata = [
-            ('user_email', email),
-            ('request_id', str(random.randint(1, 1000))), 
-            ('op_code', 'POST')
-        ]
-        try:
-            response = stub.Register(request, metadata=metadata)
-            print("Response received: ", response)
-        except grpc.RpcError as e:
-            print(f"RPC failed with code {e.code()}: {e.details()}")
-        else:
-            if response.statusCode == 204:
-                login()
-            else:
-                print("Registrazione fallita")
-
-def client_run():
-    login_or_register()
-
-
-def test_cache():
-    max_num_retry = 3
-    timeout = 8 
-    retries = 0
-    request_id = str(random.randint(1, 1000))
-
-    while retries < max_num_retry:
-        try:
-            with grpc.insecure_channel(target) as channel:
-                stub = homework1_pb2_grpc.ServerServiceStub(channel)
-                metadata = [
-                    ('user_email', logged_email), 
-                    ('request_id', request_id),
-                    ('op_code', 'GET')
-                ]
-                request = homework1_pb2.NoneRequest()
-                response = stub.TestCache(request, timeout=timeout, metadata=metadata)
-                print("Response received at", retries + 1, "attempt: ", response.content)
-        except grpc.RpcError as e:
-            if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
-                print(f"Request timed out, retrying... ({retries + 1}/{max_num_retry})")
-            else:
-                print(f"RPC failed: {e}")
-                break
-        finally:
-            retries += 1
-    else:
-        print("All retries done.")
 
 #TODO: gesione errore canale chiuso dal server mentre il client è in attesa di una risposta

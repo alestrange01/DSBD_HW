@@ -1,7 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from contextlib import contextmanager
-from repositories import user_repository
 import os
 
 if os.getenv('POSTGRES_USER'):
@@ -22,13 +21,9 @@ else:
     postgres_port = 5532
 
 DATABASE_URL = f"postgresql://{postgres_user}:{postgres_password}@postgres:{postgres_port}/{postgres_db}"
-
 engine = create_engine(DATABASE_URL, echo=True)
-
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
-
-
 
 def initialize_database():
     from models.share_model import Share
