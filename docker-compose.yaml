@@ -12,17 +12,62 @@ services:
       - "5532:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
-  # app:
-  #   image: python:3.10
-  #   container_name: python_app
-  #   working_dir: /app
-  #   volumes:
-  #     - .:/app
-  #   environment:
-  #     DB_URL: "postgresql+psycopg2://admin:securepassword@postgres:5432/my_database"
-  #   command: python main.py
-  #   depends_on:
-  #     - postgres
-  #TODO Manca avvio dei tre file python con i loro relativi Dockerfile dove saranno presenti le librerie da installare e i comandi da lanciare per fare in modo che server e data collector stampino a video e il client rimanga con il prompt attivo
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: server_container
+    volumes:
+      - ./server:/app
+      - pg_data:/var/lib/postgresql/data
+    command: python main.py
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: toor
+      POSTGRES_DB: postgres
+      POSTGRES_PORT: 5432
+    depends_on:
+      - postgres
+    ports:
+      - "50052:50051"
+      
+  data_collector:
+    build:
+      context: ./data_collector
+      dockerfile: Dockerfile
+    container_name: data_collector_container
+    volumes:
+      - ./data_collector:/app
+      - pg_data:/var/lib/postgresql/data
+    command: python main.py
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: toor
+      POSTGRES_DB: postgres
+      POSTGRES_PORT: 5432
+    depends_on:
+      - postgres
+      - server
+    
+  data_cleaner:
+    build:
+      context: ./data_cleaner
+      dockerfile: Dockerfile
+    container_name: data_cleaner_container
+    volumes:
+      - ./data_cleaner:/app
+      - pg_data:/var/lib/postgresql/data
+    command: python main.py
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: toor
+      POSTGRES_DB: postgres
+      POSTGRES_PORT: 5432
+    depends_on:
+      - postgres
+      - server
+      - data_collector
+
 volumes:
   pg_data:

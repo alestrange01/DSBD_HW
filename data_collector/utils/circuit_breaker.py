@@ -45,11 +45,8 @@ class CircuitBreaker:
             
     def __set_state(self, new_state):
         self.state = new_state
-        #if new_state == CircuitState.CLOSED:
-        #    self.failure_count = 0
-        #TODO: da aggiungere?
-        #elif new_state == CircuitState.HALF_OPEN/OPEN:
-        self.failure_count = 0 
+        self.failure_count = 0
+        self.success_count = 0 
             
     def __failure_management(self):
         self.failure_count += 1
@@ -61,7 +58,9 @@ class CircuitBreaker:
             self.__set_state(CircuitState.OPEN)
             
 class CBException(Exception):
-    print("Circuit breaker exception")
+    def __init__(self, message="Circuit breaker exception occurred"):
+        super().__init__(message)
 
 class CBOpenException(CBException):
-    print("Circuit breaker open exception")
+    def __init__(self, message="Circuit breaker is open"):
+        super().__init__(message)

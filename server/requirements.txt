@@ -1,0 +1,6 @@
+grpcio
+protobuf
+bcrypt
+SQLAlchemy
+grpcio-tools
+psycopg2

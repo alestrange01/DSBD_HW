@@ -1,6 +1,11 @@
-from models.user_model import User
 from db.db import get_db_session
+from models.user_model import User
 
+def get_all_users():
+    with get_db_session() as session:
+        users = session.query(User).all()
+        return users
+    
 def get_user_by_email(email):
     with get_db_session() as session:
         user = session.query(User).filter_by(email=email).first()
@@ -51,8 +56,3 @@ def delete_user(email):
                 raise
         else:
             print("Utente non trovato.")
-
-def get_all_users():
-    with get_db_session() as session:
-        users = session.query(User).all()
-        return users

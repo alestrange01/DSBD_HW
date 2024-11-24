@@ -25,10 +25,6 @@ engine = create_engine(DATABASE_URL, echo=True)
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
-def initialize_database():
-    from models.share_model import Share
-    Base.metadata.create_all(engine, tables=[Share.__table__])
-
 @contextmanager
 def get_db_session():
     """Context manager per gestire automaticamente la sessione del DB."""

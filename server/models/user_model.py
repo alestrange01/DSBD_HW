@@ -1,6 +1,4 @@
-from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-from sqlalchemy.sql import func
+from sqlalchemy import Column, Integer, String
 from db.db import Base 
 
 class User(Base):
@@ -14,3 +12,4 @@ class User(Base):
     
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', role='{self.role}', share_cod='{self.share_cod}')>"
+    

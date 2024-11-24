@@ -6,12 +6,14 @@ package homework1;
 
 service ServerService {
   rpc Register(RegisterRequest) returns (Reply) {}
-  rpc Login(LoginRequest) returns (Reply) {}
+  rpc Login(LoginRequest) returns (LoginReply) {}
   rpc Update(UpdateRequest) returns (Reply) {}
   rpc Delete(DeleteRequest) returns(Reply) {}
   rpc GetValueShare(NoneRequest) returns (Reply) {}
   rpc GetMeanShare(MeanRequest) returns (Reply) {}
   rpc ViewAllUsers(NoneRequest) returns (Reply) {}
+  rpc ViewTickerManagement(NoneRequest) returns (Reply) {}
+  rpc ViewAllShares(NoneRequest) returns (Reply) {}
   rpc TestCache(NoneRequest) returns (Reply) {}
 }
 
@@ -51,4 +53,11 @@ message Reply {
     int32 statusCode = 1;
     string message = 2;
     string content = 3;
+}
+
+message LoginReply {
+    int32 statusCode = 1;
+    string message = 2;
+    string content = 3;
+    string role = 4;
 }
