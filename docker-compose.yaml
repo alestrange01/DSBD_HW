@@ -26,9 +26,11 @@ services:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: toor
       POSTGRES_DB: postgres
-      POSTGRES_PORT: 5532
+      POSTGRES_PORT: 5432
     depends_on:
       - postgres
+    ports:
+      - "50051:50051"
       
   data_collector:
     build:
@@ -43,7 +45,7 @@ services:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: toor
       POSTGRES_DB: postgres
-      POSTGRES_PORT: 5532
+      POSTGRES_PORT: 5432
     depends_on:
       - postgres
       - server
@@ -61,10 +63,11 @@ services:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: toor
       POSTGRES_DB: postgres
-      POSTGRES_PORT: 5532
+      POSTGRES_PORT: 5432
     depends_on:
       - postgres
       - server
+      - data_collector
 
 volumes:
   pg_data:
