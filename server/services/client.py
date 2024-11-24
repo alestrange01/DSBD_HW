@@ -94,7 +94,7 @@ def register():
             if response.statusCode == 204:
                 login()
             else:
-                print("Registrazione fallita")
+                login_or_register()
 
 def run():
     while True:
@@ -275,11 +275,6 @@ def admin_register_user():
             print(RESPONSE_RECEIVED, response)
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
-        else:
-            if response.statusCode == 204:
-                login()
-            else:
-                print("Registrazione fallita")
                 
 def admin_update():
     email = input("Inserisci l'email dell'utente da modificare: ")
