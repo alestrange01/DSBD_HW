@@ -312,8 +312,9 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
 
 def clean_cache():
     current_time = time.time()
-    threshold = 10 
+    threshold = 120
     print("Pulizia cache...")
+    print("Cache attuale:")
     print(request_cache)
     with cache_lock:
         for op_code in request_cache:
@@ -323,19 +324,11 @@ def clean_cache():
             ]
             for key in keys_to_delete:
                 del request_cache[op_code][key]
-    print("Cache pulita.")
+    print("Cache dopo pulizia:")
     print(request_cache)
 
-def start_cleaner_thread():
-    def run_cleaning():
-        while True:
-            time.sleep(20)
-            clean_cache()
-    cleaning_thread = Thread(target=run_cleaning, daemon=True)
-    cleaning_thread.start()
-
 def serve():
-    port = '50051'
+    port = '50052'
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     homework1_pb2_grpc.add_ServerServiceServicer_to_server(ServerService(), server)
     server.add_insecure_port('[::]:' + port)
