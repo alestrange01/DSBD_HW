@@ -2,7 +2,7 @@ from concurrent import futures
 import re
 import time
 import bcrypt
-from threading import Lock
+from threading import Lock, Thread
 import grpc
 import services.homework1_pb2 as homework1_pb2
 import services.homework1_pb2_grpc as homework1_pb2_grpc
@@ -292,21 +292,47 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
         with cache_lock:
             if user_request_id in request_cache[op_code]:
                 print(f"Returning cached response for RequestID {request_id}")
-                return request_cache[op_code][user_request_id]
+                return request_cache[op_code][user_request_id]['response']
             else:
                 print(f"No cached response for RequestID {request_id}")
                 return None
+
             
     def __StoreInCache(self, user_email, request_id, op_code, response):
         user_request_id = user_email + "_" + request_id
         with cache_lock:
-            request_cache[op_code][user_request_id] = response
+            request_cache[op_code][user_request_id] = {'response': response, 'timestamp': time.time()}
 
     def __IsAuthorized(self, request_email, user_email, required_role=None):
         logged_user = user_repository.get_user_by_email(user_email)
         if required_role and logged_user.role != required_role:
             return False
         return request_email == user_email or logged_user.role == "admin"
+    
+
+def clean_cache():
+    current_time = time.time()
+    threshold = 10 
+    print("Pulizia cache...")
+    print(request_cache)
+    with cache_lock:
+        for op_code in request_cache:
+            keys_to_delete = [
+                key for key, value in request_cache[op_code].items()
+                if current_time - value['timestamp'] > threshold
+            ]
+            for key in keys_to_delete:
+                del request_cache[op_code][key]
+    print("Cache pulita.")
+    print(request_cache)
+
+def start_cleaner_thread():
+    def run_cleaning():
+        while True:
+            time.sleep(20)
+            clean_cache()
+    cleaning_thread = Thread(target=run_cleaning, daemon=True)
+    cleaning_thread.start()
 
 def serve():
     port = '50051'
