@@ -1,3 +1,4 @@
 SQLAlchemy
 yfinance
 psycopg2
+schedule
