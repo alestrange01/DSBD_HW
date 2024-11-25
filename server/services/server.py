@@ -328,7 +328,7 @@ def clean_cache():
     print(request_cache)
 
 def serve():
-    port = '50052'
+    port = '50051'
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     homework1_pb2_grpc.add_ServerServiceServicer_to_server(ServerService(), server)
     server.add_insecure_port('[::]:' + port)

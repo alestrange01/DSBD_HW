@@ -3,5 +3,5 @@ protobuf
 bcrypt
 SQLAlchemy
 grpcio-tools
-psycopg2
+psycopg2-binary
 schedule

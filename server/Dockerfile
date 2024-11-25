@@ -1,6 +1,4 @@
-FROM python:3.13-alpine
-
-RUN apk add --no-cache g++ gcc libffi-dev musl-dev postgresql-dev
+FROM python:3.13-slim
 
 WORKDIR /app
 COPY . /app

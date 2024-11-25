@@ -30,7 +30,7 @@ services:
     depends_on:
       - postgres
     ports:
-      - "50052:50051"
+      - "50051:50051"
       
   data_collector:
     build:
