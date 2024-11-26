@@ -10,14 +10,17 @@ circuit_breaker = CircuitBreaker(failure_threshold=5, difference_failure_open_ha
 def retrieve_share_value(share):
     msft = yf.Ticker(share)
     try:
-        if 'currentPrice' in msft.info:
-            last_price = msft.info['currentPrice']
-        else:
-            last_price = msft.history(period="1d", interval="1m").iloc[-1]['Close']
+        last_price = msft.info.get('currentPrice')
+        if last_price is None:
+            history = msft.history(period="1d", interval="1m")
+            if not history.empty:
+                last_price = history['Close'].iloc[-1]
+            else:
+                raise ValueError(f"No data available for ticker {share}")
     except Exception as e:
-        raise e
-    finally:
-        return last_price
+        print(f"Error retrieving data for {share}: {e}")
+        last_price = None
+    return last_price
 
 def collect():
     share_dict = {}
@@ -32,6 +35,9 @@ def process_users(users, share_dict, circuit_breaker):
             continue
         try:
             share_value = circuit_breaker.call(retrieve_share_value, share)
+            if share_value is None:
+                print(f"Could not retrieve share value for {share}. Skipping.")
+                continue
         except CBOpenException as e:
             print("Circuit is open. Skipping call.")
         except CBException as e:
@@ -39,7 +45,7 @@ def process_users(users, share_dict, circuit_breaker):
         except Exception as e:
             print(f"Exception occurred: {e}")
         else:
-            share_dict[share] = share_value
+            share_dict[share] = float(share_value)
             share_repository.create_share(share, share_dict[share], func.now())
             print(f"Share value for {share}: {share_value}")
 
