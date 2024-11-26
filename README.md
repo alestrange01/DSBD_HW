@@ -91,15 +91,15 @@ Il DataCleaner è un microservizio che opera autonomamente per garantire la puli
 2. Tabella **shares**: Registra i dati delle azioni, cioé ticker, valore e timestamp.
  - Colonne: `id`, `ticker`, `valore`, `timestamp`.
 3. Tabella **gestione_ticker**: Tiene traccia dell'uso dei ticker da parte degli utenti e rimuove quelli inutilizzati per ottimizzare lo spazio.
- - Colonne: `ticker`, `conteggio_uso`.
+ - Colonne: `ticker`, `counter`.
 ---
 ## **Caratteristiche del sistema**
 1. **Credenziali di default**:
  - **Admin**: `admin@gmail.com` / `admin`
  - **Utente**: `user1@gmail.com` / `user1`
 2. **Funzionalità del client**:
- - Verifica delle funzionalità della piattaforma, login, registrazione/modifica/cancellazione utente, richiesta ticker value o ticker mean, inoltre é possibile testare la validitá della cache con l'apposita funzione: `Test cache`.
- - Per testare la funzionalità del circuit breaker in maniera automatica all'avvio del data_collector_cointainer bisogna decommentare riga 8 del file data_collector_main.py all'interno della directory data_collector.
+ - Verifica delle funzionalità della piattaforma, login, registrazione/modifica/cancellazione utente, richiesta ticker value o ticker mean, inoltre é possibile testare la validitá della cache con l'apposita funzione: `test_cache()`.
+ - Per testare la funzionalità del circuit breaker in maniera automatica all'avvio del data_collector_cointainer bisogna decommentare riga 8 del file data_collector_main.py all'interno della directory data_collector la chiamata alla funzione: `test_circuit_breaker_behavior()`.
 ---
 ## **Guida al build & deploy**
 ### **Prequisiti**
@@ -109,7 +109,7 @@ Assicurarsi che siano installati i seguenti elementi:
 ### **Passi**
 1. **Clonare il repository**
  ```bash
- git clone https://github.com/alestrange01/APL_prove.git
+ git clone https://github.com/alestrange01/DSBD_HW1.git
  cd root/project
  ```
 2. **Costruire le immagini Docker**
@@ -135,4 +135,5 @@ Il sistema comprende:
 - **Data collector**: Recupera periodicamente i dati sugli shares.
 - **Data Cleaner**: Ottimizza il database rimuovendo le informazioni obsolete.
 - **Database**: Istanza PostgreSQL per la persistenza dei dati.
+
 Tutti i componenti sono orchestrati utilizzando **Docker Compose** e la comunicazione tra client e server avviene tramite **gRPC**.
