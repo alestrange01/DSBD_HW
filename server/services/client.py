@@ -5,7 +5,7 @@ import grpc
 import services.homework1_pb2 as homework1_pb2
 import services.homework1_pb2_grpc as homework1_pb2_grpc
 
-target = 'localhost:50052'
+target = 'localhost:50051'
 INSERT_YOUR_CHOICE = "Inserisci la tua scelta: "
 NOT_VALID_CHOICE = "Scelta non valida"
 RESPONSE_RECEIVED = "Response received: "
