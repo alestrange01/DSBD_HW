@@ -433,5 +433,3 @@ def parse(raw_content, object_name):
     except Exception as e:
         print(f"Error parsing {object_name} data: {e}")
         return []
-
-#TODO: gesione errore canale chiuso dal server mentre il client è in attesa di una risposta

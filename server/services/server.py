@@ -88,7 +88,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 if request.share == user.share_cod:
                     content = "Share already updated"
                 else:  
-                    user_repository.update_user(request.email, None, request.share) #TODO: vorresti aggiornare anche la password?
+                    user_repository.update_user(request.email, None, request.share)
                     old_ticker_management = ticker_management_repository.get_ticker_management_by_code(user.share_cod)
                     ticker_management_repository.update_ticker_management(user.share_cod, old_ticker_management.counter - 1)
                     new_ticker_management = ticker_management_repository.get_ticker_management_by_code(request.share)
@@ -139,7 +139,6 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 print("Get value share failed")
                 return response
             else:
-                #TODO: Può richiederlo un admin o ognuno il suo?
                 print(share)
                 response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Retrieved value share successfully: " + str(share.value))
                 self.__StoreInCache(user_email, request_id, op_code, response)
@@ -161,7 +160,6 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 print("Get value share failed")
                 return response
             else:
-                #TODO: Può richiederlo un admin o ognuno il suo?
                 try:
                     n = int(request.n)
                     if n < 1:
