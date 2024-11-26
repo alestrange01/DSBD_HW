@@ -1,7 +1,7 @@
 from sqlalchemy import func
 import time
 import yfinance as yf
-from repositories import user_repository
+from repositories import ticker_management_repository
 from repositories import share_repository
 from utils.circuit_breaker import CircuitBreaker, CBException, CBOpenException
 
@@ -23,16 +23,14 @@ def retrieve_share_value(share):
     return last_price
 
 def collect():
-    share_dict = {}
-    users = user_repository.get_all_users()
-    process_users(users, share_dict, circuit_breaker)
+    tickers = ticker_management_repository.get_all_ticker_management()
+    process_tickers(tickers, circuit_breaker)
 
-def process_users(users, share_dict, circuit_breaker):
-    for user in users:
-        share = user.share_cod
-        if share in share_dict:
-            print(f"Share value for {share}: {share_dict[share]} already retrieved.")
+def process_tickers(tickers, circuit_breaker):
+    for ticker in tickers:
+        if ticker.counter == 0:
             continue
+        share = ticker.share_cod
         try:
             share_value = circuit_breaker.call(retrieve_share_value, share)
             if share_value is None:
@@ -45,8 +43,7 @@ def process_users(users, share_dict, circuit_breaker):
         except Exception as e:
             print(f"Exception occurred: {e}")
         else:
-            share_dict[share] = float(share_value)
-            share_repository.create_share(share, share_dict[share], func.now())
+            share_repository.create_share(share, share_value, func.now())
             print(f"Share value for {share}: {share_value}")
 
 def test_circuit_breaker_behavior():
