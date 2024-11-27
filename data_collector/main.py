@@ -1,7 +1,18 @@
 import schedule
+import logging
+import sys
 import time
 from db.db import initialize_database
 from services.data_collector import collect, test_circuit_breaker_behavior
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - [%(levelname)s] - %(message)s',
+    handlers=[
+        logging.FileHandler('data_collector.log'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 if __name__ == '__main__':
     initialize_database()    

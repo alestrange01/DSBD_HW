@@ -1,11 +1,13 @@
 from sqlalchemy import func
 import time
+import logging
 import yfinance as yf
 from repositories import ticker_management_repository
 from repositories import share_repository
 from utils.circuit_breaker import CircuitBreaker, CBException, CBOpenException
 
 circuit_breaker = CircuitBreaker(failure_threshold=5, difference_failure_open_half_open=2, success_threshold=5, recovery_timeout=30, expected_exception=Exception)
+logging = logging.getLogger(__name__)
 
 def retrieve_share_value(share):
     msft = yf.Ticker(share)
@@ -55,7 +57,7 @@ def test_circuit_breaker_behavior():
     def simulate_failure():
         raise ValueError("Errore")
 
-    print(f"Stato iniziale: {cb.state}")
+    logging.error(f"Stato iniziale: {cb.state}")
 
     simulate_failures(cb, simulate_failure, 1, 5)
     simulate_successes(cb, simulate_success, 5, 6)
@@ -65,31 +67,31 @@ def test_circuit_breaker_behavior():
     simulate_successes(cb, simulate_success, 7, 9)
     simulate_failures(cb, simulate_failure, 9, 11, CBOpenException)
 
-    print("Aspettando per passare in HALF_OPEN...")
+    logging.info("Aspettando per passare in HALF_OPEN...")
     time.sleep(6)
     simulate_successes(cb, simulate_success, 11, 13)
     simulate_failures(cb, simulate_failure, 13, 14)
     simulate_successes(cb, simulate_success, 14, 16)
     simulate_failures(cb, simulate_failure, 16, 18)
-    print(f"Stato dopo i fallimenti: {cb.state}")
+    logging.info(f"Stato dopo i fallimenti: {cb.state}")
 
-    print("Aspettando per passare in HALF_OPEN...")
+    logging.info("Aspettando per passare in HALF_OPEN...")
     time.sleep(6)
     simulate_successes(cb, simulate_success, 18, 22)
     simulate_failures(cb, simulate_failure, 22, 23)
     simulate_successes(cb, simulate_success, 23, 28)
-    print(f"Stato finale: {cb.state}")
+    logging.info(f"Stato finale: {cb.state}")
 
 def simulate_failures(cb, simulate_failure, start, end, exception_type=CBException):
     for i in range(start, end):
         try:
             cb.call(simulate_failure)
         except exception_type as e:
-            print(f"Chiamata {i} fallita: {e} - Stato: {cb.state}")
+            logging.info(f"Chiamata {i} fallita: {e} - Stato: {cb.state}")
 
 def simulate_successes(cb, simulate_success, start, end):
     for i in range(start, end):
         try:
-            print(f"Chiamata {i}: Risultato: {cb.call(simulate_success)} - Stato: {cb.state}")
+            logging.info(f"Chiamata {i}: Risultato: {cb.call(simulate_success)} - Stato: {cb.state}")
         except CBException as e:
-            print(f"Chiamata {i}: Errore durante il successo: {e}, Stato: {cb.state}")
+            logging.info(f"Chiamata {i}: Errore durante il successo: {e}, Stato: {cb.state}")
