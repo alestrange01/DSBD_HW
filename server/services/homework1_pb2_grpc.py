@@ -81,8 +81,8 @@ class ServerServiceStub(object):
                 request_serializer=services_dot_homework1__pb2.NoneRequest.SerializeToString,
                 response_deserializer=services_dot_homework1__pb2.Reply.FromString,
                 _registered_method=True)
-        self.TestCache = channel.unary_unary(
-                '/homework1.ServerService/TestCache',
+        self.TestAtMostOncePolicy = channel.unary_unary(
+                '/homework1.ServerService/TestAtMostOncePolicy',
                 request_serializer=services_dot_homework1__pb2.NoneRequest.SerializeToString,
                 response_deserializer=services_dot_homework1__pb2.Reply.FromString,
                 _registered_method=True)
@@ -147,7 +147,7 @@ class ServerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def TestCache(self, request, context):
+    def TestAtMostOncePolicy(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -201,8 +201,8 @@ def add_ServerServiceServicer_to_server(servicer, server):
                     request_deserializer=services_dot_homework1__pb2.NoneRequest.FromString,
                     response_serializer=services_dot_homework1__pb2.Reply.SerializeToString,
             ),
-            'TestCache': grpc.unary_unary_rpc_method_handler(
-                    servicer.TestCache,
+            'TestAtMostOncePolicy': grpc.unary_unary_rpc_method_handler(
+                    servicer.TestAtMostOncePolicy,
                     request_deserializer=services_dot_homework1__pb2.NoneRequest.FromString,
                     response_serializer=services_dot_homework1__pb2.Reply.SerializeToString,
             ),
@@ -463,7 +463,7 @@ class ServerService(object):
             _registered_method=True)
 
     @staticmethod
-    def TestCache(request,
+    def TestAtMostOncePolicy(request,
             target,
             options=(),
             channel_credentials=None,
@@ -476,7 +476,7 @@ class ServerService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/homework1.ServerService/TestCache',
+            '/homework1.ServerService/TestAtMostOncePolicy',
             services_dot_homework1__pb2.NoneRequest.SerializeToString,
             services_dot_homework1__pb2.Reply.FromString,
             options,

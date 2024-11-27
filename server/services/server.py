@@ -247,7 +247,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 print("View all shares")
                 return response
             
-    def TestCache(self, request, context):
+    def TestAtMostOncePolicy(self, request, context):
         user_email, request_id, op_code = self.__GetMetadata(context)
         cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:

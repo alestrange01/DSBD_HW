@@ -14,7 +14,7 @@ service ServerService {
   rpc ViewAllUsers(NoneRequest) returns (Reply) {}
   rpc ViewTickerManagement(NoneRequest) returns (Reply) {}
   rpc ViewAllShares(NoneRequest) returns (Reply) {}
-  rpc TestCache(NoneRequest) returns (Reply) {}
+  rpc TestAtMostOncePolicy(NoneRequest) returns (Reply) {}
 }
 
 // Messages for users management

@@ -143,7 +143,7 @@ def admin_run():
         print("5 - View all users")
         print("6 - View ticker management")
         print("7 - View all shares")
-        print("8 - Test cache")
+        print("8 - Test at-most-once policy")
         print("9 - Exit")
         
         choice = input(INSERT_YOUR_CHOICE)
@@ -164,7 +164,7 @@ def admin_run():
         elif choice == "7":
             view_all_shares()
         elif choice == "8":
-            test_cache()
+            test_at_most_once_policy()
         elif choice == "9":
             break
         else:
@@ -379,7 +379,7 @@ def view_all_shares():
         except Exception as e:
             print(f"Error parsing shares: {e}")
 
-def test_cache():
+def test_at_most_once_policy():
     max_num_retry = 3
     timeout = 8 
     retries = 0
@@ -396,7 +396,7 @@ def test_cache():
                     ('op_code', 'GET')
                 ]
                 request = homework1_pb2.NoneRequest()
-                response = stub.TestCache(request, timeout=timeout, metadata=metadata)
+                response = stub.TestAtMostOncePolicy(request, timeout=timeout, metadata=metadata)
                 elapsed_time = time.time() - start_time
                 print(f"Response received at {retries + 1} attempt after {elapsed_time:.5f} seconds: {response.content}")
         except grpc.RpcError as e:

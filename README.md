@@ -10,7 +10,7 @@ L'applicazione è suddivisa in tre componenti principali
 
 Questo progetto realizza un sistema distribuito basato su un'architettura a microservizi per la gestione e l'elaborazione di dati relativi a titoli azionari. L'applicazione, suddivisa in tre componenti principali (server, data_collector e data_cleaner), utilizza un approccio modulare per garantire scalabilità e resilienza. Il sistema implementa un meccanismo di autenticazione che distingue tra utenti "user" e "admin", conferendo a quest'ultimo priorità operative come la registrazione, l'aggiornamento e la cancellazione di altri utenti ma anche la visualizzazione di tutte le informazioni presenti nel DB. 
 
-La comunicazione tra client e server avviene tramite gRPC, garantendo efficienza e bassa latenza. Il server adotta la politica di at-most-once per assicurare che ogni richiesta sia processata al massimo una volta, per garantire l’idempotenza delle operazioni e migliorare l’efficienza del sistema. Gli altri microservizi operano autonomamente, attivati periodicamente da uno scheduler per raccogliere e pulire i dati.
+La comunicazione tra client e server avviene tramite gRPC, garantendo trasparenza ed efficienza. Il server adotta la politica di at-most-once per assicurare che ogni richiesta sia processata al massimo una volta, per garantire l’idempotenza delle operazioni e migliorare l’efficienza del sistema. Gli altri microservizi operano autonomamente, attivati periodicamente da uno scheduler per raccogliere e pulire i dati.
 
 La gestione dei dati è centralizzata in un database relazionale composto da tre tabelle principali. La tabella users gestisce le informazioni sugli utenti, tra cui email e il ticker azionario associato. La tabella shares registra i dati relativi ai titoli azionari (titolo, valore e un timestamp). Infine, la tabella ticker_management tiene traccia dell'utilizzo dei ticker azionari tramite un contatore, garantendo che i ticker non utilizzati vengano eliminati poi per ottimizzare lo spazio.
 
@@ -98,7 +98,7 @@ Il DataCleaner è un microservizio che opera autonomamente per garantire la puli
  - **Admin**: `admin@gmail.com` / `admin`
  - **Utente**: `user1@gmail.com` / `user1`
 2. **Funzionalità del client**:
- - Verifica delle funzionalità della piattaforma, login, registrazione/modifica/cancellazione utente, richiesta ticker value o ticker mean, inoltre é possibile testare la validitá della cache con l'apposita funzione: `test_cache()`.
+ - Verifica delle funzionalità della piattaforma, login, registrazione/modifica/cancellazione utente, richiesta ticker value o ticker mean. Inoltre, previa essersi loggati come admin, é possibile visualizzare le tabelle del DB e testare la validitá dell'implementazione di at-most-once con l'apposita funzione: `test_at_most_once_policy()`.
  - Per testare la funzionalità del circuit breaker in maniera automatica all'avvio del data_collector_cointainer bisogna decommentare riga 8 del file data_collector_main.py all'interno della directory data_collector la chiamata alla funzione: `test_circuit_breaker_behavior()`.
 ---
 ## **Guida al build & deploy**
