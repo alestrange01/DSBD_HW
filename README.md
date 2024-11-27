@@ -17,6 +17,18 @@ La gestione dei dati è centralizzata in un database relazionale composto da tre
 Il pattern Circuit Breaker gestisce le chiamate verso servizi esterni, come Yahoo Finance, proteggendo da guasti e fallimenti ripetuti. In caso di errori, il circuito si apre temporaneamente, impedendo nuove richieste, e passa successivamente a uno stato "half-open" per verificare il recupero del servizio. 
 
 ---
+## **Scelte architetturali**
+Abbiamo scelto di suddividere il sistema in tre microservizi distinti per garantire una chiara separazione delle responsabilità e una maggiore modularità. 
+
+In particolare, abbiamo deciso di creare un terzo microservizio dedicato, il Data Cleaner, separato logicamente dal Data Collector, nonostante entrambi operino sui dati dei ticker azionari. Questa scelta è stata motivata dall'esigenza di distinguere nettamente le operazioni di raccolta e aggiornamento dei dati da quelle di pulizia e ottimizzazione del database.
+
+Ogni microservizio ha un ruolo ben definito e indipendente, consentendo di isolare eventuali problematiche e facilitare la risoluzione dei guasti. Questo approccio offre diversi vantaggi:
+- Scalabilità: Ogni componente può essere scalato indipendentemente in base al carico specifico, ottimizzando l'uso delle risorse senza dover aumentare inutilmente le capacità dell'intero sistema.
+- Manutenibilità: Grazie alla suddivisione dei compiti, il codice di ciascun microservizio è più leggibile e modulare, facilitando sia lo sviluppo che l'introduzione di nuove funzionalità senza impattare sugli altri componenti.
+- Resilienza: L'indipendenza tra i microservizi limita l'impatto di eventuali guasti, mantenendo operativo il resto del sistema. Inoltre, il Data Collector utilizza un pattern come il Circuit Breaker per isolare i problemi legati ai servizi esterni.
+- Flessibilità nello sviluppo: Il team può lavorare su diversi microservizi in parallelo, scegliendo tecnologie e strumenti più adatti per ciascun componente.
+
+---
 ## **Diagramma architetturale**
 ![Architettura](https://github.com/alestrange01/APL_prove/blob/main/img/Diagramma_architettura.png)
 ---
@@ -99,7 +111,12 @@ Il DataCleaner è un microservizio che opera autonomamente per garantire la puli
  - **Utente**: `user1@gmail.com` / `user1`
 2. **Funzionalità del client**:
  - Verifica delle funzionalità della piattaforma, login, registrazione/modifica/cancellazione utente, richiesta ticker value o ticker mean. Inoltre, previa essersi loggati come admin, é possibile visualizzare le tabelle del DB e testare la validitá dell'implementazione di at-most-once con l'apposita funzione: `test_at_most_once_policy()`.
+   - Il comportamento del codice verifica la politica "at-most-once" per garantire che ogni richiesta venga processata una sola volta. Al primo tentativo, il server introduce un ritardo di 10 secondi, ma il client, avendo un timeout di 8 secondi, registra un timeout e ritenta. Al secondo tentativo, il server risponde dopo 5 secondi e il client riceve con successo la risposta. Infine, al terzo tentativo, la risposta è già memorizzata nella cache del server, che la restituisce immediatamente, permettendo al client di completare rapidamente l'operazione. Il processo garantisce l'idempotenza, assicurando che ogni richiesta venga processata al massimo una volta, evitando duplicazioni e migliorando l'efficienza.
  - Per testare la funzionalità del circuit breaker in maniera automatica all'avvio del data_collector_cointainer bisogna decommentare riga 8 del file data_collector_main.py all'interno della directory data_collector la chiamata alla funzione: `test_circuit_breaker_behavior()`.
+   - La funzione test_circuit_breaker_behavior simula il funzionamento di un Circuit Breaker e dimostra come gestisce le richieste passando tra i suoi stati principali: CLOSED, OPEN e HALF_OPEN. L'obiettivo è proteggere il sistema da guasti ripetuti e verificare la stabilità prima di tornare al normale funzionamento.
+All'inizio, il Circuit Breaker è nello stato CLOSED, accettando tutte le richieste. Durante le prime chiamate, si verificano alcuni successi e fallimenti. Al quinto fallimento, indipendentemente dal fatto che siano consecutivi o meno, il Circuit Breaker raggiunge la soglia configurata e passa allo stato OPEN, bloccando tutte le chiamate successive. In questo stato, ogni nuova richiesta viene immediatamente rifiutata per evitare ulteriori problemi.
+Dopo un timeout di recupero, il Circuit Breaker passa nello stato HALF_OPEN, in cui consente alcune richieste per testare se il sistema è tornato stabile. Le prime chiamate hanno successo, ma al terzo fallimento (poiché la soglia difference_failure_open_half_open è impostata a 2), il Circuit Breaker torna temporaneamente nello stato OPEN. Successivamente, dopo un altro periodo di timeout, torna in HALF_OPEN. Questa volta, un numero sufficiente di successi consecutivi consente al Circuit Breaker di tornare allo stato CLOSED, ripristinando il normale funzionamento.
+Questo test dimostra come il Circuit Breaker gestisca i guasti in modo intelligente: blocca le richieste quando necessario, verifica la stabilità con richieste limitate e si ripristina completamente solo quando il sistema dimostra di essere stabile.
 ---
 ## **Guida al build & deploy**
 ### **Prequisiti**
