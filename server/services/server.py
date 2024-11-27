@@ -2,7 +2,7 @@ from concurrent import futures
 import re
 import time
 import bcrypt
-from threading import Lock, Thread
+from threading import Lock
 import grpc
 import services.homework1_pb2 as homework1_pb2
 import services.homework1_pb2_grpc as homework1_pb2_grpc
@@ -140,7 +140,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 return response
             else:
                 print(share)
-                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Retrieved value share successfully: " + str(share.value))
+                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Retrieved "+ str(share_name) + " value successfully: " + str(share.value))
                 self.__StoreInCache(user_email, request_id, op_code, response)
                 print("Get value share")
                 return response
@@ -170,7 +170,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                     return response
                 limited_shares = shares[:n] if len(shares) > n else shares
                 mean = sum([share.value for share in limited_shares]) / len(limited_shares)
-                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Retrieved mean share successfully: " + str(mean))
+                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Mean value of " + str(share_name) + " of " + str(len(limited_shares)) + " latest shares: " + "{:.3f}".format(mean))
                 self.__StoreInCache(user_email, request_id, op_code, response)
                 print("Get mean share")
                 return response

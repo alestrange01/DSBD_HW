@@ -43,8 +43,8 @@ def process_tickers(tickers, circuit_breaker):
         except Exception as e:
             print(f"Exception occurred: {e}")
         else:
-            share_repository.create_share(share, share_value, func.now())
-            print(f"Share value for {share}: {share_value}")
+            share_repository.create_share(share, float(share_value), func.now())
+            print(f"Share value for {share}: {float(share_value)}")
 
 def test_circuit_breaker_behavior():
     cb = CircuitBreaker(failure_threshold=5, difference_failure_open_half_open=2, success_threshold=5, recovery_timeout=5, expected_exception=ValueError)
