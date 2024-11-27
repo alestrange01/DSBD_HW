@@ -1,6 +1,6 @@
-import schedule
 import logging
 import sys
+import schedule
 import time
 from db.db import initialize_database
 from services.data_collector import collect, test_circuit_breaker_behavior

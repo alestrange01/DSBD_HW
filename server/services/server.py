@@ -1,3 +1,4 @@
+import logging
 from concurrent import futures
 import re
 import time
@@ -10,6 +11,7 @@ from repositories import user_repository
 from repositories import share_repository
 from repositories import ticker_management_repository
 
+logging = logging.getLogger(__name__)
 
 request_cache = {'GET': {}, 'POST': {}, 'PUT': {}, 'DEL': {}}
 request_attempts = {}
@@ -23,21 +25,21 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
         user_email, request_id, op_code = self.__GetMetadata(context)
         cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
-            print("Login cached response")
+            logging.info("Login cached response")
             return cached_response
         else:
-            print(request)
+            logging.info(request)
             user = user_repository.get_user_by_email(request.email)
-            print(user)
+            logging.info(user)
             if (user is None) or (not bcrypt.checkpw(request.password.encode('utf-8'), user.password.encode('utf-8'))):
                 response = homework1_pb2.LoginReply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Login failed: wrong email or password", role="unknown")
-                print("Login failed")
+                logging.error("Login failed")
                 return response
             else:
-                print("Login successful")
+                logging.info("Login successful")
                 response = homework1_pb2.LoginReply(statusCode=200, message=OK_MESSAGE, content="Login successful", role=user.role)
                 self.__StoreInCache(user_email, request_id, op_code, response)
-                print("Login")
+                logging.info("Login")
                 return response
     
 
@@ -45,19 +47,19 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
         user_email, request_id, op_code = self.__GetMetadata(context)
         cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
-            print("Register cached response")
+            logging.info("Register cached response")
             return cached_response
         else:
             email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
             if not re.match(email_pattern, request.email):
-                print("Invalid email format")
+                logging.error("Invalid email format")
                 response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Invalid email format")
                 return response
             else:
                 user = user_repository.get_user_by_email(request.email)
                 if user is not None:
                     response = homework1_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="User registration failed")
-                    print("Register failed")
+                    logging.error("Register failed")
                     return response
                 else:
                     hashed_password = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -69,20 +71,20 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                         ticker_management_repository.update_ticker_management(request.share, ticker_management.counter + 1)
                     response = homework1_pb2.Reply(statusCode=204, message=OK_MESSAGE, content="User registered successfully")
                     self.__StoreInCache(user_email, request_id, op_code, response)
-                    print("Register")
+                    logging.info("Register")
                     return response
     
     def Update(self, request, context):        
         user_email, request_id, op_code = self.__GetMetadata(context)
         cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
-            print("Update cached response")
+            logging.info("Update cached response")
             return cached_response
         else:
             user = user_repository.get_user_by_email(request.email)
             if user is None or not self.__IsAuthorized(request.email, user_email):
                 response = homework1_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="User updating failed")
-                print("Update failed")
+                logging.error("Update failed")
                 return response
             else:
                 if request.share == user.share_cod:
@@ -100,20 +102,20 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
 
                 response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=content)
                 self.__StoreInCache(user_email, request_id, op_code, response)
-                print("Update")
+                logging.info("Update")
                 return response
 
     def Delete(self, request, context):        
         user_email, request_id, op_code = self.__GetMetadata(context)
         cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
-            print("Delete cached response")
+            logging.info("Delete cached response")
             return cached_response
         else:
             user = user_repository.get_user_by_email(request.email)
             if user is None or not self.__IsAuthorized(request.email, user_email):
                 response = homework1_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="User deleting failed")
-                print("Delete failed")
+                logging.error("Delete failed")
                 return response
             else:     
                 user_repository.delete_user(user.email)
@@ -121,14 +123,14 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 ticker_management_repository.update_ticker_management(user.share_cod, ticker_management.counter - 1)
                 response = homework1_pb2.Reply(statusCode=201, message=OK_MESSAGE, content="User deleted successfully")
                 self.__StoreInCache(user_email, request_id, op_code, response)
-                print("Delete")
+                logging.info("Delete")
                 return response
         
     def GetValueShare(self, request, context):
         user_email, request_id, op_code = self.__GetMetadata(context)
         cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
-            print("Get value share cached response")
+            logging.info("Get value share cached response")
             return cached_response
         else:
             user = user_repository.get_user_by_email(user_email)
@@ -136,20 +138,20 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             share = share_repository.get_latest_share_by_name(share_name)
             if share is None:
                 response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve value share failed")
-                print("Get value share failed")
+                logging.error("Get value share failed")
                 return response
             else:
-                print(share)
+                logging.info(share)
                 response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Retrieved "+ str(share_name) + " value successfully: " + str(share.value))
                 self.__StoreInCache(user_email, request_id, op_code, response)
-                print("Get value share")
+                logging.info("Get value share")
                 return response
     
     def GetMeanShare(self, request, context):
         user_email, request_id, op_code = self.__GetMetadata(context)
         cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
-            print("Get mean share cached response")
+            logging.info("Get mean share cached response")
             return cached_response
         else:
             user = user_repository.get_user_by_email(user_email)
@@ -157,7 +159,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             shares = share_repository.get_shares_by_share_name(share_name)
             if shares is None:
                 response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve mean share failed")
-                print("Get value share failed")
+                logging.error("Get value share failed")
                 return response
             else:
                 try:
@@ -166,13 +168,13 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                         raise ValueError("Invalid n")
                 except ValueError:
                     response = homework1_pb2.Reply(statusCode=400, message=BAD_REQUEST_MESSAGE, content="Invalid value for n")
-                    print("Invalid value for n")
+                    logging.error("Invalid value for n")
                     return response
                 limited_shares = shares[:n] if len(shares) > n else shares
                 mean = sum([share.value for share in limited_shares]) / len(limited_shares)
                 response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Mean value of " + str(share_name) + " of " + str(len(limited_shares)) + " latest shares: " + "{:.3f}".format(mean))
                 self.__StoreInCache(user_email, request_id, op_code, response)
-                print("Get mean share")
+                logging.info("Get mean share")
                 return response
             
     def ViewAllUsers(self, request, context):
@@ -180,23 +182,23 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
 
         if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
             response = homework1_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Only admin can view all users")
-            print("View all users failed.")
+            logging.error("View all users failed.")
             return response
 
         cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
-            print("View all users cached response")
+            logging.info("View all users cached response")
             return cached_response
         else:
             users = user_repository.get_all_users()
             if users is None:
                 response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve all users failed")
-                print("View all users failed")
+                logging.error("View all users failed")
                 return response
             else:
                 response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=str(users))
                 self.__StoreInCache(user_email, request_id, op_code, response)
-                print("View all users")
+                logging.info("View all users")
                 return response
 
     def ViewTickerManagement(self, request, context):
@@ -204,23 +206,23 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
 
         if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
             response = homework1_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Only admin can view ticker management")
-            print("View ticker management failed.")
+            logging.error("View ticker management failed.")
             return response
 
         cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
-            print("View ticker management cached response")
+            logging.info("View ticker management cached response")
             return cached_response
         else:
             ticker_management = ticker_management_repository.get_all_ticker_management()
             if ticker_management is None:
                 response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve ticker management failed")
-                print("View ticker management failed")
+                logging.error("View ticker management failed")
                 return response
             else:
                 response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=str(ticker_management))
                 self.__StoreInCache(user_email, request_id, op_code, response)
-                print("View ticker management")
+                logging.info("View ticker management")
                 return response
     
     def ViewAllShares(self, request, context):
@@ -228,30 +230,30 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
 
         if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
             response = homework1_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Only admin can view all shares")
-            print("View all shares failed.")
+            logging.error("View all shares failed.")
             return response
 
         cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
-            print("View all shares cached response")
+            logging.info("View all shares cached response")
             return cached_response
         else:
             shares = share_repository.get_all_shares()
             if shares is None:
                 response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve all shares failed")
-                print("View all shares failed")
+                logging.error("View all shares failed")
                 return response
             else:
                 response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=str(shares))
                 self.__StoreInCache(user_email, request_id, op_code, response)
-                print("View all shares")
+                logging.info("View all shares")
                 return response
             
     def TestAtMostOncePolicy(self, request, context):
         user_email, request_id, op_code = self.__GetMetadata(context)
         cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
-            print("Returning cached response")
+            logging.info("Returning cached response")
             del request_attempts[request_id]
             return cached_response
 
@@ -262,10 +264,10 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
         attempt_count = request_attempts[request_id]
 
         if attempt_count == 1:
-            print(f"Simulating delay for attempt {attempt_count}")
+            logging.info(f"Simulating delay for attempt {attempt_count}")
             time.sleep(10) 
         elif attempt_count == 2:
-            print(f"Simulating delay for attempt {attempt_count}")
+            logging.info(f"Simulating delay for attempt {attempt_count}")
             time.sleep(5)
 
         response = homework1_pb2.Reply(
@@ -278,21 +280,21 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
 
     def __GetMetadata(self, context): 
         meta = dict(context.invocation_metadata())
-        print(meta)
+        logging.info(meta)
         user_email = meta.get('user_email', 'unknown')   
         request_id = meta.get('request_id', 'unknown')  
         op_code = meta.get('op_code', 'unknown') 
         return user_email, request_id, op_code
 
     def __GetFromCache(self, user_email, request_id, op_code):
-        print(f"Checking cache for RequestID {request_id}")
+        logging.info(f"Checking cache for RequestID {request_id}")
         user_request_id = user_email + "_" + request_id
         with cache_lock:
             if user_request_id in request_cache[op_code]:
-                print(f"Returning cached response for RequestID {request_id}")
+                logging.info(f"Returning cached response for RequestID {request_id}")
                 return request_cache[op_code][user_request_id]['response']
             else:
-                print(f"No cached response for RequestID {request_id}")
+                logging.info(f"No cached response for RequestID {request_id}")
                 return None
 
             
@@ -311,9 +313,9 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
 def clean_cache():
     current_time = time.time()
     threshold = 120
-    print("Pulizia cache...")
-    print("Cache attuale:")
-    print(request_cache)
+    logging.info("Pulizia cache...")
+    logging.info("Cache attuale:")
+    logging.info(request_cache)
     with cache_lock:
         for op_code in request_cache:
             keys_to_delete = [
@@ -322,8 +324,8 @@ def clean_cache():
             ]
             for key in keys_to_delete:
                 del request_cache[op_code][key]
-    print("Cache dopo pulizia:")
-    print(request_cache)
+    logging.info("Cache dopo pulizia:")
+    logging.info(request_cache)
 
 def serve():
     port = '50051'
@@ -333,10 +335,10 @@ def serve():
     
     try:
         server.start()
-        print(f"Server started, listening on port {port}")
+        logging.info(f"Server started, listening on port {port}")
         server.wait_for_termination() 
     except KeyboardInterrupt:
-        print("Server interrupted by user.")
+        logging.info("Server interrupted by user.")
     finally:
         server.stop(0)  
-        print("Server stopped.")
+        logging.info("Server stopped.")

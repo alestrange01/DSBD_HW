@@ -1,5 +1,8 @@
+import logging
 from db.db import get_db_session
 from models.ticker_management import TickerManagement
+
+logging = logging.getLogger(__name__)
 
 def get_all_ticker_management():
     with get_db_session() as session:
@@ -13,10 +16,10 @@ def delete_ticker_management(ticker_management):
             try:
                 session.delete(ticker_management)
                 session.commit()
-                print(f"Lo share: {ticker_management} è stato eliminato.")
+                logging.info(f"Lo share: {ticker_management} è stato eliminato.")
             except Exception as e:
                 session.rollback()
-                print(f"Errore durante l'eliminazione dello share: {e}")
+                logging.error(f"Errore durante l'eliminazione dello share: {e}")
                 raise
         else:
-            print("Ticker non trovato.")
+            logging.info("Ticker non trovato.")

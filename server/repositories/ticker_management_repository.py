@@ -1,5 +1,8 @@
+import logging
 from db.db import get_db_session
 from models.ticker_management import TickerManagement
+
+logging = logging.getLogger(__name__)
 
 def get_all_ticker_management():
     with get_db_session() as session:
@@ -17,10 +20,10 @@ def create_ticker_management(share_cod, counter = 1):
         try:
             session.add(ticker_management)
             session.commit()
-            print(f"Ticker management creato: {ticker_management}")
+            logging.info(f"Ticker management creato: {ticker_management}")
         except Exception as e:
             session.rollback()
-            print(f"Errore durante la creazione del ticker management: {e}")
+            logging.error(f"Errore durante la creazione del ticker management: {e}")
             raise
         return ticker_management
 
@@ -31,10 +34,10 @@ def update_ticker_management(share_cod, counter):
             try:
                 ticker_management.counter = counter
                 session.commit()
-                print(f"Ticker management aggiornato: {ticker_management}")
+                logging.info(f"Ticker management aggiornato: {ticker_management}")
             except Exception as e:
                 session.rollback()
-                print(f"Errore durante l'aggiornamento del ticker management: {e}")
+                logging.error(f"Errore durante l'aggiornamento del ticker management: {e}")
                 raise
         else:
-            print("Ticker management non trovato.")
+            logging.info("Ticker management non trovato.")

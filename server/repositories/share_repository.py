@@ -1,5 +1,8 @@
+import logging
 from db.db import get_db_session
 from models.share_model import Share
+
+logging = logging.getLogger(__name__)
 
 def get_all_shares():
     with get_db_session() as session:
@@ -12,7 +15,7 @@ def get_shares_by_share_name(share_name):
         if shares:
             return shares
         else:
-            print(f"Nessuno share trovato per {share_name}.")
+            logging.error(f"Nessuno share trovato per {share_name}.")
             return None
         
 def get_latest_share_by_name(share_name):
@@ -21,6 +24,6 @@ def get_latest_share_by_name(share_name):
         if latest_share:
             return latest_share
         else:
-            print(f"Nessuno share trovato per {share_name}.")
+            logging.error(f"Nessuno share trovato per {share_name}.")
             return None
         

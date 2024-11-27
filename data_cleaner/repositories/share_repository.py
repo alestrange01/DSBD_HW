@@ -1,5 +1,8 @@
+import logging
 from db.db import get_db_session
 from models.share_model import Share
+
+logging = logging.getLogger(__name__)
 
 def get_all_shares():
     with get_db_session() as session:
@@ -15,7 +18,7 @@ def delete_share(share):
     with get_db_session() as session:
         session.delete(share)
         session.commit()
-        print(f"Lo share: {share} è stato eliminato.")
+        logging.info(f"Lo share: {share} è stato eliminato.")
 
 def delete_shares_by_share_name(share_name, batch_size=100):
     with get_db_session() as session:
@@ -33,11 +36,11 @@ def delete_shares_by_share_name(share_name, batch_size=100):
                 for share in shares:
                     session.delete(share)
                 session.commit()
-                print(f"Eliminato batch di {len(shares)} share per il ticker {share_name}.")
-            print(f"Tutti gli share per il ticker {share_name} sono stati eliminati.")
+                logging.info(f"Eliminato batch di {len(shares)} share per il ticker {share_name}.")
+            logging.info(f"Tutti gli share per il ticker {share_name} sono stati eliminati.")
         except Exception as e:
             session.rollback()
-            print(f"Errore durante l'eliminazione degli share per il ticker {share_name}: {e}")
+            logging.error(f"Errore durante l'eliminazione degli share per il ticker {share_name}: {e}")
             raise
 
         

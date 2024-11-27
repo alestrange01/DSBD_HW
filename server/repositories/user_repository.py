@@ -1,5 +1,8 @@
+import logging
 from db.db import get_db_session
 from models.user_model import User
+
+logging = logging.getLogger(__name__)
 
 def get_all_users():
     with get_db_session() as session:
@@ -17,10 +20,10 @@ def create_user(email, password, share_cod, role="user"):
         try:
             session.add(user)
             session.commit()
-            print(f"Utente creato: {user}")
+            logging.info(f"Utente creato: {user}")
         except Exception as e:
             session.rollback()
-            print(f"Errore durante la creazione dell'utente: {e}")
+            logging.error(f"Errore durante la creazione dell'utente: {e}")
             raise
         return user
 
@@ -34,13 +37,13 @@ def update_user(email, new_password=None, new_share_cod=None):
                 if new_share_cod is not None:
                     user.share_cod = new_share_cod
                 session.commit()
-                print(f"Utente aggiornato: {user}")
+                logging.info(f"Utente aggiornato: {user}")
             except Exception as e:
                 session.rollback()
-                print(f"Errore durante l'aggiornamento dell'utente: {e}")
+                logging.error(f"Errore durante l'aggiornamento dell'utente: {e}")
                 raise
         else:
-            print("Utente non trovato.")
+            logging.info("Utente non trovato.")
 
 def delete_user(email):
     with get_db_session() as session:
@@ -49,10 +52,10 @@ def delete_user(email):
             try:
                 session.delete(user)
                 session.commit()
-                print(f"Utente eliminato: {user}")
+                logging.info(f"Utente eliminato: {user}")
             except Exception as e:
                 session.rollback()
-                print(f"Errore durante l'eliminazione dell'utente: {e}")
+                logging.error(f"Errore durante l'eliminazione dell'utente: {e}")
                 raise
         else:
-            print("Utente non trovato.")
+            logging.info("Utente non trovato.")
