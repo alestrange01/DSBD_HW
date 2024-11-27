@@ -29,6 +29,25 @@ Ogni microservizio ha un ruolo ben definito e indipendente, consentendo di isola
 - Flessibilità nello sviluppo: Il team può lavorare su diversi microservizi in parallelo, scegliendo tecnologie e strumenti più adatti per ciascun componente.
 
 ---
+## **Scelte implementative**
+La politica di *at-most-once* è stata implementata utilizzando un meccanismo basato su un identificativo univoco della richiesta (`request_id`), generato dal client per ogni richiesta. Il server mantiene una cache strutturata organizzata come un dizionario annidato, in cui:
+
+- Il primo livello di chiave rappresenta il tipo di operazione (`op_code`, come `GET`, `POST`, `PUT`, `DEL`).
+- Il secondo livello utilizza una chiave unica costruita combinando l'email del client (`user_email`) e il `request_id` della richiesta. 
+
+Questa combinazione, denominata `user_request_id`, garantisce che ogni richiesta venga identificata in modo univoco. 
+
+Quando il server riceve una nuova richiesta, verifica nella cache se esiste già una risposta associata a quel `request_id`:
+- **Se presente**, restituisce direttamente la risposta memorizzata, evitando di rielaborare la richiesta.
+- **Se assente**, il server elabora la richiesta, genera una risposta e memorizza nella cache un oggetto che include:
+  - La risposta generata.
+  - Un `timestamp` che rappresenta il momento dell'elaborazione.
+
+Il `timestamp` è utilizzato per gestire la pulizia periodica della cache, eliminando voci obsolete e garantendo che la memoria occupata dalla cache rimanga sotto controllo.
+
+Questo approccio garantisce che ogni richiesta venga processata al massimo una volta, evitando computazioni ridondanti, anche in caso di retry da parte del client a causa di timeout o perdita della risposta. Il sistema è progettato per isolare le richieste dei diversi client e per rendere la gestione dei duplicati trasparente e affidabile.
+
+---
 ## **Diagramma architetturale**
 ![Architettura](https://github.com/alestrange01/APL_prove/blob/main/img/Diagramma_architettura.png)
 ---
