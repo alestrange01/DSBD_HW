@@ -1,6 +1,6 @@
 Sistema distribuito di ticker
 # Sistema distribuito di ticker
-Questo progetto implementa un sistema distribuito basato su un'architettura a servizi per la gestione di utenti e dei ticker di loro interesse.
+Questo progetto implementa un sistema distribuito basato su un'architettura a microservizi per la gestione di utenti e dei ticker di loro interesse.
 L'applicazione è suddivisa in tre componenti principali
 (`server`, `data_collector` e `data_cleaner`), sfruttando un approccio modulare per garantire scalabilità e resilienza.
 ---
@@ -168,8 +168,8 @@ Assicurarsi che siano installati i seguenti elementi:
 ## **Riassunto dell'architettura**
 Il sistema comprende:
 - **Server**: Gestisce le interazioni con gli utenti e le operazioni del database.
-- **Data collector**: Recupera periodicamente i dati sugli shares.
+- **Data Collector**: Recupera periodicamente i dati sugli shares.
 - **Data Cleaner**: Ottimizza il database rimuovendo le informazioni obsolete.
 - **Database**: Istanza PostgreSQL per la persistenza dei dati.
 
-Tutti i componenti sono orchestrati utilizzando **Docker Compose** e la comunicazione tra client e server avviene tramite **gRPC**.
+Tutti i microservizi sono orchestrati utilizzando **Docker Compose** e la comunicazione tra client e server avviene tramite **gRPC**.
