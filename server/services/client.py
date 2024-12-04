@@ -2,6 +2,7 @@ import random
 import time
 import re
 import grpc
+from decimal import Decimal
 import services.homework1_pb2 as homework1_pb2
 import services.homework1_pb2_grpc as homework1_pb2_grpc
 
@@ -76,10 +77,26 @@ def register():
             print("Formato email non valido. Riprova.")
     password = input("Inserisci la tua password: ")
     share = input("Inserisci il Ticker: ")
-    
+    while True:
+        high_value = input("Inserisci il valore massimo per cui vuoi essere notificato: (n per saltare)")
+        low_value = input("Inserisci il valore minimo per cui vuoi essere notificato: (n per saltare)")
+        if ((high_value.isdigit() and Decimal(high_value) < 0) or (high_value.isalpha and high_value.capitalize != "N")) or \
+           ((low_value.isdigit() and Decimal(low_value) < 0) or (low_value.isalpha and low_value.capitalize != "N")):
+            print("Numeri non validi")
+            continue
+        else:
+            print("Numeri validi")
+            if low_value.isalpha and low_value.capitalize == "N":
+                low_value = None
+            if high_value.isalpha and high_value.capitalize == "N":
+                high_value = None
+            if high_value and low_value and Decimal(high_value) < Decimal(low_value):
+                print("Valore massimo minore del valore minimo")
+                continue
+            break
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.RegisterRequest(email=email, password=password, role="user", share=share)
+        request = homework1_pb2.RegisterRequest(email=email, password=password, role="user", share=share, high_value=high_value, low_value=low_value)
         metadata = [
             ('user_email', email),
             ('request_id', str(random.randint(1, 1000))), 
@@ -172,9 +189,26 @@ def admin_run():
     
 def update():
     share = input("Inserisci il tuo nuovo share d'interesse: ")
+    while True:
+        high_value = input("Inserisci il valore massimo per cui vuoi essere notificato: (n per saltare)")
+        low_value = input("Inserisci il valore minimo per cui vuoi essere notificato: (n per saltare)")
+        if ((high_value.isdigit() and Decimal(high_value) < 0) or (high_value.isalpha and high_value.capitalize != "N")) or \
+           ((low_value.isdigit() and Decimal(low_value) < 0) or (low_value.isalpha and low_value.capitalize != "N")):
+            print("Numeri non validi")
+            continue
+        else:
+            print("Numeri validi")
+            if low_value.isalpha and low_value.capitalize == "N":
+                low_value = None
+            if high_value.isalpha and high_value.capitalize == "N":
+                high_value = None
+            if high_value and low_value and Decimal(high_value) < Decimal(low_value):
+                print("Valore massimo minore del valore minimo")
+                continue
+            break
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.UpdateRequest(email=session.logged_email, share=share)
+        request = homework1_pb2.UpdateRequest(email=session.logged_email, share=share, high_value=high_value, low_value=low_value)
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),

@@ -4,6 +4,7 @@ import re
 import time
 import bcrypt
 from threading import Lock
+from decimal import Decimal
 import grpc
 import services.homework1_pb2 as homework1_pb2
 import services.homework1_pb2_grpc as homework1_pb2_grpc
@@ -63,7 +64,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                     return response
                 else:
                     hashed_password = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-                    user_repository.create_user(email=request.email, password=hashed_password, share_cod=request.share, role=request.role)
+                    user_repository.create_user(email=request.email, password=hashed_password, share_cod=request.share, role=request.role, high_value=Decimal(request.high_value), low_value=Decimal(request.low_value))
                     ticker_management = ticker_management_repository.get_ticker_management_by_code(request.share)
                     if ticker_management is None:
                         ticker_management_repository.create_ticker_management(request.share)
@@ -90,7 +91,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
                 if request.share == user.share_cod:
                     content = "Share already updated"
                 else:  
-                    user_repository.update_user(request.email, None, request.share)
+                    user_repository.update_user(request.email, None, request.share, Decimal(request.high_value), Decimal(request.low_value))
                     old_ticker_management = ticker_management_repository.get_ticker_management_by_code(user.share_cod)
                     ticker_management_repository.update_ticker_management(user.share_cod, old_ticker_management.counter - 1)
                     new_ticker_management = ticker_management_repository.get_ticker_management_by_code(request.share)

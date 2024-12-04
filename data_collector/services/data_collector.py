@@ -2,9 +2,21 @@ import logging
 from sqlalchemy import func
 import time
 import yfinance as yf
+from confluent_kafka import Producer
+import json
 from repositories import ticker_management_repository
 from repositories import share_repository
 from utils.circuit_breaker import CircuitBreaker, CBException, CBOpenException
+
+producer_config = {
+    'bootstrap.servers': 'localhost:29092', 
+    'acks': 'all',  
+    'batch.size': 500,  
+    'max.in.flight.requests.per.connection': 1,      
+    'retries': 3  
+}
+producer = Producer(producer_config)
+topic = "to-alert-system"
 
 circuit_breaker = CircuitBreaker(failure_threshold=5, difference_failure_open_half_open=2, success_threshold=5, recovery_timeout=30, expected_exception=Exception)
 logging = logging.getLogger(__name__)
@@ -47,6 +59,22 @@ def process_tickers(tickers, circuit_breaker):
         else:
             share_repository.create_share(share, float(share_value), func.now())
             logging.info(f"Share value for {share}: {float(share_value)}")
+    
+    message = {"msg" : "Share value updated"}    
+    producer.produce(topic, json.dumps(message), callback=delivery_report)
+    producer.flush() 
+    print(f"Produced: {message}")
+    
+def delivery_report(err, msg):
+    if err:
+        print(f"Delivery failed: {err}, retrying...")
+        
+        message = {"msg" : "Share value updated"}    
+        producer.produce(topic, json.dumps(message), callback=delivery_report)
+        producer.flush()
+        print(f"Produced: {message}")
+    else:
+        print(f"Message delivered to {msg.topic()} [{msg.partition()}] at offset {msg.offset()}")
 
 def test_circuit_breaker_behavior():
     cb = CircuitBreaker(failure_threshold=5, difference_failure_open_half_open=2, success_threshold=5, recovery_timeout=5, expected_exception=ValueError)

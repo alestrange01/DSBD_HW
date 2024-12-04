@@ -69,5 +69,44 @@ services:
       - server
       - data_collector
 
+  alert_system:
+    build:
+      context: ./alert_system
+      dockerfile: Dockerfile
+    container_name: alert_system_container
+    volumes:
+      - ./alert_system:/app
+      - pg_data:/var/lib/postgresql/data
+    command: python main.py
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: toor
+      POSTGRES_DB: postgres
+      POSTGRES_PORT: 5432
+    depends_on:
+      - postgres
+      - server
+      - data_collector
+  
+  alert_notification_system:
+    build:
+      context: ./alert_notification_system
+      dockerfile: Dockerfile
+    container_name: alert_notification_system_container
+    volumes:
+      - ./alert_notification_system:/app
+      - pg_data:/var/lib/postgresql/data
+    command: python main.py
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: toor
+      POSTGRES_DB: postgres
+      POSTGRES_PORT: 5432
+    depends_on:
+      - postgres
+      - server
+      - data_collector
+      - alert_system
+
 volumes:
   pg_data:

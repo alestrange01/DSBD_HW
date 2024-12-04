@@ -27,6 +27,8 @@ message RegisterRequest {
     string password = 2;
     string role = 3;
     string share = 4;
+    string highValue = 5;
+    string lowValue = 6;
 }
 
 message LoginRequest {
@@ -37,6 +39,8 @@ message LoginRequest {
 message UpdateRequest {
     string email = 1;
     string share = 2;
+    string highValue = 3;
+    string lowValue = 4;
 }
 
 message DeleteRequest {
