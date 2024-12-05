@@ -1,14 +1,13 @@
 import logging 
 import sys
 import threading
-import time
 from services.alert_notification import send
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - [%(levelname)s] - %(message)s',
     handlers=[
-        logging.FileHandler('alert_system.log'),
+        logging.FileHandler('alert_notification_system.log'),
         logging.StreamHandler(sys.stdout)
     ]
 )
