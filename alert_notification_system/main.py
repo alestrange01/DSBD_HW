@@ -1,7 +1,7 @@
 import logging 
 import sys
 import threading
-from services.alert_notification import send
+from services.alert_notification import send_email
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,6 +13,6 @@ logging.basicConfig(
 )
 
 if __name__ == '__main__':
-    alert_thread = threading.Thread(target=send)
+    alert_thread = threading.Thread(target=send_email)
     alert_thread.start()
     alert_thread.join()
