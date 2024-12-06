@@ -29,15 +29,15 @@ Base = declarative_base()
 def initialize_database():
     from models.user_model import User
     from models.ticker_management import TickerManagement
-    from repositories import user_repository
-    from repositories import ticker_management_repository
+    from server.repositories import user_repository_reader, user_repository_writer
+    from server.repositories import ticker_management_repository_writer
     Base.metadata.create_all(engine, tables=[User.__table__, TickerManagement.__table__])
-    users = user_repository.get_all_users()
+    users = user_repository_reader.get_all_users()
     if not users:
-        user_repository.create_user("admin@gmail.com", bcrypt.hashpw("admin".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), "AAPL", "admin", 250.00, 220.00)
-        user_repository.create_user("user1@gmail.com", bcrypt.hashpw("user1".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), "TSLA", "user", 377.93, 327.93)
-        ticker_management_repository.create_ticker_management("AAPL")
-        ticker_management_repository.create_ticker_management("TSLA")
+        user_repository_writer.create_user("admin@gmail.com", bcrypt.hashpw("admin".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), "AAPL", "admin", 250.00, 220.00)
+        user_repository_writer.create_user("user1@gmail.com", bcrypt.hashpw("user1".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), "TSLA", "user", 377.93, 327.93)
+        ticker_management_repository_writer.create_ticker_management("AAPL")
+        ticker_management_repository_writer.create_ticker_management("TSLA")
 
 @contextmanager
 def get_db_session():

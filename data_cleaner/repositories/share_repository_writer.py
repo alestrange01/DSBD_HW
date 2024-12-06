@@ -4,16 +4,6 @@ from models.share_model import Share
 
 logging = logging.getLogger(__name__)
 
-def get_all_shares():
-    with get_db_session() as session:
-        shares = session.query(Share).all()
-        return shares
-    
-def get_all_shares_by_share_code(share_name):
-    with get_db_session() as session:
-        shares = session.query(Share).filter_by(share_name=share_name).all()
-        return shares
-
 def delete_share(share):
     with get_db_session() as session:
         session.delete(share)
@@ -42,5 +32,3 @@ def delete_shares_by_share_name(share_name, batch_size=100):
             session.rollback()
             logging.error(f"Errore durante l'eliminazione degli share per il ticker {share_name}: {e}")
             raise
-
-        

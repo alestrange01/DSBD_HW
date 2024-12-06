@@ -4,8 +4,8 @@ import time
 import yfinance as yf
 from confluent_kafka import Producer
 import json
-from repositories import ticker_management_repository
-from repositories import share_repository
+from data_collector.repositories import ticker_management_repository_reader
+from data_collector.repositories import share_repository_writer
 from utils.circuit_breaker import CircuitBreaker, CBException, CBOpenException
 
 producer_config = {
@@ -37,7 +37,7 @@ def retrieve_share_value(share):
     return last_price
 
 def collect():
-    tickers = ticker_management_repository.get_all_ticker_management()
+    tickers = ticker_management_repository_reader.get_all_ticker_management()
     process_tickers(tickers, circuit_breaker)
 
 def process_tickers(tickers, circuit_breaker):
@@ -57,7 +57,7 @@ def process_tickers(tickers, circuit_breaker):
         except Exception as e:
             logging.error(f"Exception occurred: {e}")
         else:
-            share_repository.create_share(share, float(share_value), func.now())
+            share_repository_writer.create_share(share, float(share_value), func.now())
             logging.info(f"Share value for {share}: {float(share_value)}")
     
     message = {"msg" : "Share value updated"}    

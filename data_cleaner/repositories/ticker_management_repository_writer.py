@@ -4,11 +4,6 @@ from models.ticker_management import TickerManagement
 
 logging = logging.getLogger(__name__)
 
-def get_all_ticker_management():
-    with get_db_session() as session:
-        ticker_managements = session.query(TickerManagement).all()
-        return ticker_managements
-    
 def delete_ticker_management(ticker_management):
     with get_db_session() as session:
         ticker_management = session.query(TickerManagement).filter_by(share_cod=ticker_management).first()

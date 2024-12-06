@@ -3,7 +3,8 @@ import time
 import json
 from confluent_kafka import Consumer, KafkaException, Producer
 import json
-from repositories import user_repository, share_repository
+from alert_system.repositories import share_repository_reader
+from alert_system.repositories import user_repository_reader
 
 producer_config = {
     'bootstrap.servers': 'localhost:29092',  
@@ -44,10 +45,10 @@ def alerts():
             logging.error(f"Invalid message received: {data}")
             continue   
         logging.info(f"Consumed: {data}")
-        users = user_repository.get_all_users()
+        users = user_repository_reader.get_all_users()
         for user in users:
             for user in users:
-                latest_share = share_repository.get_latest_share_by_name(user.share_name)
+                latest_share = share_repository_reader.get_latest_share_by_name(user.share_name)
                 if latest_share:
                     if (user.high_value != None and latest_share.value > user.high_value) or (user.low_value != None and latest_share.value < user.low_value):
                         if(user.high_value != None and latest_share.value > user.high_value):
