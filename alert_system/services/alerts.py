@@ -7,7 +7,7 @@ from alert_system.repositories import share_repository_reader
 from alert_system.repositories import user_repository_reader
 
 producer_config = {
-    'bootstrap.servers': 'localhost:29092',  
+    'bootstrap.servers': 'kafka:9092',  
     'acks': 'all',  
     'batch.size': 500,  
     'max.in.flight.requests.per.connection': 1, 
@@ -17,7 +17,7 @@ producer = Producer(producer_config)
 topic = "to-notifier"
 
 consumer_config = {
-    'bootstrap.servers': 'localhost:29092',  
+    'bootstrap.servers': 'kafka:9092',  
     'group.id': 'group2', 
     'auto.offset.reset': 'earliest',  
     'enable.auto.commit': False 

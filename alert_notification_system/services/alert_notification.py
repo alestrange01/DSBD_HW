@@ -9,7 +9,7 @@ from confluent_kafka import Consumer, KafkaException
 logging = logging.getLogger(__name__)
 
 consumer_config = {
-    'bootstrap.servers': 'localhost:29092',  
+    'bootstrap.servers': 'kafka:9092',  
     'group.id': 'group2', 
     'auto.offset.reset': 'earliest',  
     'enable.auto.commit': False 

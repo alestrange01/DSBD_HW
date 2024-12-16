@@ -11,6 +11,7 @@ import services.homework1_pb2_grpc as homework1_pb2_grpc
 from server.repositories import user_repository_reader, user_repository_writer
 from server.repositories import share_repository_reader
 from server.repositories import ticker_management_repository_reader, ticker_management_repository_writer
+from server.services.user_write_service import RegisterCommand, UserWriteService
 
 logging = logging.getLogger(__name__)
 
@@ -51,29 +52,15 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             logging.info("Register cached response")
             return cached_response
         else:
-            email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
-            if not re.match(email_pattern, request.email):
-                logging.error("Invalid email format")
-                response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Invalid email format")
-                return response
-            else:
-                user = user_repository_reader.get_user_by_email(request.email)
-                if user is not None:
-                    response = homework1_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="User registration failed")
-                    logging.error("Register failed")
-                    return response
-                else:
-                    hashed_password = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-                    user_repository_writer.create_user(email=request.email, password=hashed_password, share_cod=request.share, role=request.role, high_value=Decimal(request.high_value), low_value=Decimal(request.low_value))
-                    ticker_management = ticker_management_repository_reader.get_ticker_management_by_code(request.share)
-                    if ticker_management is None:
-                        ticker_management_repository_writer.create_ticker_management(request.share)
-                    else:
-                        ticker_management_repository_writer.update_ticker_management(request.share, ticker_management.counter + 1)
-                    response = homework1_pb2.Reply(statusCode=204, message=OK_MESSAGE, content="User registered successfully")
-                    self.__StoreInCache(user_email, request_id, op_code, response)
-                    logging.info("Register")
-                    return response
+            try:
+                user_write_service = UserWriteService()
+                user_write_service.handle_register_user(RegisterCommand(request))
+                message = homework1_pb2.Reply(statusCode=204, message=OK_MESSAGE, content="User registered successfully")
+            except ValueError as e:
+                message = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+            finally:
+                self.__StoreInCache(user_email, request_id, op_code, message)
+            return message
     
     def Update(self, request, context):        
         user_email, request_id, op_code = self.__GetMetadata(context)

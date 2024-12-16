@@ -9,7 +9,7 @@ from data_collector.repositories import share_repository_writer
 from utils.circuit_breaker import CircuitBreaker, CBException, CBOpenException
 
 producer_config = {
-    'bootstrap.servers': 'localhost:29092', 
+    'bootstrap.servers': 'kafka:9092',  
     'acks': 'all',  
     'batch.size': 500,  
     'max.in.flight.requests.per.connection': 1,      
