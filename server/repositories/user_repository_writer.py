@@ -1,12 +1,13 @@
 import logging
 from db.db import get_db_session
 from models.user_model import User
+from dto.user import UserCreationDTO
 
 logging = logging.getLogger(__name__)
 
-def create_user(email, password, share_cod, role="user", high_value=None, low_value=None):
+def create_user(user_creation_dto: UserCreationDTO):
     with get_db_session() as session:
-        user = User(email=email, password=password, role=role, share_cod=share_cod, high_value=high_value, low_value=low_value)
+        user = User(email=user_creation_dto.email, password=user_creation_dto.password, role=user_creation_dto.role, share_cod=user_creation_dto.share_cod, high_value=user_creation_dto.high_value, low_value=user_creation_dto.low_value)
         try:
             session.add(user)
             session.commit()

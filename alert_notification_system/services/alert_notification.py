@@ -37,7 +37,7 @@ def deliver_email(data):
         text_content = render_template("./text/" + template_name_txt, context)
 
         msg = MIMEMultipart("alternative")
-        msg["From"] = "fraromeo69@gmail.com"
+        msg["From"] = "fraromeo69@gmail.com" #TODO Prendere email come env di docker
         msg["To"] = recipient
         msg["Subject"] = ticker
         
@@ -46,7 +46,7 @@ def deliver_email(data):
         
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.starttls()
-            server.login("fraromeo69@gmail.com", "nxis zslg ywts rpyj") #TODO: rendere sicura la password
+            server.login("fraromeo69@gmail.com", "nxis zslg ywts rpyj") #TODO Prendere password come env di docker
             server.sendmail(msg["From"], msg["To"], msg.as_string())
         
         logging.info(f"Email sent to {recipient}")
@@ -55,7 +55,42 @@ def deliver_email(data):
         logging.error(f"Failed to send email to {recipient}: {e}")
         return False
 
-    
+def handle_message(msg):
+    if msg.error():
+        if msg.error().code() == KafkaException._PARTITION_EOF:
+            logging.error(f"End of partition reached {msg.topic()} [{msg.partition()}]")
+        else:
+            logging.error(f"Consumer error: {msg.error()}")
+        return False
+    return True
+
+def process_message(msg):
+    data = json.loads(msg.value().decode('utf-8'))
+    logging.info(f"Consumed: {data}")
+    if deliver_email(data):
+        consumer.commit(asynchronous=False)
+        logging.info(f"Offset committed for message: {msg.offset()}")
+    else:
+        logging.error(f"Failed to process email notification: {data}")
+
+def consume_and_send_notifications():
+    try:
+        while True:
+            try:
+                msg = consumer.poll(1.0)
+                if msg is None:
+                    continue
+                if not handle_message(msg):
+                    continue
+                process_message(msg)
+            except Exception as e:
+                logging.error(f"Unexpected error in Kafka consumer loop: {e}")
+    except KeyboardInterrupt:
+        logging.info("Consumer interrupted by user. Shutting down gracefully.")
+    finally:
+        consumer.close()
+        logging.info("Consumer closed.")
+
 # body = "Il valore del tuo share: AAPL è al limite minimo!"
 # message = {
 #         "to_email":"dr.russodaniele@gmail.com",
@@ -70,34 +105,3 @@ def deliver_email(data):
 # send_email(
 #     data = message
 # )
-
-def consume_and_send_notifications():
-    try:
-        while True:
-            try:
-                msg = consumer.poll(1.0)  
-                if msg is None:
-                        continue
-                if msg.error():
-                    if msg.error().code() == KafkaException._PARTITION_EOF:
-                        logging.error(f"End of partition reached {msg.topic()} [{msg.partition()}]")
-                    else:
-                        logging.error(f"Consumer error: {msg.error()}")
-                    continue
-                data = json.loads(msg.value().decode('utf-8'))
-                logging.info(f"Consumed: {data}")
-                try:
-                    if deliver_email(data):
-                        consumer.commit(asynchronous=False)
-                        logging.info(f"Offset committed for message: {msg.offset()}")
-                    else:
-                        logging.error(f"Failed to process email notification: {data}")
-                except Exception as e:
-                    logging.error(f"Unexpected error processing email notification: {e}")
-            except Exception as e:
-                logging.error(f"Unexpected error in Kafka consumer loop: {e}")
-    except KeyboardInterrupt:
-        logging.info("Consumer interrupted by user. Shutting down gracefully.")
-    finally:
-        consumer.close()
-        logging.info("Consumer closed.")

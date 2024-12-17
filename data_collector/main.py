@@ -16,7 +16,7 @@ logging.basicConfig(
 
 if __name__ == '__main__':
     initialize_database()    
-    #test_circuit_breaker_behavior() rimuovere il commento per testare il circuit breaker
+    #test_circuit_breaker_behavior() #TOTEST rimuovere il commento per testare il circuit breaker
     schedule.every(10).minutes.do(collect)
 
     while True:

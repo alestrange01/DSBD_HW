@@ -10,7 +10,7 @@ def delete_share(share):
         session.commit()
         logging.info(f"Lo share: {share} è stato eliminato.")
 
-def delete_shares_by_share_name(share_name, batch_size=100):
+def delete_shares_by_share_name(share_name, batch_size=100): #TODO Unico dubbio, bisogna creare il relativo command o non è necessario qui?
     with get_db_session() as session:
         try:
             while True:

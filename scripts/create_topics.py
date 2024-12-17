@@ -1,9 +1,8 @@
 import subprocess
 
 TOPICS = [
-    {"name": "topic1", "partitions": 1, "replication": 1}, #TODO Capire se partitions va bene cosi o se bisogna fare modifiche al consumer
-    {"name": "topic2", "partitions": 2, "replication": 1}, #TODO Capire se partitions va bene cosi o se bisogna fare modifiche al consumer
-    {"name": "topic3", "partitions": 3, "replication": 1} #TODO Capire se partitions va bene cosi o se bisogna fare modifiche al consumer
+    {"name": "to-alert-system", "partitions": 1, "replication": 1}, #TODO Capire se partitions va bene cosi o se bisogna fare modifiche al consumer
+    {"name": "to-notifier", "partitions": 2, "replication": 1}, #TODO Capire se partitions va bene cosi o se bisogna fare modifiche al consumer
 ]
 
 for topic in TOPICS:

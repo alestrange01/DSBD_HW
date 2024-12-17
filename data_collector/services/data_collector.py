@@ -7,6 +7,9 @@ import json
 from data_collector.repositories import ticker_management_repository_reader
 from data_collector.repositories import share_repository_writer
 from utils.circuit_breaker import CircuitBreaker, CBException, CBOpenException
+from data_collector.dto.share import ShareDTO
+
+logging = logging.getLogger(__name__)
 
 producer_config = {
     'bootstrap.servers': 'kafka:9092',  
@@ -19,22 +22,6 @@ producer = Producer(producer_config)
 topic = "to-alert-system"
 
 circuit_breaker = CircuitBreaker(failure_threshold=5, difference_failure_open_half_open=2, success_threshold=5, recovery_timeout=30, expected_exception=Exception)
-logging = logging.getLogger(__name__)
-
-def retrieve_share_value(share):
-    msft = yf.Ticker(share)
-    try:
-        last_price = msft.info.get('currentPrice')
-        if last_price is None:
-            history = msft.history(period="1d", interval="1m")
-            if not history.empty:
-                last_price = history['Close'].iloc[-1]
-            else:
-                raise ValueError(f"No data available for ticker {share}")
-    except Exception as e:
-        logging.error(f"Error retrieving data for {share}: {e}")
-        last_price = None
-    return last_price
 
 def collect():
     tickers = ticker_management_repository_reader.get_all_ticker_management()
@@ -57,13 +44,29 @@ def process_tickers(tickers, circuit_breaker):
         except Exception as e:
             logging.error(f"Exception occurred: {e}")
         else:
-            share_repository_writer.create_share(share, float(share_value), func.now())
+            share_dto = ShareDTO(share, share_value, func.now())
+            share_repository_writer.create_share(share_dto)
             logging.info(f"Share value for {share}: {float(share_value)}")
     
     message = {"msg" : "Share value updated"}    
     producer.produce(topic, json.dumps(message), callback=delivery_report)
     producer.flush() 
     print(f"Produced: {message}")
+    
+def retrieve_share_value(share):
+    msft = yf.Ticker(share)
+    try:
+        last_price = msft.info.get('currentPrice')
+        if last_price is None:
+            history = msft.history(period="1d", interval="1m")
+            if not history.empty:
+                last_price = history['Close'].iloc[-1]
+            else:
+                raise ValueError(f"No data available for ticker {share}")
+    except Exception as e:
+        logging.error(f"Error retrieving data for {share}: {e}")
+        last_price = None
+    return last_price
     
 def delivery_report(err, msg):
     if err:

@@ -11,10 +11,10 @@ def delete_ticker_management(ticker_management):
             try:
                 session.delete(ticker_management)
                 session.commit()
-                logging.info(f"Lo share: {ticker_management} è stato eliminato.")
+                logging.info(f"Il ticker: {ticker_management} è stato eliminato.")
             except Exception as e:
                 session.rollback()
-                logging.error(f"Errore durante l'eliminazione dello share: {e}")
+                logging.error(f"Errore durante l'eliminazione del ticker: {e}")
                 raise
         else:
             logging.info("Ticker non trovato.")

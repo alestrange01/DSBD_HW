@@ -10,6 +10,7 @@ import services.homework1_pb2_grpc as homework1_pb2_grpc
 from server.repositories import user_repository_writer
 from server.repositories import ticker_management_repository_reader, ticker_management_repository_writer
 from server.services.user_reader_service import UserReaderService
+from dto.user import UserCreationDTO
 from db.db import get_db_session
 
 BAD_REQUEST_MESSAGE = "Bad request"
@@ -18,7 +19,7 @@ OK_MESSAGE = "OK"
 
 class RegisterCommand:
     def __init__(self, request):
-        user_reader_service = UserReaderService(get_db_session())
+        user_reader_service = UserReaderService()
         email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
         if not re.match(email_pattern, request.email):
             logging.error("Invalid email format")
@@ -48,5 +49,6 @@ class UserWriteService:
         pass
 
     def handle_register_user(self, command: RegisterCommand):
-        user = user_repository_writer.create_user(email=command.email, password=command.password, share_cod=command.share, role=command.role, high_value=command.high_value, low_value=command.low_value)
+        user_creation_dto = UserCreationDTO(command.email, command.password, command.role, command.share, command.high_value, command.low_value)
+        user = user_repository_writer.create_user(user_creation_dto= user_creation_dto)
         print(user) 
