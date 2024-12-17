@@ -18,7 +18,7 @@ class AlertNotification:
         }
 
         self.consumer = Consumer(consumer_config) 
-        topic = 'to-notifier'  
+        topic = 'to-notifier'  #TODO perchè non self.topic?
         self.consumer.subscribe([topic])
 
         self.template_loader = FileSystemLoader(searchpath="./templates") 
