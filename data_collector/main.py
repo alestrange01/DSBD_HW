@@ -2,8 +2,8 @@ import logging
 import sys
 import schedule
 import time
-from db.db import initialize_database
-from services.data_collector import collect, test_circuit_breaker_behavior
+from db.db import DB
+from services.data_collector import DataCollector
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,9 +15,10 @@ logging.basicConfig(
 )
 
 if __name__ == '__main__':
-    initialize_database()    
-    #test_circuit_breaker_behavior() #TOTEST rimuovere il commento per testare il circuit breaker
-    schedule.every(10).minutes.do(collect)
+    DB.initialize_database()   
+    data_collector = DataCollector()
+    #data_collector.test_circuit_breaker_behavior() #TOTEST rimuovere il commento per testare il circuit breaker
+    schedule.every(10).minutes.do(data_collector.collect) #TODO Rendere private tutte tranne questa
 
     while True:
         schedule.run_pending()

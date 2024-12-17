@@ -2,7 +2,7 @@ import logging
 import sys
 import schedule
 import time
-from services.data_cleaner import clean
+from services.data_cleaner import DataCleaner
 
 logging.basicConfig(
     level=logging.INFO,
@@ -14,7 +14,8 @@ logging.basicConfig(
 )
 
 if __name__ == '__main__':
-    schedule.every().day.do(clean)
+    data_cleaner = DataCleaner()
+    schedule.every().day.do(data_cleaner.clean) #TODO Rendere private tutte tranne questa
 
     while True:
         schedule.run_pending()

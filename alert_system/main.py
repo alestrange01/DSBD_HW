@@ -1,7 +1,7 @@
 import logging 
 import sys
 import threading
-from services.alerts import alerts
+from services.alerts import Alerts
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,6 +13,7 @@ logging.basicConfig(
 )
 
 if __name__ == '__main__':
-    alert_thread = threading.Thread(target=alerts)
+    alert = Alerts()
+    alert_thread = threading.Thread(target=alert.alerts) #TODO Rendere private tutte tranne questa
     alert_thread.start()
     alert_thread.join()

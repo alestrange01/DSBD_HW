@@ -1,7 +1,7 @@
 import logging 
 import sys
 import threading
-from services.alert_notification import consume_and_send_notifications
+from services.alert_notification import AlertNotification
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,6 +13,7 @@ logging.basicConfig(
 )
 
 if __name__ == '__main__':
-    alert_thread = threading.Thread(target=consume_and_send_notifications)
+    alert_notification = AlertNotification()
+    alert_thread = threading.Thread(target=alert_notification.consume_and_send_notifications) #TODO Rendere private tutte tranne questa
     alert_thread.start()
     alert_thread.join()
