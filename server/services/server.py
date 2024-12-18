@@ -1,11 +1,10 @@
-import logging
-from concurrent import futures
-import time
 from threading import Lock
+from concurrent import futures
+import logging
+import time
 import grpc
 import services.homework1_pb2 as homework1_pb2
 import services.homework1_pb2_grpc as homework1_pb2_grpc
-from server.db.db import DB
 from server.services.user_write_service import RegisterCommand, UpdateCommand, DeleteCommand, UserWriteService
 from server.services.user_reader_service import UserReaderService
 from server.services.ticker_management_reader_service import TickerManagementReaderService

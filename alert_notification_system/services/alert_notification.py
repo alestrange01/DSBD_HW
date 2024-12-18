@@ -1,10 +1,10 @@
-import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from jinja2 import Environment, FileSystemLoader
+from confluent_kafka import Consumer, KafkaException
+import smtplib
 import json
 import logging
-from confluent_kafka import Consumer, KafkaException
 import os
 
 logging = logging.getLogger(__name__) 

@@ -1,5 +1,5 @@
-from models.ticker_management import TickerManagement
 from dto.ticker_management import TickerManagementDTO
+from models.ticker_management import TickerManagement
 
 class TickerManagementRepositoryReader:
     def __init__(self, session):

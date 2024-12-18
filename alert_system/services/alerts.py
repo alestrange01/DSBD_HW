@@ -1,7 +1,7 @@
+from confluent_kafka import Consumer, KafkaException, Producer
 import logging
 import time
 import json
-from confluent_kafka import Consumer, KafkaException, Producer
 import json
 from db.db import DB
 from repositories.user_repository_reader import UserRepositoryReader

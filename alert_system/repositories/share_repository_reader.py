@@ -1,6 +1,6 @@
 import logging
-from models.share_model import Share
 from dto.share import ShareDTO
+from models.share_model import Share
 
 logging = logging.getLogger(__name__)
         

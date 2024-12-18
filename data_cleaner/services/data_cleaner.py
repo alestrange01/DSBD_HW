@@ -1,6 +1,6 @@
+from datetime import datetime, timedelta
 import logging
 import time
-from datetime import datetime, timedelta
 from db.db import DB
 from repositories.share_repository_reader import ShareRepositoryReader
 from repositories.share_repository_writer import ShareRepositoryWriter

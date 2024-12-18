@@ -1,8 +1,8 @@
 from sqlalchemy import Column, Integer, String, DateTime, Numeric
 from sqlalchemy.sql import func
-from db.db import Base 
+from db.db import DB 
 
-class Share(Base):
+class Share(DB.Base):
     __tablename__ = 'shares' 
 
     id = Column(Integer, primary_key=True)

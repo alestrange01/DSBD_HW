@@ -1,14 +1,14 @@
-import logging
 from sqlalchemy import func
+from confluent_kafka import Producer
+import logging
 import time
 import yfinance as yf
-from confluent_kafka import Producer
 import json
 from db.db import DB
+from data_collector.dto.share import ShareCreationDTO
 from data_collector.repositories.ticker_management_repository_reader import TickerManagementRepositoryReader
 from data_collector.repositories.share_repository_writer import ShareRepositoryWriter
 from utils.circuit_breaker import CircuitBreaker, CBException, CBOpenException
-from data_collector.dto.share import ShareCreationDTO
 
 logging = logging.getLogger(__name__)
 

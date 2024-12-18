@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String
-from db.db import Base 
+from db.db import DB 
 
-class TickerManagement(Base):
+class TickerManagement(DB.Base):
     __tablename__ = 'ticker_management'  
 
     id = Column(Integer, primary_key=True)

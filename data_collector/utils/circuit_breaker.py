@@ -1,6 +1,6 @@
+from enum import Enum
 import time
 import threading
-from enum import Enum
 
 class CircuitState(Enum):
     CLOSED = 'CLOSED'

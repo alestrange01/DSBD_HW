@@ -1,10 +1,10 @@
+from decimal import Decimal
 import logging
 import re
 import bcrypt
-from decimal import Decimal
 from db.db import DB
-from dto.ticker_management import TickerManagementUpsertDTO
 from dto.user import UserCreationDTO, UserUpdateDTO
+from dto.ticker_management import TickerManagementUpsertDTO
 from server.repositories.user_repository_reader import UserRepositoryReader
 from server.repositories.user_repository_writer import UserRepositoryWriter
 from server.repositories.ticker_management_repository_reader import TickerManagementRepositoryReader

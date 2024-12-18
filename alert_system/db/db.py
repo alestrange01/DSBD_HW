@@ -24,13 +24,13 @@ class DB:
 
         self.DATABASE_URL = f"postgresql://{postgres_user}:{postgres_password}@postgres:{postgres_port}/{postgres_db}"
         self.engine = create_engine(self.DATABASE_URL, echo=True)
-        self.session = sessionmaker(bind=self.engine)
-        self.base = declarative_base()
+        self.Session = sessionmaker(bind=self.engine)
+        self.Base = declarative_base()
 
     @contextmanager
     def get_db_session(self):
         """Context manager per gestire automaticamente la sessione del DB."""
-        session = self.session()
+        session = self.Session()
         try:
             yield session
         finally:
