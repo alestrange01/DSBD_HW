@@ -1,11 +1,27 @@
-from server.repositories import user_repository_reader
+import bcrypt
+import logging
 from db.db import DB
+from server.repositories.user_repository_reader import UserRepositoryReader
+
+logging = logging.getLogger(__name__)
 
 class UserReaderService: 
     def __init__(self):
         self.DB = DB()
-        self.db_session = self.DB.get_db_session() #TODO Lo devo passare o la prendo qui la session come import? Io la prenderei qui
-        self.user_reader_repository = user_repository_reader.UserReaderRepository(self.db_session)
+        self.db_session = self.DB.get_db_session()
+        self.user_reader_repository = UserRepositoryReader(self.db_session)
 
-    def get_user_by_email(self, email):
-        return self.user_reader_repository.get_user_by_email(email) #TODO è necessario mettere l'handler?
+    def login(self, request):
+        user = self.user_reader_repository.get_user_by_email(request.email)
+        if (user is None) or (not bcrypt.checkpw(request.password.encode('utf-8'), user.password.encode('utf-8'))):
+            raise ValueError("Login failed: wrong email or password")
+        else:
+            logging.info("Login successful")
+            return "Login successful", user.role
+    
+    def get_all_users(self):
+        users = self.user_reader_repository.get_all_users()
+        if users is None:
+            raise ValueError("No users found")
+        else:
+            return users

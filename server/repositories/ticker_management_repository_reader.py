@@ -1,7 +1,6 @@
 import logging
-from db.db import get_db_session
-from models.ticker_management import TickerManagement
 from dto.ticker_management import TickerManagementDTO
+from models.ticker_management import TickerManagement
 
 logging = logging.getLogger(__name__)
 

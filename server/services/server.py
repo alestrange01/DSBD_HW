@@ -1,20 +1,15 @@
 import logging
 from concurrent import futures
-import re
 import time
-import bcrypt
 from threading import Lock
-from decimal import Decimal
 import grpc
 import services.homework1_pb2 as homework1_pb2
 import services.homework1_pb2_grpc as homework1_pb2_grpc
-from server.repositories.ticker_management_repository_reader import TickerManagementRepositoryReader    
-from server.repositories.share_repository_reader import ShareRepositoryReader
-from server.repositories.user_repository_reader import UserRepositoryReader
-from server.repositories.user_repository_writer import UserRepositoryWriter
-from server.repositories.ticker_management_repository_writer import TickerManagementRepositoryWriter
-from server.services.user_write_service import RegisterCommand, UserWriteService, UpdateCommand, DeleteCommand
 from server.db.db import DB
+from server.services.user_write_service import RegisterCommand, UpdateCommand, DeleteCommand, UserWriteService
+from server.services.user_reader_service import UserReaderService
+from server.services.ticker_management_reader_service import TickerManagementReaderService
+from server.services.share_reader_service import ShareReaderService
 
 logging = logging.getLogger(__name__)
 
@@ -25,16 +20,10 @@ BAD_REQUEST_MESSAGE = "Bad request"
 UNOTHORIZED_MESSAGE = "Unauthorized"
 OK_MESSAGE = "OK"
 
-class ServerService(homework1_pb2_grpc.ServerServiceServicer):
+class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to ServerApp and move on "app" folder do the same with client.py and grpc files and recreate files
     def __init__(self):
-        self.DB = DB
-        self.session = self.DB.get_db_session()
-        self.user_repository_reader = UserRepositoryReader(self.session)
-        self.user_repository_writer = UserRepositoryWriter(self.session)
-        self.ticker_management_repository_reader = TickerManagementRepositoryReader(self.session)
-        self.ticker_management_repository_writer = TickerManagementRepositoryWriter(self.session)
-        self.share_repository_reader = ShareRepositoryReader(self.session)
-        
+        pass
+            
     def Login(self, request, context): 
         user_email, request_id, op_code = self.__GetMetadata(context)
         cached_response = self.__GetFromCache(user_email, request_id, op_code)
@@ -42,19 +31,17 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             logging.info("Login cached response")
             return cached_response
         else:
-            logging.info(request)
-            user = self.user_repository_reader.get_user_by_email(request.email)
-            logging.info(user)
-            if (user is None) or (not bcrypt.checkpw(request.password.encode('utf-8'), user.password.encode('utf-8'))):
-                response = homework1_pb2.LoginReply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Login failed: wrong email or password", role="unknown")
-                logging.error("Login failed")
-                return response
-            else:
-                logging.info("Login successful")
-                response = homework1_pb2.LoginReply(statusCode=200, message=OK_MESSAGE, content="Login successful", role=user.role)
+            try:
+                user_reader_service = UserReaderService()
+                content, role = user_reader_service.login(request)
+                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=content, role=role)
+            except ValueError as e:
+                response = homework1_pb2.Reply(statusCode=401, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
+            except Exception as e:
+                response = homework1_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
+            finally:
                 self.__StoreInCache(user_email, request_id, op_code, response)
-                logging.info("Login")
-                return response
+            return response
     
 
     def Register(self, request, context):        
@@ -121,57 +108,6 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             finally:
                 self.__StoreInCache(user_email, request_id, op_code, message)     
             return message
-        
-    def GetValueShare(self, request, context):
-        user_email, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_email, request_id, op_code)
-        if cached_response is not None:
-            logging.info("Get value share cached response")
-            return cached_response
-        else:
-            user = self.user_repository_reader.get_user_by_email(user_email)
-            share_name = user.share_cod
-            share = self.share_repository_reader.get_latest_share_by_name(share_name)
-            if share is None:
-                response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve value share failed")
-                logging.error("Get value share failed")
-                return response
-            else:
-                logging.info(share)
-                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Retrieved "+ str(share_name) + " value successfully: " + str(share.value))
-                self.__StoreInCache(user_email, request_id, op_code, response)
-                logging.info("Get value share")
-                return response
-    
-    def GetMeanShare(self, request, context):
-        user_email, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_email, request_id, op_code)
-        if cached_response is not None:
-            logging.info("Get mean share cached response")
-            return cached_response
-        else:
-            user = self.user_repository_reader.get_user_by_email(user_email)
-            share_name = user.share_cod
-            shares = self.share_repository_reader.get_shares_by_share_name(share_name)
-            if shares is None:
-                response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve mean share failed")
-                logging.error("Get value share failed")
-                return response
-            else:
-                try:
-                    n = int(request.n)
-                    if n < 1:
-                        raise ValueError("Invalid n")
-                except ValueError:
-                    response = homework1_pb2.Reply(statusCode=400, message=BAD_REQUEST_MESSAGE, content="Invalid value for n")
-                    logging.error("Invalid value for n")
-                    return response
-                limited_shares = shares[:n] if len(shares) > n else shares
-                mean = sum([share.value for share in limited_shares]) / len(limited_shares)
-                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Mean value of " + str(share_name) + " of " + str(len(limited_shares)) + " latest shares: " + "{:.3f}".format(mean))
-                self.__StoreInCache(user_email, request_id, op_code, response)
-                logging.info("Get mean share")
-                return response
             
     def ViewAllUsers(self, request, context):
         user_email, request_id, op_code = self.__GetMetadata(context)
@@ -186,16 +122,17 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             logging.info("View all users cached response")
             return cached_response
         else:
-            users = self.user_repository_reader.get_all_users()
-            if users is None:
-                response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve all users failed")
-                logging.error("View all users failed")
-                return response
-            else:
+            try:
+                user_reader_service = UserReaderService()
+                users = user_reader_service.get_all_users()
                 response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=str(users))
+            except ValueError as e:
+                response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+            except Exception as e:
+                response = homework1_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+            finally:   
                 self.__StoreInCache(user_email, request_id, op_code, response)
-                logging.info("View all users")
-                return response
+            return response
 
     def ViewTickerManagement(self, request, context):
         user_email, request_id, op_code = self.__GetMetadata(context)
@@ -210,17 +147,18 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             logging.info("View ticker management cached response")
             return cached_response
         else:
-            ticker_management = self.ticker_management_repository_reader.get_all_ticker_management()
-            if ticker_management is None:
-                response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve ticker management failed")
-                logging.error("View ticker management failed")
-                return response
-            else:
-                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=str(ticker_management))
+            try:
+                ticker_management_reader_service = TickerManagementReaderService()
+                ticker_managements = ticker_management_reader_service.get_all_ticker_managements()
+                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=str(ticker_managements))
+            except ValueError as e:
+                response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+            except Exception as e:
+                response = homework1_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+            finally:
                 self.__StoreInCache(user_email, request_id, op_code, response)
-                logging.info("View ticker management")
-                return response
-    
+            return response
+                
     def ViewAllShares(self, request, context):
         user_email, request_id, op_code = self.__GetMetadata(context)
 
@@ -234,16 +172,56 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer):
             logging.info("View all shares cached response")
             return cached_response
         else:
-            shares = self.share_repository_reader.get_all_shares()
-            if shares is None:
-                response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve all shares failed")
-                logging.error("View all shares failed")
-                return response
-            else:
+            try:
+                share_reader_service = ShareReaderService()
+                shares = share_reader_service.get_all_shares()
                 response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=str(shares))
+            except ValueError as e:
+                response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+            except Exception as e:
+                response = homework1_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+            finally:
                 self.__StoreInCache(user_email, request_id, op_code, response)
-                logging.info("View all shares")
-                return response
+            return response
+            
+    def GetValueShare(self, request, context):
+        user_email, request_id, op_code = self.__GetMetadata(context)
+        cached_response = self.__GetFromCache(user_email, request_id, op_code)
+        if cached_response is not None:
+            logging.info("Get value share cached response")
+            return cached_response
+        else:
+            try:
+                share_reader_service = ShareReaderService()
+                share = share_reader_service.get_values_share(user_email)
+                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Value of " + str(share.name) + " share: " + "{:.3f}".format(share.value))
+            except ValueError as e:
+                response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve share failed")
+                logging.error("Get value share failed")
+            except Exception as e:
+                response = homework1_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+            finally:
+                self.__StoreInCache(user_email, request_id, op_code, response)
+            return response
+    
+    def GetMeanShare(self, request, context):
+        user_email, request_id, op_code = self.__GetMetadata(context)
+        cached_response = self.__GetFromCache(user_email, request_id, op_code)
+        if cached_response is not None:
+            logging.info("Get mean share cached response")
+            return cached_response
+        else:
+            try:
+                share_reader_service = ShareReaderService()
+                content = share_reader_service.get_mean_share(request, user_email)
+                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=content)
+            except ValueError as e:
+                response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+            except Exception as e:
+                response = homework1_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+            finally:
+                self.__StoreInCache(user_email, request_id, op_code, response)
+            return response
             
     def TestAtMostOncePolicy(self, request, context):
         user_email, request_id, op_code = self.__GetMetadata(context)

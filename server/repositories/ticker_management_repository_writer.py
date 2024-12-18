@@ -1,5 +1,5 @@
 import logging
-from db.db import get_db_session
+from dto.ticker_management import TickerManagementDTO
 from models.ticker_management import TickerManagement
 
 logging = logging.getLogger(__name__)
@@ -19,7 +19,8 @@ class TickerManagementRepositoryWriter:
                 session.rollback()
                 logging.error(f"Errore durante la creazione del ticker management: {e}")
                 raise
-            return ticker_management
+            ticker_management_dto = TickerManagementDTO(share_cod=ticker_management.share_cod, counter=ticker_management.counter)
+            return ticker_management_dto
 
     def update_ticker_management(self, ticker_managment_upsert_dto):
         with self.session as session:

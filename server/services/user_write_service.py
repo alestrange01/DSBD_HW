@@ -1,19 +1,15 @@
 import logging
-from concurrent import futures
 import re
-import time
 import bcrypt
 from decimal import Decimal
-import grpc
-import services.homework1_pb2 as homework1_pb2
-import services.homework1_pb2_grpc as homework1_pb2_grpc
+from db.db import DB
+from dto.ticker_management import TickerManagementUpsertDTO
+from dto.user import UserCreationDTO, UserUpdateDTO
+from server.repositories.user_repository_reader import UserRepositoryReader
 from server.repositories.user_repository_writer import UserRepositoryWriter
 from server.repositories.ticker_management_repository_reader import TickerManagementRepositoryReader
 from server.repositories.ticker_management_repository_writer import TickerManagementRepositoryWriter
-from server.services.user_reader_service import UserReaderService
-from dto.user import UserCreationDTO, UserUpdateDTO
-from db.db import DB
-from dto.ticker_management import TickerManagementUpsertDTO
+
 BAD_REQUEST_MESSAGE = "Bad request"
 UNOTHORIZED_MESSAGE = "Unauthorized"
 OK_MESSAGE = "OK"
@@ -24,13 +20,13 @@ class RegisterCommand:
     def __init__(self, request):
         ticker_management_repository_reader = TickerManagementRepositoryReader(DB().get_db_session())
         ticker_management_repository_writer = TickerManagementRepositoryWriter(DB().get_db_session())
-        user_reader_service = UserReaderService()
+        user_repository_reader = UserRepositoryReader(DB().get_db_session())
         email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
         if not re.match(email_pattern, request.email):
             logging.error("Invalid email format")
             raise ValueError("Invalid email format")
         else:
-            user = user_reader_service.get_user_by_email(request.email)
+            user = user_repository_reader.get_user_by_email(request.email)
             if user is not None:
                 logging.error("User already exists")
                 raise ValueError("User already exists")
@@ -53,8 +49,8 @@ class UpdateCommand:
     def __init__(self, request, user_email):
         ticker_management_repository_reader = TickerManagementRepositoryReader(DB().get_db_session())
         ticker_management_repository_writer = TickerManagementRepositoryWriter(DB().get_db_session())
-        user_reader_service = UserReaderService()
-        user = user_reader_service.get_user_by_email(request.email)
+        user_repository_reader = UserRepositoryReader(DB().get_db_session())        
+        user = user_repository_reader.get_user_by_email(request.email)
         if user is None:
             raise ValueError("User does not exist")
         if request.share == user.share_cod:
@@ -79,8 +75,8 @@ class DeleteCommand():
     def __init__(self, request):
         ticker_management_repository_reader = TickerManagementRepositoryReader(DB().get_db_session())
         ticker_management_repository_writer = TickerManagementRepositoryWriter(DB().get_db_session())
-        user_reader_service = UserReaderService()
-        user = user_reader_service.get_user_by_email(request.email)  
+        user_repository_reader = UserRepositoryReader(DB().get_db_session())
+        user = user_repository_reader.get_user_by_email(request.email)  
         if user is None:
             raise ValueError("User does not exist")
         self.email = user.email

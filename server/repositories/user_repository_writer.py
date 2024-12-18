@@ -1,7 +1,6 @@
 import logging
-from db.db import get_db_session
-from models.user_model import User
 from dto.user import UserCreationDTO
+from models.user_model import User
 
 logging = logging.getLogger(__name__)
 
