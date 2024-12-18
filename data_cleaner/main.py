@@ -15,7 +15,7 @@ logging.basicConfig(
 
 if __name__ == '__main__':
     data_cleaner = DataCleaner()
-    schedule.every().day.do(data_cleaner.clean) #TODO Rendere private tutte tranne questa
+    schedule.every().day.do(data_cleaner.clean) 
 
     while True:
         schedule.run_pending()

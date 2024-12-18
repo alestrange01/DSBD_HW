@@ -108,6 +108,8 @@ services:
       POSTGRES_DB: postgres
       POSTGRES_PORT: 5432
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EMAIL_SENDER_USER: "fraromeo69@gmail.com"
+      EMAIL_SENDER_PASSWORD: "nxis zslg ywts rpyj"
     depends_on:
       - postgres
       - kafka

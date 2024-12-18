@@ -33,10 +33,52 @@ class Alerts:
         self.consumer.subscribe([topic2])
         self.db = DB()
         self.db_session = self.db.get_db_session()
-        self.user_repository_reader = UserRepositoryReader(self.db_session) #TODO Così il passaggio di sessione?
-        self.share_repository_reader = ShareRepositoryReader(self.db_session) #TODO Così il passaggio di sessione?
+        self.user_repository_reader = UserRepositoryReader(self.db_session) 
+        self.share_repository_reader = ShareRepositoryReader(self.db_session)
 
-    def process(self, data):
+
+
+    def alerts(self):
+            try:
+                while True:
+                    self.__process_message()
+            except KeyboardInterrupt:
+                logging.info("Consumer interrupted by user. Shutting down gracefully.")
+            finally:
+                self.consumer.close()
+                logging.info("Consumer closed.")
+
+    def __process_message(self):
+        try:
+            msg = self.consumer.poll(1.0)
+            if msg is None:
+                return
+            if msg.error():
+                self.__handle_consumer_error(msg)
+                return
+            self.__handle_message(msg)
+        except Exception as e:
+            logging.error(f"Unexpected error in Kafka consumer loop: {e}")
+
+    def __handle_consumer_error(self, msg):
+        if msg.error().code() == KafkaException._PARTITION_EOF:
+            logging.error(f"End of partition reached {msg.topic()} [{msg.partition()}]")
+        else:
+            logging.error(f"Consumer error: {msg.error()}")
+
+    def __handle_message(self, msg):
+        try:
+            data = json.loads(msg.value().decode('utf-8'))
+            logging.info(f"Consumed: {data}")
+            if self.__process(data):
+                self.consumer.commit(asynchronous=False) #TODO Il commit non va fatto a priori?
+                logging.info(f"Offset committed: {msg.offset()}")
+            else:
+                logging.error(f"Error processing message: {data}")
+        except Exception as e:
+            logging.error(f"Unexpected error processing message: {e}")
+
+    def __process(self, data):
         try:
             if data['msg'] != 'Share value updated':
                 logging.error(f"Invalid message received: {data}")
@@ -61,7 +103,7 @@ class Alerts:
                                 "message": body,
                             },
                         }
-                        self.producer.produce(self.topic, json.dumps(message), callback=self.delivery_report)
+                        self.producer.produce(self.topic, json.dumps(message), callback=self.__delivery_report)
                         self.producer.flush()
                         logging.info(f"Produced: {message}")
             return True
@@ -69,51 +111,11 @@ class Alerts:
             logging.error(f"Error processing message: {e}")
             return False
 
-    def alerts(self):
-        try:
-            while True:
-                self.process_message()
-        except KeyboardInterrupt:
-            logging.info("Consumer interrupted by user. Shutting down gracefully.")
-        finally:
-            self.consumer.close()
-            logging.info("Consumer closed.")
-
-    def process_message(self):
-        try:
-            msg = self.consumer.poll(1.0)
-            if msg is None:
-                return
-            if msg.error():
-                self.handle_consumer_error(msg)
-                return
-            self.handle_message(msg)
-        except Exception as e:
-            logging.error(f"Unexpected error in Kafka consumer loop: {e}")
-
-    def handle_consumer_error(self, msg):
-        if msg.error().code() == KafkaException._PARTITION_EOF:
-            logging.error(f"End of partition reached {msg.topic()} [{msg.partition()}]")
-        else:
-            logging.error(f"Consumer error: {msg.error()}")
-
-    def handle_message(self, msg):
-        try:
-            data = json.loads(msg.value().decode('utf-8'))
-            logging.info(f"Consumed: {data}")
-            if self.process(data):
-                self.consumer.commit(asynchronous=False) #TODO Il commit non va fatto a priori?
-                logging.info(f"Offset committed: {msg.offset()}")
-            else:
-                logging.error(f"Error processing message: {data}")
-        except Exception as e:
-            logging.error(f"Unexpected error processing message: {e}")
-
-    def delivery_report(self, err, msg):
+    def __delivery_report(self, err, msg):
         if err:
             print(f"Delivery failed: {err}, retrying...")
             message = msg  
-            self.producer.produce(self.topic, json.dumps(message), callback=self.delivery_report)
+            self.producer.produce(self.topic, json.dumps(message), callback=self.__delivery_report)
             self.producer.flush()
             print(f"Produced: {message}")
         else:

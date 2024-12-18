@@ -32,15 +32,15 @@ class DataCollector:
         
     def collect(self):
         tickers = self.ticker_management_repository_reader.get_all_ticker_management()
-        self.process_tickers(tickers, self.circuit_breaker)
+        self.__process_tickers(tickers, self.circuit_breaker)
 
-    def process_tickers(self, tickers, circuit_breaker):
+    def __process_tickers(self, tickers, circuit_breaker):
         for ticker in tickers:
             if ticker.counter == 0:
                 continue
             share = ticker.share_cod
             try:
-                share_value = circuit_breaker.call(self.retrieve_share_value, share)
+                share_value = circuit_breaker.call(self.__retrieve_share_value, share)
                 if share_value is None:
                     logging.info(f"Could not retrieve share value for {share}. Skipping.")
                     continue
@@ -56,11 +56,11 @@ class DataCollector:
                 logging.info(f"Share value for {share}: {float(share_value)}")
         
         message = {"msg" : "Share value updated"}    
-        self.producer.produce(self.topic, json.dumps(message), callback=self.delivery_report)
+        self.producer.produce(self.topic, json.dumps(message), callback=self.__delivery_report)
         self.producer.flush() 
         print(f"Produced: {message}")
         
-    def retrieve_share_value(self, share):
+    def __retrieve_share_value(self, share):
         msft = yf.Ticker(share)
         try:
             last_price = msft.info.get('currentPrice')
@@ -75,12 +75,12 @@ class DataCollector:
             last_price = None
         return last_price
         
-    def delivery_report(self, err, msg):
+    def __delivery_report(self, err, msg):
         if err:
             print(f"Delivery failed: {err}, retrying...")
             
             message = {"msg" : "Share value updated"}    
-            self.producer.produce(self.topic, json.dumps(message), callback=self.delivery_report)
+            self.producer.produce(self.topic, json.dumps(message), callback=self.__delivery_report)
             self.producer.flush()
             print(f"Produced: {message}")
         else:

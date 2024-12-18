@@ -14,6 +14,6 @@ logging.basicConfig(
 
 if __name__ == '__main__':
     alert = Alerts()
-    alert_thread = threading.Thread(target=alert.alerts) #TODO Rendere private tutte tranne questa
+    alert_thread = threading.Thread(target=alert.alerts)
     alert_thread.start()
     alert_thread.join()
