@@ -18,7 +18,7 @@ if __name__ == '__main__':
     DB.initialize_database()   
     data_collector = DataCollector()
     #data_collector.test_circuit_breaker_behavior() #TOTEST rimuovere il commento per testare il circuit breaker
-    schedule.every(10).minutes.do(data_collector.collect)
+    schedule.every(5).minutes.do(data_collector.collect) #TODO cambiare il tempo
 
     while True:
         schedule.run_pending()

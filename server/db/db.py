@@ -5,6 +5,7 @@ import bcrypt
 import os
 
 class DB:
+    Base = declarative_base()
     def __init__(self):
         if os.getenv('POSTGRES_USER'):
             postgres_user = os.getenv('POSTGRES_USER')
@@ -26,14 +27,13 @@ class DB:
         self.DATABASE_URL = f"postgresql://{postgres_user}:{postgres_password}@postgres:{postgres_port}/{postgres_db}"
         self.engine = create_engine(self.DATABASE_URL, echo=True)
         self.Session = sessionmaker(bind=self.engine)
-        self.Base = declarative_base()
 
     def initialize_database(self):
         from models.user_model import User
         from models.ticker_management import TickerManagement
         from server.repositories import user_repository_reader, user_repository_writer
         from server.repositories import ticker_management_repository_writer
-        self.Base.metadata.create_all(self.engine, tables=[User.__table__, TickerManagement.__table__])
+        DB.Base.metadata.create_all(self.engine, tables=[User.__table__, TickerManagement.__table__])
         users = user_repository_reader.get_all_users()
         if not users:
             user_repository_writer.create_user("admin@gmail.com", bcrypt.hashpw("admin".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), "AAPL", "admin", 250.00, 220.00)

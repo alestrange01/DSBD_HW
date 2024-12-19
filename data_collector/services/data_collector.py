@@ -5,9 +5,9 @@ import time
 import yfinance as yf
 import json
 from db.db import DB
-from data_collector.dto.share import ShareCreationDTO
-from data_collector.repositories.ticker_management_repository_reader import TickerManagementRepositoryReader
-from data_collector.repositories.share_repository_writer import ShareRepositoryWriter
+from dto.share import ShareCreationDTO
+from repositories.ticker_management_repository_reader import TickerManagementRepositoryReader
+from repositories.share_repository_writer import ShareRepositoryWriter
 from utils.circuit_breaker import CircuitBreaker, CBException, CBOpenException
 
 logging = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ logging = logging.getLogger(__name__)
 class DataCollector:
     def __init__(self):
         producer_config = {
-            'bootstrap.servers': 'kafka:9092',  
+            'bootstrap.servers': 'kafka-broker:9092',  
             'acks': 'all',  
             'batch.size': 500,  
             'max.in.flight.requests.per.connection': 1,      

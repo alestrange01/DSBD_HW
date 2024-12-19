@@ -3,8 +3,8 @@ import time
 import re
 import grpc
 from decimal import Decimal
-import services.homework1_pb2 as homework1_pb2
-import services.homework1_pb2_grpc as homework1_pb2_grpc
+import app.homework1_pb2 as homework1_pb2
+import app.homework1_pb2_grpc as homework1_pb2_grpc
 
 target = 'localhost:50051'
 INSERT_YOUR_CHOICE = "Inserisci la tua scelta: "

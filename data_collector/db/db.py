@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import os
 
 class DB:
+    Base = declarative_base()
     def __init__(self):
         if os.getenv('POSTGRES_USER'):
             postgres_user = os.getenv('POSTGRES_USER')
@@ -25,11 +26,11 @@ class DB:
         self.DATABASE_URL = f"postgresql://{postgres_user}:{postgres_password}@postgres:{postgres_port}/{postgres_db}"
         self.engine = create_engine(self.DATABASE_URL, echo=True)
         self.Session = sessionmaker(bind=self.engine)
-        self.Base = declarative_base()
 
-    def initialize_database(self):
+    @classmethod
+    def initialize_database(cls):
         from models.share_model import Share
-        self.Base.metadata.create_all(self.engine, tables=[Share.__table__])
+        cls.Base.metadata.create_all(cls().engine, tables=[Share.__table__])
     
     @contextmanager
     def get_db_session(self):

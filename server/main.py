@@ -4,7 +4,7 @@ import schedule
 import time
 import threading
 from db.db import DB
-from services.server import serve, clean_cache
+from app.server import serve, clean_cache
 
 logging.basicConfig(
     level=logging.INFO,

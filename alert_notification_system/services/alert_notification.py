@@ -22,7 +22,7 @@ class AlertNotification:
             self.email_sender_password = ""
 
         consumer_config = {
-            'bootstrap.servers': 'kafka:9092',  
+            'bootstrap.servers': 'kafka-broker:9092',  
             'group.id': 'group2', 
             'auto.offset.reset': 'earliest',  
             'enable.auto.commit': False 

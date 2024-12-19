@@ -12,7 +12,7 @@ logging = logging.getLogger(__name__)
 class Alerts:
     def __init__(self):
         producer_config = {
-            'bootstrap.servers': 'kafka:9092',  
+            'bootstrap.servers': 'kafka-broker:9092',  
             'acks': 'all',  
             'batch.size': 500,  
             'max.in.flight.requests.per.connection': 1, 
@@ -22,7 +22,7 @@ class Alerts:
         self.topic = "to-notifier"
 
         consumer_config = {
-            'bootstrap.servers': 'kafka:9092',  
+            'bootstrap.servers': 'kafka-broker:9092',  
             'group.id': 'group2', 
             'auto.offset.reset': 'earliest',  
             'enable.auto.commit': False 
