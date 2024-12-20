@@ -15,10 +15,11 @@ logging.basicConfig(
 )
 
 if __name__ == '__main__':
+    DB.initialize()
     DB.initialize_database()   
     data_collector = DataCollector()
     #data_collector.test_circuit_breaker_behavior() #TOTEST rimuovere il commento per testare il circuit breaker
-    schedule.every(5).minutes.do(data_collector.collect) #TODO cambiare il tempo
+    schedule.every(3).seconds.do(data_collector.collect) #TODO modificare
 
     while True:
         schedule.run_pending()

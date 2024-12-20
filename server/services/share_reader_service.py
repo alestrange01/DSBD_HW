@@ -1,16 +1,15 @@
 import logging
 from db.db import DB
-from server.repositories.share_repository_reader import ShareRepositoryReader
-from server.repositories.user_repository_reader import UserRepositoryReader
+from repositories.share_repository_reader import ShareRepositoryReader
+from repositories.user_repository_reader import UserRepositoryReader
 
 logging = logging.getLogger(__name__)
 
 class ShareReaderService: 
     def __init__(self):
-        self.DB = DB()
-        self.db_session = self.DB.get_db_session()
-        self.share_repository_reader = ShareRepositoryReader(self.db_session)
-        self.user_repository_reader = UserRepositoryReader(self.db_session)
+        self.db = DB()
+        self.share_repository_reader = ShareRepositoryReader(self.db)
+        self.user_repository_reader = UserRepositoryReader(self.db)
         
     def get_all_shares(self):
         shares = self.share_repository_reader.get_all_shares()

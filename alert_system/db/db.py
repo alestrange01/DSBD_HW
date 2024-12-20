@@ -5,27 +5,21 @@ import os
 
 class DB:
     Base = declarative_base()
-    def __init__(self):
-        if os.getenv('POSTGRES_USER'):
-            postgres_user = os.getenv('POSTGRES_USER')
-        else:
-            postgres_user = "root"
-        if os.getenv('POSTGRES_PASSWORD'):
-            postgres_password = os.getenv('POSTGRES_PASSWORD')
-        else:
-            postgres_password = "toor"
-        if os.getenv('POSTGRES_DB'):
-            postgres_db = os.getenv('POSTGRES_DB')
-        else:
-            postgres_db = "postgres"
-        if os.getenv('POSTGRES_PORT'):
-            postgres_port = os.getenv('POSTGRES_PORT')
-        else:
-            postgres_port = 5532
+    engine = None  
+    Session = None 
 
-        self.DATABASE_URL = f"postgresql://{postgres_user}:{postgres_password}@postgres:{postgres_port}/{postgres_db}"
-        self.engine = create_engine(self.DATABASE_URL, echo=True)
-        self.Session = sessionmaker(bind=self.engine)
+    @classmethod
+    def initialize(cls):
+        """Inizializza l'engine e la sessione una sola volta"""
+        if not cls.engine:
+            postgres_user = os.getenv('POSTGRES_USER', 'root')
+            postgres_password = os.getenv('POSTGRES_PASSWORD', 'toor')
+            postgres_db = os.getenv('POSTGRES_DB', 'postgres')
+            postgres_port = os.getenv('POSTGRES_PORT', 5532)
+
+            cls.DATABASE_URL = f"postgresql://{postgres_user}:{postgres_password}@postgres:{postgres_port}/{postgres_db}"
+            cls.engine = create_engine(cls.DATABASE_URL, echo=False)
+            cls.Session = sessionmaker(bind=cls.engine)
 
     @contextmanager
     def get_db_session(self):

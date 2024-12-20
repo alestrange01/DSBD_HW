@@ -4,18 +4,18 @@ from models.share_model import Share
 logging = logging.getLogger(__name__)
 
 class ShareRepositoryWriter:
-    def __init__(self, session):
-        self.db_session = session
+    def __init__(self, db):
+        self.db = db
         
     def delete_share(self, share_dto):
-        with self.db_session as session:
+        with self.db.get_db_session() as session:
             share = session.query(Share).filter_by(id=share_dto.id).first()
             session.delete(share)
             session.commit()
             logging.info(f"Lo share: {share} è stato eliminato.")
 
     def delete_shares_by_share_name(self, share_name, batch_size=100): #TODO Unico dubbio, bisogna creare il relativo command o non è necessario qui?
-        with self.db_session as session:
+        with self.db.get_db_session() as session:
             try:
                 while True:
                     shares = (

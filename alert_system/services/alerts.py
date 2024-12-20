@@ -32,9 +32,8 @@ class Alerts:
         topic2 = 'to-alert-system'  
         self.consumer.subscribe([topic2])
         self.db = DB()
-        self.db_session = self.db.get_db_session()
-        self.user_repository_reader = UserRepositoryReader(self.db_session) 
-        self.share_repository_reader = ShareRepositoryReader(self.db_session)
+        self.user_repository_reader = UserRepositoryReader(self.db)
+        self.share_repository_reader = ShareRepositoryReader(self.db)
 
 
 

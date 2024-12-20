@@ -11,12 +11,11 @@ logging = logging.getLogger(__name__)
 
 class DataCleaner():
     def __init__(self):
-        self.DB = DB()
-        self.db_session = self.DB.get_db_session()
-        self.share_repository_reader = ShareRepositoryReader(self.db_session)
-        self.share_repository_writer = ShareRepositoryWriter(self.db_session)
-        self.ticker_management_repository_reader = TickerManagementRepositoryReader(self.db_session)
-        self.ticker_management_repository_writer = TickerManagementRepositoryWriter(self.db_session)
+        self.db = DB()
+        self.share_repository_reader = ShareRepositoryReader(self.db)
+        self.share_repository_writer = ShareRepositoryWriter(self.db)
+        self.ticker_management_repository_reader = TickerManagementRepositoryReader(self.db)
+        self.ticker_management_repository_writer = TickerManagementRepositoryWriter(self.db)
         
     def clean(self):
         shares = self.share_repository_reader.get_all_shares()

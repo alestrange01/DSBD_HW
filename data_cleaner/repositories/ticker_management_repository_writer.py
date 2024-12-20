@@ -4,11 +4,11 @@ from models.ticker_management import TickerManagement
 logging = logging.getLogger(__name__)
 
 class TickerManagementRepositoryWriter:
-    def __init__(self, session):
-        self.db_session = session
+    def __init__(self, db):
+        self.db = db
         
     def delete_ticker_management(self, ticker_management):
-        with self.db_session as session:
+        with self.db.get_db_session() as session:
             ticker_management = session.query(TickerManagement).filter_by(share_cod=ticker_management.share_cod).first()
             if ticker_management:
                 try:

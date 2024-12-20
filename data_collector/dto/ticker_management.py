@@ -4,4 +4,4 @@ class TickerManagementDTO:
         self.counter = counter
 
     def __repr__(self):
-        return f"<TickerManagementDTO: share='{self.share_cod}', counter={self.counter})>"
+        return f"<TickerManagementDTO: share_cod='{self.share_cod}', counter={self.counter})>"

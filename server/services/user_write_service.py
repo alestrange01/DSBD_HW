@@ -5,10 +5,10 @@ import bcrypt
 from db.db import DB
 from dto.user import UserCreationDTO, UserUpdateDTO
 from dto.ticker_management import TickerManagementUpsertDTO
-from server.repositories.user_repository_reader import UserRepositoryReader
-from server.repositories.user_repository_writer import UserRepositoryWriter
-from server.repositories.ticker_management_repository_reader import TickerManagementRepositoryReader
-from server.repositories.ticker_management_repository_writer import TickerManagementRepositoryWriter
+from repositories.user_repository_reader import UserRepositoryReader
+from repositories.user_repository_writer import UserRepositoryWriter
+from repositories.ticker_management_repository_reader import TickerManagementRepositoryReader
+from repositories.ticker_management_repository_writer import TickerManagementRepositoryWriter
 
 BAD_REQUEST_MESSAGE = "Bad request"
 UNOTHORIZED_MESSAGE = "Unauthorized"
@@ -86,9 +86,8 @@ class DeleteCommand():
 
 class UserWriteService:
     def __init__(self):
-        self.DB = DB()
-        self.db_session = self.DB.get_db_session()
-        self.user_repository_writer = UserRepositoryWriter(self.db_session)
+        self.db = DB()
+        self.user_repository_writer = UserRepositoryWriter(self.db)
         
     def handle_register_user(self, command: RegisterCommand):
         user_creation_dto = UserCreationDTO(command.email, command.password, command.role, command.share, command.high_value, command.low_value)

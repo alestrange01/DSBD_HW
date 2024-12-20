@@ -16,6 +16,7 @@ logging.basicConfig(
 )
 
 if __name__ == '__main__':
+    DB.initialize()
     DB.initialize_database()
     serve_thread = threading.Thread(target=serve, daemon=True)
     serve_thread.start()

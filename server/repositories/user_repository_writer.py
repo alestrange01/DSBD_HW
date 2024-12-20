@@ -5,11 +5,11 @@ from models.user_model import User
 logging = logging.getLogger(__name__)
 
 class UserRepositoryWriter:
-    def __init__(self, session):
-        self.session = session
+    def __init__(self, db):
+        self.db = db
         
     def create_user(self, user_creation_dto: UserCreationDTO):
-        with self.session as session:
+        with self.db.get_db_session() as session:
             user = User(email=user_creation_dto.email, password=user_creation_dto.password, role=user_creation_dto.role, share_cod=user_creation_dto.share_cod, high_value=user_creation_dto.high_value, low_value=user_creation_dto.low_value)
             try:
                 session.add(user)
@@ -22,7 +22,7 @@ class UserRepositoryWriter:
             return user
 
     def update_user(self, user_update_dto):
-        with self.session as session:
+        with self.db.get_db_session() as session:
             user = session.query(User).filter_by(email=user_update_dto.email).first()
             if user:
                 try:
@@ -51,7 +51,7 @@ class UserRepositoryWriter:
                 logging.info("Utente non trovato.")
 
     def delete_user(self, email):
-        with self.session as session:
+        with self.db.get_db_session() as session:
             user = session.query(User).filter_by(email=email).first()
             if user:
                 try:

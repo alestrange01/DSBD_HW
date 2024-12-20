@@ -26,9 +26,8 @@ class DataCollector:
 
         self.circuit_breaker = CircuitBreaker(failure_threshold=5, difference_failure_open_half_open=2, success_threshold=5, recovery_timeout=30, expected_exception=Exception)
         self.db = DB()
-        self.db_session = self.db.get_db_session()
-        self.ticker_management_repository_reader = TickerManagementRepositoryReader(self.db_session)
-        self.share_repository_writer = ShareRepositoryWriter(self.db_session)
+        self.ticker_management_repository_reader = TickerManagementRepositoryReader(self.db)
+        self.share_repository_writer = ShareRepositoryWriter(self.db)
         
     def collect(self):
         tickers = self.ticker_management_repository_reader.get_all_ticker_management()
@@ -55,10 +54,10 @@ class DataCollector:
                 self.share_repository_writer.create_share(share_dto)
                 logging.info(f"Share value for {share}: {float(share_value)}")
         
-        message = {"msg" : "Share value updated"}    
-        self.producer.produce(self.topic, json.dumps(message), callback=self.__delivery_report)
-        self.producer.flush() 
-        print(f"Produced: {message}")
+        # message = {"msg" : "Share value updated"}    TODO: Da rimuovere il commento
+        # self.producer.produce(self.topic, json.dumps(message), callback=self.__delivery_report)
+        # self.producer.flush() 
+        # print(f"Produced: {message}")
         
     def __retrieve_share_value(self, share):
         msft = yf.Ticker(share)

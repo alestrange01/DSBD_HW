@@ -5,11 +5,11 @@ from models.ticker_management import TickerManagement
 logging = logging.getLogger(__name__)
 
 class TickerManagementRepositoryWriter:
-    def __init__(self, session):
-        self.session = session
+    def __init__(self, db):
+        self.db = db
         
     def create_ticker_management(self, ticker_managment_upsert_dto):
-        with self.session as session:
+        with self.db.get_db_session() as session:
             ticker_management = TickerManagement(share_cod=ticker_managment_upsert_dto.share_cod, counter=ticker_managment_upsert_dto.counter)
             try:
                 session.add(ticker_management)
@@ -23,7 +23,7 @@ class TickerManagementRepositoryWriter:
             return ticker_management_dto
 
     def update_ticker_management(self, ticker_managment_upsert_dto):
-        with self.session as session:
+        with self.db.get_db_session() as session:
             ticker_management = session.query(TickerManagement).filter_by(share_cod=ticker_managment_upsert_dto.share_cod).first()
             if ticker_management:
                 try:

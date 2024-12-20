@@ -2,11 +2,11 @@ from dto.ticker_management import TickerManagementDTO
 from models.ticker_management import TickerManagement
 
 class TickerManagementRepositoryReader:
-    def __init__(self, session):
-        self.session = session
+    def __init__(self, db):
+        self.db = db
         
     def get_all_ticker_management(self):
-        with self.session as session:
+        with self.db.get_db_session() as session:
             ticker_managements = session.query(TickerManagement).all()
             ticker_managements_dto = []
             for ticker_management in ticker_managements:

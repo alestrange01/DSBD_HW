@@ -1,15 +1,14 @@
 import bcrypt
 import logging
 from db.db import DB
-from server.repositories.user_repository_reader import UserRepositoryReader
+from repositories.user_repository_reader import UserRepositoryReader
 
 logging = logging.getLogger(__name__)
 
 class UserReaderService: 
     def __init__(self):
-        self.DB = DB()
-        self.db_session = self.DB.get_db_session()
-        self.user_reader_repository = UserRepositoryReader(self.db_session)
+        self.db = DB()
+        self.user_reader_repository = UserRepositoryReader(self.db)
 
     def login(self, request):
         user = self.user_reader_repository.get_user_by_email(request.email)

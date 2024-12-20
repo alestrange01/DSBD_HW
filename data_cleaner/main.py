@@ -13,8 +13,10 @@ logging.basicConfig(
     ]
 )
 
+
 if __name__ == '__main__':
     data_cleaner = DataCleaner()
+    data_cleaner.clean() #TODO rimuovere
     schedule.every().day.do(data_cleaner.clean) 
 
     while True:

@@ -5,10 +5,10 @@ import time
 import grpc
 import app.homework1_pb2 as homework1_pb2
 import app.homework1_pb2_grpc as homework1_pb2_grpc
-from server.services.user_write_service import RegisterCommand, UpdateCommand, DeleteCommand, UserWriteService
-from server.services.user_reader_service import UserReaderService
-from server.services.ticker_management_reader_service import TickerManagementReaderService
-from server.services.share_reader_service import ShareReaderService
+from services.user_write_service import RegisterCommand, UpdateCommand, DeleteCommand, UserWriteService
+from services.user_reader_service import UserReaderService
+from services.ticker_management_reader_service import TickerManagementReaderService
+from services.share_reader_service import ShareReaderService
 
 logging = logging.getLogger(__name__)
 
