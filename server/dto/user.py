@@ -12,9 +12,8 @@ class UserCreationDTO():
         return f"UserCreationDTO(email={self.email}, password={self.password}, role={self.role}, share_cod={self.share_cod}, high_value={self.high_value}, low_value={self.low_value})"
 
 class UserUpdateDTO():
-    def __init__(self, email, password, share_cod, high_value=None, low_value=None):
+    def __init__(self, email, share_cod, high_value=None, low_value=None):
         self.email = email
-        self.password = password
         self.share_cod = share_cod
         self.high_value = high_value
         self.low_value = low_value
@@ -32,3 +31,12 @@ class UserDTO():
     
     def __repr__(self):
         return f"UserDTO(email={self.email}, role={self.role}, share_cod={self.share_cod}, high_value={self.high_value}, low_value={self.low_value})"
+    
+    def to_dict(self):
+        return {
+            "email": self.email,
+            "role": self.role,
+            "share_cod": self.share_cod,
+            "high_value": float(self.high_value) if self.high_value is not None else None,
+            "low_value": float(self.low_value) if self.low_value is not None else None
+        }

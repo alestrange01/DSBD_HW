@@ -13,3 +13,10 @@ class TickerManagementDTO:
 
     def __repr__(self):
         return f"TickerManagementDTO(share_cod={self.share_cod}, counter={self.counter})"
+    
+    def to_dict(self):
+        return {
+            "share_cod": self.share_cod,
+            "counter": self.counter
+        }
+    

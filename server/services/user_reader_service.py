@@ -11,8 +11,8 @@ class UserReaderService:
         self.user_reader_repository = UserRepositoryReader(self.db)
 
     def login(self, request):
-        user = self.user_reader_repository.get_user_by_email(request.email)
-        if (user is None) or (not bcrypt.checkpw(request.password.encode('utf-8'), user.password.encode('utf-8'))):
+        user = self.user_reader_repository.get_user_by_email_and_password(request.email, request.password)
+        if user is None:
             raise ValueError("Login failed: wrong email or password")
         else:
             logging.info("Login successful")
@@ -24,3 +24,10 @@ class UserReaderService:
             raise ValueError("No users found")
         else:
             return users
+    
+    def get_user_by_email(self, email):
+        user = self.user_reader_repository.get_user_by_email(email)
+        if user is None:
+            raise ValueError("No user found")
+        else:
+            return user

@@ -11,3 +11,9 @@ class TickerManagement(DB.Base):
     def __repr__(self):
         return f"TickerManagement(id={self.id}, share_cod='{self.share_cod}', counter='{self.counter}')"
     
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "share_cod": self.share_cod,
+            "counter": self.counter
+        }

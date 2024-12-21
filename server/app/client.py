@@ -2,6 +2,7 @@ import random
 import time
 import re
 import grpc
+import json
 from decimal import Decimal
 import app.homework1_pb2 as homework1_pb2
 import app.homework1_pb2_grpc as homework1_pb2_grpc
@@ -78,17 +79,17 @@ def register():
     password = input("Inserisci la tua password: ")
     share = input("Inserisci il Ticker: ")
     while True:
-        high_value = input("Inserisci il valore massimo per cui vuoi essere notificato: (n per saltare)")
-        low_value = input("Inserisci il valore minimo per cui vuoi essere notificato: (n per saltare)")
-        if ((high_value.isdigit() and Decimal(high_value) < 0) or (high_value.isalpha and high_value.capitalize != "N")) or \
-           ((low_value.isdigit() and Decimal(low_value) < 0) or (low_value.isalpha and low_value.capitalize != "N")):
+        high_value = input("Inserisci il valore massimo per cui vuoi essere notificato(n per saltare): ")
+        low_value = input("Inserisci il valore minimo per cui vuoi essere notificato(n per saltare): ")
+        if ((high_value.isdigit() and Decimal(high_value) < 0) or (high_value.isalpha() and high_value.capitalize() != "N")) or \
+           ((low_value.isdigit() and Decimal(low_value) < 0) or (low_value.isalpha() and low_value.capitalize() != "N")):
             print("Numeri non validi")
             continue
         else:
             print("Numeri validi")
-            if low_value.isalpha and low_value.capitalize == "N":
+            if low_value.isalpha() and low_value.capitalize() == "N":
                 low_value = None
-            if high_value.isalpha and high_value.capitalize == "N":
+            if high_value.isalpha() and high_value.capitalize() == "N":
                 high_value = None
             if high_value and low_value and Decimal(high_value) < Decimal(low_value):
                 print("Valore massimo minore del valore minimo")
@@ -96,7 +97,7 @@ def register():
             break
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.RegisterRequest(email=email, password=password, role="user", share=share, high_value=high_value, low_value=low_value)
+        request = homework1_pb2.RegisterRequest(email=email, password=password, role="user", share=share, highValue=high_value, lowValue=low_value)
         metadata = [
             ('user_email', email),
             ('request_id', str(random.randint(1, 1000))), 
@@ -108,10 +109,7 @@ def register():
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
         else:
-            if response.statusCode == 204:
-                login()
-            else:
-                login_or_register()
+            login_or_register()
 
 def run():
     while True:
@@ -190,17 +188,17 @@ def admin_run():
 def update():
     share = input("Inserisci il tuo nuovo share d'interesse: ")
     while True:
-        high_value = input("Inserisci il valore massimo per cui vuoi essere notificato: (n per saltare)")
-        low_value = input("Inserisci il valore minimo per cui vuoi essere notificato: (n per saltare)")
-        if ((high_value.isdigit() and Decimal(high_value) < 0) or (high_value.isalpha and high_value.capitalize != "N")) or \
-           ((low_value.isdigit() and Decimal(low_value) < 0) or (low_value.isalpha and low_value.capitalize != "N")):
+        high_value = input("Inserisci il valore massimo per cui vuoi essere notificato(n per saltare): ")
+        low_value = input("Inserisci il valore minimo per cui vuoi essere notificato(n per saltare): ")
+        if ((high_value.isdigit() and Decimal(high_value) < 0) or (high_value.isalpha() and high_value.capitalize() != "N")) or \
+           ((low_value.isdigit() and Decimal(low_value) < 0) or (low_value.isalpha() and low_value.capitalize() != "N")):
             print("Numeri non validi")
             continue
         else:
             print("Numeri validi")
-            if low_value.isalpha and low_value.capitalize == "N":
+            if low_value.isalpha() and low_value.capitalize() == "N":
                 low_value = None
-            if high_value.isalpha and high_value.capitalize == "N":
+            if high_value.isalpha() and high_value.capitalize() == "N":
                 high_value = None
             if high_value and low_value and Decimal(high_value) < Decimal(low_value):
                 print("Valore massimo minore del valore minimo")
@@ -208,7 +206,7 @@ def update():
             break
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.UpdateRequest(email=session.logged_email, share=share, high_value=high_value, low_value=low_value)
+        request = homework1_pb2.UpdateRequest(email=session.logged_email, share=share, highValue=high_value, lowValue=low_value)
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -362,10 +360,10 @@ def view_all_users():
         try:
             response = stub.ViewAllUsers(request, metadata=metadata)
             print(f"Response received: status code {response.statusCode}, message {response.message}")
-            users = parse(response.content, "User")
+            users = json.loads(response.content)
             print("\nLista degli utenti registrati:")
             for user in users:
-                print(f"- ID: {user['id']}, Email: {user['email']}, Role: {user['role']}, Share: {user['share_cod']}")
+                print(f"- Email: {user['email']}, Role: {user['role']}, Share: {user['share_cod']}, High Value: {user['high_value']}, Low Value: {user['low_value']}")
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
         except Exception as e:
@@ -383,10 +381,10 @@ def view_ticker_management():
         try:
             response = stub.ViewTickerManagement(request, metadata=metadata)
             print(f"Response received: status code {response.statusCode}, message {response.message}")
-            ticker_managements = parse(response.content, "TickerManagement")
+            ticker_managements = json.loads(response.content)
             print("\nTicker management:")
             for ticker_management in ticker_managements:
-                print(f"- ID: {ticker_management['id']}, Share Cod: {ticker_management['share_cod']}, Counter: {ticker_management['counter']}")
+                print(f"- Share Cod: {ticker_management['share_cod']}, Counter: {ticker_management['counter']}")
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
         except Exception as e:
@@ -404,10 +402,10 @@ def view_all_shares():
         try:
             response = stub.ViewAllShares(request, metadata=metadata)
             print(f"Response received: status code {response.statusCode}, message {response.message}")
-            shares = parse(response.content, "Share")
+            shares = json.loads(response.content)
             print("\nLista delle share:")
             for share in shares:
-                print(f"- ID: {share['id']}, Share Cod: {share['share']}, Value: {share['value']}, Timestamp: {share['timestamp']}")
+                print(f"- Share Cod: {share['share_name']}, Value: {share['value']}, Timestamp: {share['timestamp']}")
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
         except Exception as e:
@@ -443,27 +441,3 @@ def test_at_most_once_policy():
             retries += 1
     else:
         print("All retries done.")
-
-def parse(raw_content, object_name):
-    try:
-        start_index = raw_content.find("[")
-        end_index = raw_content.find("]")
-        objects_raw = raw_content[start_index + 1:end_index]
-        parsed_objects = []
-        object_prefix = f"<{object_name}(" if "<" in objects_raw else f"{object_name}("
-        
-        for obj_raw in objects_raw.split(f", {object_prefix}"):
-            obj_raw = obj_raw.replace(object_prefix, "").replace(")>", "").replace(")", "").strip()
-            if not obj_raw:
-                continue
-            obj_dict = {}
-            for field in obj_raw.split(", "):
-                key, value = field.split("=")
-                value = value.strip().strip("'")
-                obj_dict[key.strip()] = value
-            parsed_objects.append(obj_dict)
-        
-        return parsed_objects
-    except Exception as e:
-        print(f"Error parsing {object_name} data: {e}")
-        return []

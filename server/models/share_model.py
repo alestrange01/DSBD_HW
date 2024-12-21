@@ -12,3 +12,11 @@ class Share(DB.Base):
 
     def __repr__(self):
         return f"<Share(id={self.id}, share='{self.share_name}', value={self.value}, timestamp={self.timestamp})>"
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "share_name": self.share_name,
+            "value": float(self.value),
+            "timestamp": self.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+        }

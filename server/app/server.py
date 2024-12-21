@@ -1,6 +1,7 @@
 from threading import Lock
 from concurrent import futures
 import logging
+import json
 import time
 import grpc
 import app.homework1_pb2 as homework1_pb2
@@ -33,17 +34,17 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
             try:
                 user_reader_service = UserReaderService()
                 content, role = user_reader_service.login(request)
-                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=content, role=role)
+                response = homework1_pb2.LoginReply(statusCode=200, message=OK_MESSAGE, content=content, role=role)
             except ValueError as e:
-                response = homework1_pb2.Reply(statusCode=401, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
+                response = homework1_pb2.LoginReply(statusCode=401, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
             except Exception as e:
-                response = homework1_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
+                response = homework1_pb2.LoginReply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
             finally:
                 self.__StoreInCache(user_email, request_id, op_code, response)
             return response
     
 
-    def Register(self, request, context):        
+    def Register(self, request, context):      
         user_email, request_id, op_code = self.__GetMetadata(context)
         cached_response = self.__GetFromCache(user_email, request_id, op_code)
         if cached_response is not None:
@@ -124,7 +125,8 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
             try:
                 user_reader_service = UserReaderService()
                 users = user_reader_service.get_all_users()
-                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=str(users))
+                response_content = json.dumps([user.to_dict() for user in users])
+                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
             except ValueError as e:
                 response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
             except Exception as e:
@@ -149,7 +151,8 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
             try:
                 ticker_management_reader_service = TickerManagementReaderService()
                 ticker_managements = ticker_management_reader_service.get_all_ticker_managements()
-                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=str(ticker_managements))
+                response_content = json.dumps([ticker_management.to_dict() for ticker_management in ticker_managements])
+                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
             except ValueError as e:
                 response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
             except Exception as e:
@@ -174,7 +177,9 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
             try:
                 share_reader_service = ShareReaderService()
                 shares = share_reader_service.get_all_shares()
-                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=str(shares))
+                logging.info(f"Shares: {shares}")
+                response_content = json.dumps([share.to_dict() for share in shares])
+                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
             except ValueError as e:
                 response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
             except Exception as e:
@@ -193,7 +198,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
             try:
                 share_reader_service = ShareReaderService()
                 share = share_reader_service.get_values_share(user_email)
-                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Value of " + str(share.name) + " share: " + "{:.3f}".format(share.value))
+                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Value of " + str(share.share_name) + " share: " + "{:.3f}".format(share.value))
             except ValueError as e:
                 response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve share failed")
                 logging.error("Get value share failed")
@@ -261,6 +266,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
 
     def __GetFromCache(self, user_email, request_id, op_code):
         logging.info(f"Checking cache for RequestID {request_id}")
+        logging.info("Contenuto della cache:\n%s", json.dumps(request_cache, indent=4, default=str))
         user_request_id = user_email + "_" + request_id
         with cache_lock:
             if user_request_id in request_cache[op_code]:
@@ -277,7 +283,8 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
             request_cache[op_code][user_request_id] = {'response': response, 'timestamp': time.time()}
 
     def __IsAuthorized(self, request_email, user_email, required_role=None):
-        logged_user = self.user_repository_reader.get_user_by_email(user_email)
+        user_reader_service = UserReaderService()
+        logged_user = user_reader_service.get_user_by_email(user_email)
         if required_role and logged_user.role != required_role:
             return False
         return request_email == user_email or logged_user.role == "admin"
@@ -297,7 +304,7 @@ def clean_cache():
             ]
             for key in keys_to_delete:
                 del request_cache[op_code][key]
-    logging.info("Cache dopo pulizia:")
+    logging.info("\nCache dopo pulizia:")
     logging.info(request_cache)
 
 def serve():

@@ -26,21 +26,19 @@ class UserRepositoryWriter:
             user = session.query(User).filter_by(email=user_update_dto.email).first()
             if user:
                 try:
-                    if user_update_dto.new_password:
-                        user.password = user_update_dto.new_password
-                    if user_update_dto.new_share_cod is not None:
-                        user.share_cod = user_update_dto.new_share_cod
-                    if user_update_dto.new_high_value is not None:
-                        if user_update_dto.new_low_value is not None:
-                            if user_update_dto.new_high_value <= user_update_dto.new_low_value:
+                    if user_update_dto.share_cod is not None:
+                        user.share_cod = user_update_dto.share_cod
+                    if user_update_dto.high_value is not None:
+                        if user_update_dto.low_value is not None:
+                            if user_update_dto.high_value <= user_update_dto.low_value:
                                 raise ValueError("new_high_value must be greater than new_low_value")
-                        elif user.low_value is not None and user_update_dto.new_high_value <= user.low_value:
+                        elif user.low_value is not None and user_update_dto.high_value <= user.low_value:
                             raise ValueError("new_high_value must be greater than the current low_value")
-                        user.high_value = user_update_dto.new_high_value
-                    if user_update_dto.new_low_value is not None:
-                        if user.high_value is not None and user_update_dto.new_low_value >= user.high_value:
+                        user.high_value = user_update_dto.high_value
+                    if user_update_dto.low_value is not None:
+                        if user.high_value is not None and user_update_dto.low_value >= user.high_value:
                             raise ValueError("new_low_value must be less than the current high_value")
-                        user.low_value = user_update_dto.new_low_value
+                        user.low_value = user_update_dto.low_value
                     session.commit()
                     logging.info(f"Utente aggiornato: {user}")
                 except Exception as e:

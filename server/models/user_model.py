@@ -15,3 +15,12 @@ class User(DB.Base):
     def __repr__(self):
         return f"User: email: {self.email}, role: {self.role}, share_cod: {self.share_cod}, high_value: {self.high_value}, low_value: {self.low_value}"
     
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "email": self.email,
+            "role": self.role,
+            "share_cod": self.share_cod,
+            "high_value": float(self.high_value) if self.high_value is not None else None,
+            "low_value": float(self.low_value) if self.low_value is not None else None
+        }

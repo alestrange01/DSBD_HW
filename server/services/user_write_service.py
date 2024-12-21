@@ -18,9 +18,9 @@ logging = logging.getLogger(__name__)
 
 class RegisterCommand:
     def __init__(self, request):
-        ticker_management_repository_reader = TickerManagementRepositoryReader(DB().get_db_session())
-        ticker_management_repository_writer = TickerManagementRepositoryWriter(DB().get_db_session())
-        user_repository_reader = UserRepositoryReader(DB().get_db_session())
+        ticker_management_repository_reader = TickerManagementRepositoryReader(DB())
+        ticker_management_repository_writer = TickerManagementRepositoryWriter(DB())
+        user_repository_reader = UserRepositoryReader(DB())
         email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
         if not re.match(email_pattern, request.email):
             logging.error("Invalid email format")
@@ -36,46 +36,65 @@ class RegisterCommand:
                 self.password = hashed_password
                 self.share = request.share
                 self.role = request.role
-                self.high_value = Decimal(request.high_value)
-                self.low_value = Decimal(request.low_value)
+                if request.highValue:
+                    self.high_value = Decimal(request.highValue)
+                else:
+                    self.high_value = None
+                if request.lowValue:
+                    self.low_value = Decimal(request.lowValue)
+                else:
+                    self.low_value = None
                 ticker_management = ticker_management_repository_reader.get_ticker_management_by_code(request.share) #TODO Non query perchè non ha logica?
                 if ticker_management is None:
-                    ticker_management_repository_writer.create_ticker_management(TickerManagementUpsertDTO(request.share, 0)) #TODO Non command perchè non ha logica o bisogna crearlo?
+                    ticker_management_repository_writer.create_ticker_management(TickerManagementUpsertDTO(request.share, 1)) #TODO Non command perchè non ha logica o bisogna crearlo?
                 else:
                     ticker_management_repository_writer.update_ticker_management(TickerManagementUpsertDTO(request.share, ticker_management.counter + 1)) #TODO Non command perchè non ha logica o bisogna crearlo?
                 logging.info("Register")
                 
 class UpdateCommand:
     def __init__(self, request, user_email):
-        ticker_management_repository_reader = TickerManagementRepositoryReader(DB().get_db_session())
-        ticker_management_repository_writer = TickerManagementRepositoryWriter(DB().get_db_session())
-        user_repository_reader = UserRepositoryReader(DB().get_db_session())        
+        ticker_management_repository_reader = TickerManagementRepositoryReader(DB())
+        ticker_management_repository_writer = TickerManagementRepositoryWriter(DB())
+        user_repository_reader = UserRepositoryReader(DB())        
         user = user_repository_reader.get_user_by_email(request.email)
         if user is None:
             raise ValueError("User does not exist")
-        if request.share == user.share_cod:
-            self.content = "User already has this share"
+        if request.share == user.share_cod and self.compare_values(request.highValue, user.high_value) and self.compare_values(request.lowValue, user.low_value): #TODO: Aggiustare perchè non funziona
+            self.content = False
         else:
             self.email = request.email
             self.share = request.share
-            self.high_value = Decimal(request.high_value)
-            self.low_value = Decimal(request.low_value)
+            if request.highValue:
+                    self.high_value = Decimal(request.highValue)
+            else:
+                self.high_value = None
+            if request.lowValue:
+                self.low_value = Decimal(request.lowValue)
+            else:
+                self.low_value = None
             self.password = None
             old_ticker_management = ticker_management_repository_reader.get_ticker_management_by_code(user.share_cod)
             ticker_management_repository_writer.update_ticker_management(TickerManagementUpsertDTO(user.share_cod, old_ticker_management.counter - 1))
             new_ticker_management = ticker_management_repository_reader.get_ticker_management_by_code(request.share)
             if new_ticker_management is None:
-                ticker_management_repository_writer.create_ticker_management(TickerManagementUpsertDTO(request.share, 0))
+                ticker_management_repository_writer.create_ticker_management(TickerManagementUpsertDTO(request.share, 1))
             else:
                 ticker_management_repository_writer.update_ticker_management(TickerManagementUpsertDTO(request.share, new_ticker_management.counter + 1))
             logging.info("Update")
-            self.content = "User updated successfully"
+            self.content = True
+
+    def compare_values(self, value1, value2):
+        if value1 is None and value2 is None:
+            return True
+        if value1 is not None and value2 is not None:
+            return Decimal(value1) == Decimal(value2)
+        return False
 
 class DeleteCommand():
     def __init__(self, request):
-        ticker_management_repository_reader = TickerManagementRepositoryReader(DB().get_db_session())
-        ticker_management_repository_writer = TickerManagementRepositoryWriter(DB().get_db_session())
-        user_repository_reader = UserRepositoryReader(DB().get_db_session())
+        ticker_management_repository_reader = TickerManagementRepositoryReader(DB())
+        ticker_management_repository_writer = TickerManagementRepositoryWriter(DB())
+        user_repository_reader = UserRepositoryReader(DB())
         user = user_repository_reader.get_user_by_email(request.email)  
         if user is None:
             raise ValueError("User does not exist")
@@ -95,10 +114,13 @@ class UserWriteService:
         logging.info("User created: {user}")
     
     def handle_update_user(self, command: UpdateCommand):
-        user_update_dto = UserUpdateDTO(command.email, command.password, command.share, command.high_value, command.low_value)
-        self.user_repository_writer.update_user(user_update_dto)
-        logging.info("User updated: {user}")
-        return self.content
+        if command.content:
+            user_update_dto = UserUpdateDTO(command.email, command.share, command.high_value, command.low_value)
+            self.user_repository_writer.update_user(user_update_dto)
+            logging.info("User updated: {user}")
+            return "User updated successfully"
+        else:
+            return "User already has this share and values"
     
     def handle_delete_user(self, command: DeleteCommand):
         self.user_repository_writer.delete_user(command.email)
