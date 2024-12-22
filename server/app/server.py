@@ -4,8 +4,8 @@ import logging
 import json
 import time
 import grpc
-import app.homework1_pb2 as homework1_pb2
-import app.homework1_pb2_grpc as homework1_pb2_grpc
+import app.homework2_pb2 as homework2_pb2
+import app.homework2_pb2_grpc as homework2_pb2_grpc
 from services.user_write_service import RegisterCommand, UpdateCommand, DeleteCommand, UserWriteService
 from services.user_reader_service import UserReaderService
 from services.ticker_management_reader_service import TickerManagementReaderService
@@ -20,7 +20,7 @@ BAD_REQUEST_MESSAGE = "Bad request"
 UNOTHORIZED_MESSAGE = "Unauthorized"
 OK_MESSAGE = "OK"
 
-class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to ServerApp and move on "app" folder do the same with client.py and grpc files and recreate files
+class Server(homework2_pb2_grpc.ServerServicer):
     def __init__(self):
         pass
             
@@ -34,11 +34,11 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
             try:
                 user_reader_service = UserReaderService()
                 content, role = user_reader_service.login(request)
-                response = homework1_pb2.LoginReply(statusCode=200, message=OK_MESSAGE, content=content, role=role)
+                response = homework2_pb2.LoginReply(statusCode=200, message=OK_MESSAGE, content=content, role=role)
             except ValueError as e:
-                response = homework1_pb2.LoginReply(statusCode=401, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
+                response = homework2_pb2.LoginReply(statusCode=401, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
             except Exception as e:
-                response = homework1_pb2.LoginReply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
+                response = homework2_pb2.LoginReply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
             finally:
                 self.__StoreInCache(user_email, request_id, op_code, response)
             return response
@@ -54,11 +54,11 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
             try:
                 user_write_service = UserWriteService()
                 user_write_service.handle_register_user(RegisterCommand(request))
-                message = homework1_pb2.Reply(statusCode=204, message=OK_MESSAGE, content="User registered successfully")
+                message = homework2_pb2.Reply(statusCode=204, message=OK_MESSAGE, content="User registered successfully")
             except ValueError as e:
-                message = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+                message = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
             except Exception as e:
-                message = homework1_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+                message = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
             finally:
                 self.__StoreInCache(user_email, request_id, op_code, message)
             return message
@@ -70,18 +70,18 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
             logging.info("Update cached response")
             return cached_response
         if not self.__IsAuthorized(request.email, user_email):
-            response = homework1_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="User updating failed")
+            response = homework2_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="User updating failed")
             logging.error("Update failed")
             return response
         else:
             try:
                 user_write_service = UserWriteService()
                 content = user_write_service.handle_update_user(UpdateCommand(request, user_email))
-                message = homework1_pb2.Reply(statusCode=204, message=OK_MESSAGE, content=content)
+                message = homework2_pb2.Reply(statusCode=204, message=OK_MESSAGE, content=content)
             except ValueError as e:
-                message = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+                message = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
             except Exception as e:
-                message = homework1_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+                message = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
             finally:
                 self.__StoreInCache(user_email, request_id, op_code, message)
             return message
@@ -93,18 +93,18 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
             logging.info("Delete cached response")
             return cached_response
         if not self.__IsAuthorized(request.email, user_email):
-            response = homework1_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="User updating failed")
+            response = homework2_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="User updating failed")
             logging.error("Update failed")
             return response
         else:
             try:
                 user_write_service = UserWriteService()
                 user_write_service.handle_delete_user(DeleteCommand(request=request))
-                message = homework1_pb2.Reply(statusCode=204, message=OK_MESSAGE, content="User deleted successfully")
+                message = homework2_pb2.Reply(statusCode=204, message=OK_MESSAGE, content="User deleted successfully")
             except ValueError as e:
-                message = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+                message = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
             except Exception as e:
-                message = homework1_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+                message = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
             finally:
                 self.__StoreInCache(user_email, request_id, op_code, message)     
             return message
@@ -113,7 +113,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
         user_email, request_id, op_code = self.__GetMetadata(context)
 
         if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
-            response = homework1_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Only admin can view all users")
+            response = homework2_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Only admin can view all users")
             logging.error("View all users failed.")
             return response
 
@@ -126,11 +126,11 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
                 user_reader_service = UserReaderService()
                 users = user_reader_service.get_all_users()
                 response_content = json.dumps([user.to_dict() for user in users])
-                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
+                response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
             except ValueError as e:
-                response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+                response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
             except Exception as e:
-                response = homework1_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+                response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
             finally:   
                 self.__StoreInCache(user_email, request_id, op_code, response)
             return response
@@ -139,7 +139,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
         user_email, request_id, op_code = self.__GetMetadata(context)
 
         if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
-            response = homework1_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Only admin can view ticker management")
+            response = homework2_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Only admin can view ticker management")
             logging.error("View ticker management failed.")
             return response
 
@@ -152,11 +152,11 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
                 ticker_management_reader_service = TickerManagementReaderService()
                 ticker_managements = ticker_management_reader_service.get_all_ticker_managements()
                 response_content = json.dumps([ticker_management.to_dict() for ticker_management in ticker_managements])
-                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
+                response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
             except ValueError as e:
-                response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+                response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
             except Exception as e:
-                response = homework1_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+                response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
             finally:
                 self.__StoreInCache(user_email, request_id, op_code, response)
             return response
@@ -165,7 +165,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
         user_email, request_id, op_code = self.__GetMetadata(context)
 
         if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
-            response = homework1_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Only admin can view all shares")
+            response = homework2_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Only admin can view all shares")
             logging.error("View all shares failed.")
             return response
 
@@ -179,11 +179,11 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
                 shares = share_reader_service.get_all_shares()
                 logging.info(f"Shares: {shares}")
                 response_content = json.dumps([share.to_dict() for share in shares])
-                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
+                response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
             except ValueError as e:
-                response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+                response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
             except Exception as e:
-                response = homework1_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+                response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
             finally:
                 self.__StoreInCache(user_email, request_id, op_code, response)
             return response
@@ -198,12 +198,12 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
             try:
                 share_reader_service = ShareReaderService()
                 share = share_reader_service.get_values_share(user_email)
-                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Value of " + str(share.share_name) + " share: " + "{:.3f}".format(share.value))
+                response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Value of " + str(share.share_name) + " share: " + "{:.3f}".format(share.value))
             except ValueError as e:
-                response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve share failed")
+                response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve share failed")
                 logging.error("Get value share failed")
             except Exception as e:
-                response = homework1_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+                response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
             finally:
                 self.__StoreInCache(user_email, request_id, op_code, response)
             return response
@@ -218,11 +218,11 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
             try:
                 share_reader_service = ShareReaderService()
                 content = share_reader_service.get_mean_share(request, user_email)
-                response = homework1_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=content)
+                response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=content)
             except ValueError as e:
-                response = homework1_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+                response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
             except Exception as e:
-                response = homework1_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+                response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
             finally:
                 self.__StoreInCache(user_email, request_id, op_code, response)
             return response
@@ -248,7 +248,7 @@ class ServerService(homework1_pb2_grpc.ServerServiceServicer): #TODO Rename to S
             logging.info(f"Simulating delay for attempt {attempt_count}")
             time.sleep(5)
 
-        response = homework1_pb2.Reply(
+        response = homework2_pb2.Reply(
             statusCode=200,
             message="Processed successfully",
             content=f"Hello {user_email}, your request {request_id} has been processed."
@@ -310,7 +310,7 @@ def clean_cache():
 def serve():
     port = '50051'
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    homework1_pb2_grpc.add_ServerServiceServicer_to_server(ServerService(), server)
+    homework2_pb2_grpc.add_ServerServicer_to_server(Server(), server)
     server.add_insecure_port('[::]:' + port)
     
     try:

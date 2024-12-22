@@ -25,7 +25,7 @@ class Alerts:
             'bootstrap.servers': 'kafka-broker:9092',  
             'group.id': 'group2', 
             'auto.offset.reset': 'earliest',  
-            'enable.auto.commit': False 
+            'enable.auto.commit': True 
         }
 
         self.consumer = Consumer(consumer_config) 
@@ -70,7 +70,7 @@ class Alerts:
             data = json.loads(msg.value().decode('utf-8'))
             logging.info(f"Consumed: {data}")
             if self.__process(data):
-                self.consumer.commit(asynchronous=False) #TODO Il commit non va fatto a priori?
+                #self.consumer.commit(asynchronous=False) #TODO Il commit non va fatto a priori?
                 logging.info(f"Offset committed: {msg.offset()}")
             else:
                 logging.error(f"Error processing message: {data}")

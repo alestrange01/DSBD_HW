@@ -4,8 +4,8 @@ import re
 import grpc
 import json
 from decimal import Decimal
-import app.homework1_pb2 as homework1_pb2
-import app.homework1_pb2_grpc as homework1_pb2_grpc
+import app.homework2_pb2 as homework2_pb2
+import app.homework2_pb2_grpc as homework2_pb2_grpc
 
 target = 'localhost:50051'
 INSERT_YOUR_CHOICE = "Inserisci la tua scelta: "
@@ -45,8 +45,8 @@ def login():
     password = input("Inserisci la tua password: ")
     
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.LoginRequest(email=email, password=password)
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.LoginRequest(email=email, password=password)
         metadata = [
             ('user_email', email),
             ('request_id', str(random.randint(1, 1000))),
@@ -96,8 +96,8 @@ def register():
         print(f"typeof high value: {type(high_value)}, typeof low value: {type(low_value)}")
         break
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.RegisterRequest(email=email, password=password, role="user", share=share, highValue=high_value, lowValue=low_value)
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.RegisterRequest(email=email, password=password, role="user", share=share, highValue=high_value, lowValue=low_value)
         metadata = [
             ('user_email', email),
             ('request_id', str(random.randint(1, 1000))), 
@@ -206,8 +206,8 @@ def update():
         break
 
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.UpdateRequest(email=session.logged_email, share=share, highValue=high_value, lowValue=low_value)
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.UpdateRequest(email=session.logged_email, share=share, highValue=high_value, lowValue=low_value)
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -221,8 +221,8 @@ def update():
 
 def delete():  
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.DeleteRequest(email=session.logged_email)
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.DeleteRequest(email=session.logged_email)
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -236,8 +236,8 @@ def delete():
             
 def get_value_share():
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.NoneRequest()
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.NoneRequest()
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -261,8 +261,8 @@ def get_mean_share():
     n = int(n)
     
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.MeanRequest(n=n)
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.MeanRequest(n=n)
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -314,8 +314,8 @@ def admin_register_user():
         break
 
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.RegisterRequest(email=email, password=password, role=role, share=share, highValue=high_value, lowValue=low_value)
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.RegisterRequest(email=email, password=password, role=role, share=share, highValue=high_value, lowValue=low_value)
         metadata = [
             ('user_email', email),
             ('request_id', str(random.randint(1, 1000))), 
@@ -348,8 +348,8 @@ def admin_update():
         print(f"typeof high value: {type(high_value)}, typeof low value: {type(low_value)}")
         break
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.UpdateRequest(email=email, share=share, highValue=high_value, lowValue=low_value)
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.UpdateRequest(email=email, share=share, highValue=high_value, lowValue=low_value)
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -369,8 +369,8 @@ def admin_delete():
     choice = input(INSERT_YOUR_CHOICE)
     if choice == "1":
         with grpc.insecure_channel(target) as channel:
-            stub = homework1_pb2_grpc.ServerServiceStub(channel)
-            request = homework1_pb2.DeleteRequest(email=email)
+            stub = homework2_pb2_grpc.ServerStub(channel)
+            request = homework2_pb2.DeleteRequest(email=email)
             metadata = [
                 ('user_email', session.logged_email),
                 ('request_id', str(random.randint(1, 1000))),
@@ -386,8 +386,8 @@ def admin_delete():
 
 def view_all_users():
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.NoneRequest()
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.NoneRequest()
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -407,8 +407,8 @@ def view_all_users():
 
 def view_ticker_management():
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.NoneRequest()
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.NoneRequest()
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -428,8 +428,8 @@ def view_ticker_management():
 
 def view_all_shares():
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.NoneRequest()
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.NoneRequest()
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -457,13 +457,13 @@ def test_at_most_once_policy():
         try:
             start_time = time.time()
             with grpc.insecure_channel(target) as channel:
-                stub = homework1_pb2_grpc.ServerServiceStub(channel)
+                stub = homework2_pb2_grpc.ServerStub(channel)
                 metadata = [
                     ('user_email', session.logged_email), 
                     ('request_id', request_id),
                     ('op_code', 'GET')
                 ]
-                request = homework1_pb2.NoneRequest()
+                request = homework2_pb2.NoneRequest()
                 response = stub.TestAtMostOncePolicy(request, timeout=timeout, metadata=metadata)
                 elapsed_time = time.time() - start_time
                 print(f"Response received at {retries + 1} attempt after {elapsed_time:.5f} seconds: {response.content}")

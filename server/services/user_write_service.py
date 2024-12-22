@@ -40,11 +40,11 @@ class RegisterCommand:
                 self.role = request.role
                 self.high_value = request_high_value
                 self.low_value = request_low_value
-                ticker_management = ticker_management_repository_reader.get_ticker_management_by_code(request.share) #TODO Non query perchè non ha logica?
+                ticker_management = ticker_management_repository_reader.get_ticker_management_by_code(request.share)
                 if ticker_management is None:
-                    ticker_management_repository_writer.create_ticker_management(TickerManagementUpsertDTO(request.share, 1)) #TODO Non command perchè non ha logica o bisogna crearlo?
+                    ticker_management_repository_writer.create_ticker_management(TickerManagementUpsertDTO(request.share, 1))
                 else:
-                    ticker_management_repository_writer.update_ticker_management(TickerManagementUpsertDTO(request.share, ticker_management.counter + 1)) #TODO Non command perchè non ha logica o bisogna crearlo?
+                    ticker_management_repository_writer.update_ticker_management(TickerManagementUpsertDTO(request.share, ticker_management.counter + 1))
                 logging.info("Register")
                 
 class UpdateCommand:

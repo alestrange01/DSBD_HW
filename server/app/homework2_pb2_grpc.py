@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from app import homework1_pb2 as app_dot_homework1__pb2
+from app import homework2_pb2 as app_dot_homework2__pb2
 
 GRPC_GENERATED_VERSION = '1.68.1'
 GRPC_VERSION = grpc.__version__
@@ -18,14 +18,14 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in app/homework1_pb2_grpc.py depends on'
+        + f' but the generated code in app/homework2_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
     )
 
 
-class ServerServiceStub(object):
+class ServerStub(object):
     """Services for users management
 
     """
@@ -37,58 +37,58 @@ class ServerServiceStub(object):
             channel: A grpc.Channel.
         """
         self.Register = channel.unary_unary(
-                '/homework1.ServerService/Register',
-                request_serializer=app_dot_homework1__pb2.RegisterRequest.SerializeToString,
-                response_deserializer=app_dot_homework1__pb2.Reply.FromString,
+                '/homework1.Server/Register',
+                request_serializer=app_dot_homework2__pb2.RegisterRequest.SerializeToString,
+                response_deserializer=app_dot_homework2__pb2.Reply.FromString,
                 _registered_method=True)
         self.Login = channel.unary_unary(
-                '/homework1.ServerService/Login',
-                request_serializer=app_dot_homework1__pb2.LoginRequest.SerializeToString,
-                response_deserializer=app_dot_homework1__pb2.LoginReply.FromString,
+                '/homework1.Server/Login',
+                request_serializer=app_dot_homework2__pb2.LoginRequest.SerializeToString,
+                response_deserializer=app_dot_homework2__pb2.LoginReply.FromString,
                 _registered_method=True)
         self.Update = channel.unary_unary(
-                '/homework1.ServerService/Update',
-                request_serializer=app_dot_homework1__pb2.UpdateRequest.SerializeToString,
-                response_deserializer=app_dot_homework1__pb2.Reply.FromString,
+                '/homework1.Server/Update',
+                request_serializer=app_dot_homework2__pb2.UpdateRequest.SerializeToString,
+                response_deserializer=app_dot_homework2__pb2.Reply.FromString,
                 _registered_method=True)
         self.Delete = channel.unary_unary(
-                '/homework1.ServerService/Delete',
-                request_serializer=app_dot_homework1__pb2.DeleteRequest.SerializeToString,
-                response_deserializer=app_dot_homework1__pb2.Reply.FromString,
+                '/homework1.Server/Delete',
+                request_serializer=app_dot_homework2__pb2.DeleteRequest.SerializeToString,
+                response_deserializer=app_dot_homework2__pb2.Reply.FromString,
                 _registered_method=True)
         self.GetValueShare = channel.unary_unary(
-                '/homework1.ServerService/GetValueShare',
-                request_serializer=app_dot_homework1__pb2.NoneRequest.SerializeToString,
-                response_deserializer=app_dot_homework1__pb2.Reply.FromString,
+                '/homework1.Server/GetValueShare',
+                request_serializer=app_dot_homework2__pb2.NoneRequest.SerializeToString,
+                response_deserializer=app_dot_homework2__pb2.Reply.FromString,
                 _registered_method=True)
         self.GetMeanShare = channel.unary_unary(
-                '/homework1.ServerService/GetMeanShare',
-                request_serializer=app_dot_homework1__pb2.MeanRequest.SerializeToString,
-                response_deserializer=app_dot_homework1__pb2.Reply.FromString,
+                '/homework1.Server/GetMeanShare',
+                request_serializer=app_dot_homework2__pb2.MeanRequest.SerializeToString,
+                response_deserializer=app_dot_homework2__pb2.Reply.FromString,
                 _registered_method=True)
         self.ViewAllUsers = channel.unary_unary(
-                '/homework1.ServerService/ViewAllUsers',
-                request_serializer=app_dot_homework1__pb2.NoneRequest.SerializeToString,
-                response_deserializer=app_dot_homework1__pb2.Reply.FromString,
+                '/homework1.Server/ViewAllUsers',
+                request_serializer=app_dot_homework2__pb2.NoneRequest.SerializeToString,
+                response_deserializer=app_dot_homework2__pb2.Reply.FromString,
                 _registered_method=True)
         self.ViewTickerManagement = channel.unary_unary(
-                '/homework1.ServerService/ViewTickerManagement',
-                request_serializer=app_dot_homework1__pb2.NoneRequest.SerializeToString,
-                response_deserializer=app_dot_homework1__pb2.Reply.FromString,
+                '/homework1.Server/ViewTickerManagement',
+                request_serializer=app_dot_homework2__pb2.NoneRequest.SerializeToString,
+                response_deserializer=app_dot_homework2__pb2.Reply.FromString,
                 _registered_method=True)
         self.ViewAllShares = channel.unary_unary(
-                '/homework1.ServerService/ViewAllShares',
-                request_serializer=app_dot_homework1__pb2.NoneRequest.SerializeToString,
-                response_deserializer=app_dot_homework1__pb2.Reply.FromString,
+                '/homework1.Server/ViewAllShares',
+                request_serializer=app_dot_homework2__pb2.NoneRequest.SerializeToString,
+                response_deserializer=app_dot_homework2__pb2.Reply.FromString,
                 _registered_method=True)
         self.TestAtMostOncePolicy = channel.unary_unary(
-                '/homework1.ServerService/TestAtMostOncePolicy',
-                request_serializer=app_dot_homework1__pb2.NoneRequest.SerializeToString,
-                response_deserializer=app_dot_homework1__pb2.Reply.FromString,
+                '/homework1.Server/TestAtMostOncePolicy',
+                request_serializer=app_dot_homework2__pb2.NoneRequest.SerializeToString,
+                response_deserializer=app_dot_homework2__pb2.Reply.FromString,
                 _registered_method=True)
 
 
-class ServerServiceServicer(object):
+class ServerServicer(object):
     """Services for users management
 
     """
@@ -154,67 +154,67 @@ class ServerServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_ServerServiceServicer_to_server(servicer, server):
+def add_ServerServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Register': grpc.unary_unary_rpc_method_handler(
                     servicer.Register,
-                    request_deserializer=app_dot_homework1__pb2.RegisterRequest.FromString,
-                    response_serializer=app_dot_homework1__pb2.Reply.SerializeToString,
+                    request_deserializer=app_dot_homework2__pb2.RegisterRequest.FromString,
+                    response_serializer=app_dot_homework2__pb2.Reply.SerializeToString,
             ),
             'Login': grpc.unary_unary_rpc_method_handler(
                     servicer.Login,
-                    request_deserializer=app_dot_homework1__pb2.LoginRequest.FromString,
-                    response_serializer=app_dot_homework1__pb2.LoginReply.SerializeToString,
+                    request_deserializer=app_dot_homework2__pb2.LoginRequest.FromString,
+                    response_serializer=app_dot_homework2__pb2.LoginReply.SerializeToString,
             ),
             'Update': grpc.unary_unary_rpc_method_handler(
                     servicer.Update,
-                    request_deserializer=app_dot_homework1__pb2.UpdateRequest.FromString,
-                    response_serializer=app_dot_homework1__pb2.Reply.SerializeToString,
+                    request_deserializer=app_dot_homework2__pb2.UpdateRequest.FromString,
+                    response_serializer=app_dot_homework2__pb2.Reply.SerializeToString,
             ),
             'Delete': grpc.unary_unary_rpc_method_handler(
                     servicer.Delete,
-                    request_deserializer=app_dot_homework1__pb2.DeleteRequest.FromString,
-                    response_serializer=app_dot_homework1__pb2.Reply.SerializeToString,
+                    request_deserializer=app_dot_homework2__pb2.DeleteRequest.FromString,
+                    response_serializer=app_dot_homework2__pb2.Reply.SerializeToString,
             ),
             'GetValueShare': grpc.unary_unary_rpc_method_handler(
                     servicer.GetValueShare,
-                    request_deserializer=app_dot_homework1__pb2.NoneRequest.FromString,
-                    response_serializer=app_dot_homework1__pb2.Reply.SerializeToString,
+                    request_deserializer=app_dot_homework2__pb2.NoneRequest.FromString,
+                    response_serializer=app_dot_homework2__pb2.Reply.SerializeToString,
             ),
             'GetMeanShare': grpc.unary_unary_rpc_method_handler(
                     servicer.GetMeanShare,
-                    request_deserializer=app_dot_homework1__pb2.MeanRequest.FromString,
-                    response_serializer=app_dot_homework1__pb2.Reply.SerializeToString,
+                    request_deserializer=app_dot_homework2__pb2.MeanRequest.FromString,
+                    response_serializer=app_dot_homework2__pb2.Reply.SerializeToString,
             ),
             'ViewAllUsers': grpc.unary_unary_rpc_method_handler(
                     servicer.ViewAllUsers,
-                    request_deserializer=app_dot_homework1__pb2.NoneRequest.FromString,
-                    response_serializer=app_dot_homework1__pb2.Reply.SerializeToString,
+                    request_deserializer=app_dot_homework2__pb2.NoneRequest.FromString,
+                    response_serializer=app_dot_homework2__pb2.Reply.SerializeToString,
             ),
             'ViewTickerManagement': grpc.unary_unary_rpc_method_handler(
                     servicer.ViewTickerManagement,
-                    request_deserializer=app_dot_homework1__pb2.NoneRequest.FromString,
-                    response_serializer=app_dot_homework1__pb2.Reply.SerializeToString,
+                    request_deserializer=app_dot_homework2__pb2.NoneRequest.FromString,
+                    response_serializer=app_dot_homework2__pb2.Reply.SerializeToString,
             ),
             'ViewAllShares': grpc.unary_unary_rpc_method_handler(
                     servicer.ViewAllShares,
-                    request_deserializer=app_dot_homework1__pb2.NoneRequest.FromString,
-                    response_serializer=app_dot_homework1__pb2.Reply.SerializeToString,
+                    request_deserializer=app_dot_homework2__pb2.NoneRequest.FromString,
+                    response_serializer=app_dot_homework2__pb2.Reply.SerializeToString,
             ),
             'TestAtMostOncePolicy': grpc.unary_unary_rpc_method_handler(
                     servicer.TestAtMostOncePolicy,
-                    request_deserializer=app_dot_homework1__pb2.NoneRequest.FromString,
-                    response_serializer=app_dot_homework1__pb2.Reply.SerializeToString,
+                    request_deserializer=app_dot_homework2__pb2.NoneRequest.FromString,
+                    response_serializer=app_dot_homework2__pb2.Reply.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'homework1.ServerService', rpc_method_handlers)
+            'homework1.Server', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('homework1.ServerService', rpc_method_handlers)
+    server.add_registered_method_handlers('homework1.Server', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
-class ServerService(object):
+class Server(object):
     """Services for users management
 
     """
@@ -233,9 +233,9 @@ class ServerService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/homework1.ServerService/Register',
-            app_dot_homework1__pb2.RegisterRequest.SerializeToString,
-            app_dot_homework1__pb2.Reply.FromString,
+            '/homework1.Server/Register',
+            app_dot_homework2__pb2.RegisterRequest.SerializeToString,
+            app_dot_homework2__pb2.Reply.FromString,
             options,
             channel_credentials,
             insecure,
@@ -260,9 +260,9 @@ class ServerService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/homework1.ServerService/Login',
-            app_dot_homework1__pb2.LoginRequest.SerializeToString,
-            app_dot_homework1__pb2.LoginReply.FromString,
+            '/homework1.Server/Login',
+            app_dot_homework2__pb2.LoginRequest.SerializeToString,
+            app_dot_homework2__pb2.LoginReply.FromString,
             options,
             channel_credentials,
             insecure,
@@ -287,9 +287,9 @@ class ServerService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/homework1.ServerService/Update',
-            app_dot_homework1__pb2.UpdateRequest.SerializeToString,
-            app_dot_homework1__pb2.Reply.FromString,
+            '/homework1.Server/Update',
+            app_dot_homework2__pb2.UpdateRequest.SerializeToString,
+            app_dot_homework2__pb2.Reply.FromString,
             options,
             channel_credentials,
             insecure,
@@ -314,9 +314,9 @@ class ServerService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/homework1.ServerService/Delete',
-            app_dot_homework1__pb2.DeleteRequest.SerializeToString,
-            app_dot_homework1__pb2.Reply.FromString,
+            '/homework1.Server/Delete',
+            app_dot_homework2__pb2.DeleteRequest.SerializeToString,
+            app_dot_homework2__pb2.Reply.FromString,
             options,
             channel_credentials,
             insecure,
@@ -341,9 +341,9 @@ class ServerService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/homework1.ServerService/GetValueShare',
-            app_dot_homework1__pb2.NoneRequest.SerializeToString,
-            app_dot_homework1__pb2.Reply.FromString,
+            '/homework1.Server/GetValueShare',
+            app_dot_homework2__pb2.NoneRequest.SerializeToString,
+            app_dot_homework2__pb2.Reply.FromString,
             options,
             channel_credentials,
             insecure,
@@ -368,9 +368,9 @@ class ServerService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/homework1.ServerService/GetMeanShare',
-            app_dot_homework1__pb2.MeanRequest.SerializeToString,
-            app_dot_homework1__pb2.Reply.FromString,
+            '/homework1.Server/GetMeanShare',
+            app_dot_homework2__pb2.MeanRequest.SerializeToString,
+            app_dot_homework2__pb2.Reply.FromString,
             options,
             channel_credentials,
             insecure,
@@ -395,9 +395,9 @@ class ServerService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/homework1.ServerService/ViewAllUsers',
-            app_dot_homework1__pb2.NoneRequest.SerializeToString,
-            app_dot_homework1__pb2.Reply.FromString,
+            '/homework1.Server/ViewAllUsers',
+            app_dot_homework2__pb2.NoneRequest.SerializeToString,
+            app_dot_homework2__pb2.Reply.FromString,
             options,
             channel_credentials,
             insecure,
@@ -422,9 +422,9 @@ class ServerService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/homework1.ServerService/ViewTickerManagement',
-            app_dot_homework1__pb2.NoneRequest.SerializeToString,
-            app_dot_homework1__pb2.Reply.FromString,
+            '/homework1.Server/ViewTickerManagement',
+            app_dot_homework2__pb2.NoneRequest.SerializeToString,
+            app_dot_homework2__pb2.Reply.FromString,
             options,
             channel_credentials,
             insecure,
@@ -449,9 +449,9 @@ class ServerService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/homework1.ServerService/ViewAllShares',
-            app_dot_homework1__pb2.NoneRequest.SerializeToString,
-            app_dot_homework1__pb2.Reply.FromString,
+            '/homework1.Server/ViewAllShares',
+            app_dot_homework2__pb2.NoneRequest.SerializeToString,
+            app_dot_homework2__pb2.Reply.FromString,
             options,
             channel_credentials,
             insecure,
@@ -476,9 +476,9 @@ class ServerService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/homework1.ServerService/TestAtMostOncePolicy',
-            app_dot_homework1__pb2.NoneRequest.SerializeToString,
-            app_dot_homework1__pb2.Reply.FromString,
+            '/homework1.Server/TestAtMostOncePolicy',
+            app_dot_homework2__pb2.NoneRequest.SerializeToString,
+            app_dot_homework2__pb2.Reply.FromString,
             options,
             channel_credentials,
             insecure,

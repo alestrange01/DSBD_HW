@@ -4,7 +4,7 @@ package homework1;
 
 // Services for users management
 
-service ServerService {
+service Server {
   rpc Register(RegisterRequest) returns (Reply) {}
   rpc Login(LoginRequest) returns (LoginReply) {}
   rpc Update(UpdateRequest) returns (Reply) {}

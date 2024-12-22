@@ -14,7 +14,7 @@ class ShareRepositoryWriter:
             session.commit()
             logging.info(f"Lo share: {share} è stato eliminato.")
 
-    def delete_shares_by_share_name(self, share_name, batch_size=100): #TODO Unico dubbio, bisogna creare il relativo command o non è necessario qui?
+    def delete_shares_by_share_name(self, share_name, batch_size=100):
         with self.db.get_db_session() as session:
             try:
                 while True:

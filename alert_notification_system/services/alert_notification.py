@@ -12,20 +12,14 @@ logging = logging.getLogger(__name__)
 class AlertNotification:
     def __init__(self):
 
-        if os.getenv('EMAIL_SENDER_USER'):
-            self.email_sender_user = os.getenv('EMAIL_SENDER_USER')
-        else:
-            self.email_sender_user = ""
-        if os.getenv('EMAIL_SENDER_PASSWORD'):
-            self.email_sender_password = os.getenv('EMAIL_SENDER_PASSWORD')
-        else:
-            self.email_sender_password = ""
+        self.email_sender_user = os.getenv('EMAIL_SENDER_USER', "")
+        self.email_sender_password = os.getenv('EMAIL_SENDER_PASSWORD', "")
 
         consumer_config = {
             'bootstrap.servers': 'kafka-broker:9092',  
             'group.id': 'group2', 
             'auto.offset.reset': 'earliest',  
-            'enable.auto.commit': False 
+            'enable.auto.commit': True 
         }
 
         self.consumer = Consumer(consumer_config) 
@@ -81,7 +75,7 @@ class AlertNotification:
         data = json.loads(msg.value().decode('utf-8'))
         logging.info(f"Consumed: {data}")
         if self.__deliver_email(data):
-            self.consumer.commit(asynchronous=False)
+            #self.consumer.commit(asynchronous=False) #TODO Il commit non va fatto a priori?
             logging.info(f"Offset committed for message: {msg.offset()}")
         else:
             logging.error(f"Failed to process email notification: {data}")

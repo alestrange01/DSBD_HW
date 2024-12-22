@@ -54,10 +54,10 @@ class DataCollector:
                 self.share_repository_writer.create_share(share_dto)
                 logging.info(f"Share value for {share}: {float(share_value)}")
         
-        # message = {"msg" : "Share value updated"}    TODO: Da rimuovere il commento
-        # self.producer.produce(self.topic, json.dumps(message), callback=self.__delivery_report)
-        # self.producer.flush() 
-        # print(f"Produced: {message}")
+        message = {"msg" : "Share value updated"}
+        self.producer.produce(self.topic, json.dumps(message), callback=self.__delivery_report)
+        self.producer.flush() 
+        print(f"Produced: {message}")
         
     def __retrieve_share_value(self, share):
         msft = yf.Ticker(share)
