@@ -274,7 +274,7 @@ def get_mean_share():
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
 
-def admin_register_user(): #TODO: add high and low value
+def admin_register_user():
     email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
     while True:
         email = input("Inserisci l'email: ")
@@ -295,9 +295,27 @@ def admin_register_user(): #TODO: add high and low value
     password = input("Inserisci la password: ")
     share = input("Inserisci il Ticker: ") 
     
+    while True:
+        high_value = input("Inserisci il valore massimo per cui vuoi essere notificato(n per saltare): ")
+        low_value = input("Inserisci il valore minimo per cui vuoi essere notificato(n per saltare): ")
+        try:
+            high_value = None if high_value.lower() == "n" else float(high_value)
+            low_value = None if low_value.lower() == "n" else float(low_value)
+        except ValueError:
+            print("Valori non validi. Inserisci numeri validi o 'n' per saltare.")
+            continue
+
+        if high_value is not None and low_value is not None and high_value < low_value:
+            print("Il valore massimo non può essere inferiore al valore minimo.")
+            continue
+
+        print(f"High value: {high_value}, Low value: {low_value}")
+        print(f"typeof high value: {type(high_value)}, typeof low value: {type(low_value)}")
+        break
+
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.RegisterRequest(email=email, password=password, role=role, share=share)
+        request = homework1_pb2.RegisterRequest(email=email, password=password, role=role, share=share, highValue=high_value, lowValue=low_value)
         metadata = [
             ('user_email', email),
             ('request_id', str(random.randint(1, 1000))), 
@@ -309,12 +327,29 @@ def admin_register_user(): #TODO: add high and low value
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
                 
-def admin_update():  #TODO: add high and low value
+def admin_update():  
     email = input("Inserisci l'email dell'utente da modificare: ")
     share = input("Inserisci il nuovo share d'interesse: ")
+    while True:
+        high_value = input("Inserisci il valore massimo per cui vuoi essere notificato(n per saltare): ")
+        low_value = input("Inserisci il valore minimo per cui vuoi essere notificato(n per saltare): ")
+        try:
+            high_value = None if high_value.lower() == "n" else float(high_value)
+            low_value = None if low_value.lower() == "n" else float(low_value)
+        except ValueError:
+            print("Valori non validi. Inserisci numeri validi o 'n' per saltare.")
+            continue
+
+        if high_value is not None and low_value is not None and high_value < low_value:
+            print("Il valore massimo non può essere inferiore al valore minimo.")
+            continue
+
+        print(f"High value: {high_value}, Low value: {low_value}")
+        print(f"typeof high value: {type(high_value)}, typeof low value: {type(low_value)}")
+        break
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.UpdateRequest(email=email, share=share)
+        request = homework1_pb2.UpdateRequest(email=email, share=share, highValue=high_value, lowValue=low_value)
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
