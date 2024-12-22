@@ -20,9 +20,9 @@ class RegisterRequest(_message.Message):
     password: str
     role: str
     share: str
-    highValue: str
-    lowValue: str
-    def __init__(self, email: _Optional[str] = ..., password: _Optional[str] = ..., role: _Optional[str] = ..., share: _Optional[str] = ..., highValue: _Optional[str] = ..., lowValue: _Optional[str] = ...) -> None: ...
+    highValue: float
+    lowValue: float
+    def __init__(self, email: _Optional[str] = ..., password: _Optional[str] = ..., role: _Optional[str] = ..., share: _Optional[str] = ..., highValue: _Optional[float] = ..., lowValue: _Optional[float] = ...) -> None: ...
 
 class LoginRequest(_message.Message):
     __slots__ = ("email", "password")
@@ -40,9 +40,9 @@ class UpdateRequest(_message.Message):
     LOWVALUE_FIELD_NUMBER: _ClassVar[int]
     email: str
     share: str
-    highValue: str
-    lowValue: str
-    def __init__(self, email: _Optional[str] = ..., share: _Optional[str] = ..., highValue: _Optional[str] = ..., lowValue: _Optional[str] = ...) -> None: ...
+    highValue: float
+    lowValue: float
+    def __init__(self, email: _Optional[str] = ..., share: _Optional[str] = ..., highValue: _Optional[float] = ..., lowValue: _Optional[float] = ...) -> None: ...
 
 class DeleteRequest(_message.Message):
     __slots__ = ("email",)

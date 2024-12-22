@@ -12,11 +12,11 @@ class UserCreationDTO():
         return f"UserCreationDTO(email={self.email}, password={self.password}, role={self.role}, share_cod={self.share_cod}, high_value={self.high_value}, low_value={self.low_value})"
 
 class UserUpdateDTO():
-    def __init__(self, email, share_cod, high_value=None, low_value=None):
+    def __init__(self, email, new_share_cod, new_high_value=None, new_low_value=None):
         self.email = email
-        self.share_cod = share_cod
-        self.high_value = high_value
-        self.low_value = low_value
+        self.new_share_cod = new_share_cod
+        self.new_high_value = new_high_value
+        self.new_low_value = new_low_value
     
     def __repr__(self):
         return f"UserUpdateDTO(email={self.email}, password={self.password}, share_cod={self.share_cod}, high_value={self.high_value}, low_value={self.low_value})"

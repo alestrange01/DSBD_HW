@@ -59,27 +59,25 @@ class UpdateCommand:
         user = user_repository_reader.get_user_by_email(request.email)
         if user is None:
             raise ValueError("User does not exist")
-        if request.share == user.share_cod and self.compare_values(request.highValue, user.high_value) and self.compare_values(request.lowValue, user.low_value): #TODO: Aggiustare perchè non funziona
+        request_high_value = Decimal(request.highValue) if request.HasField("highValue") else None
+        request_low_value = Decimal(request.lowValue) if request.HasField("lowValue") else None
+        if request.share == user.share_cod and self.compare_values(request_high_value, user.high_value) and self.compare_values(request_low_value, user.low_value):
             self.content = False
         else:
             self.email = request.email
             self.share = request.share
-            if request.highValue:
-                    self.high_value = Decimal(request.highValue)
-            else:
-                self.high_value = None
-            if request.lowValue:
-                self.low_value = Decimal(request.lowValue)
-            else:
-                self.low_value = None
+            self.high_value = request_high_value
+            self.low_value = request_low_value
             self.password = None
-            old_ticker_management = ticker_management_repository_reader.get_ticker_management_by_code(user.share_cod)
-            ticker_management_repository_writer.update_ticker_management(TickerManagementUpsertDTO(user.share_cod, old_ticker_management.counter - 1))
-            new_ticker_management = ticker_management_repository_reader.get_ticker_management_by_code(request.share)
-            if new_ticker_management is None:
-                ticker_management_repository_writer.create_ticker_management(TickerManagementUpsertDTO(request.share, 1))
-            else:
-                ticker_management_repository_writer.update_ticker_management(TickerManagementUpsertDTO(request.share, new_ticker_management.counter + 1))
+            
+            if request.share != user.share_cod:
+                old_ticker_management = ticker_management_repository_reader.get_ticker_management_by_code(user.share_cod)
+                ticker_management_repository_writer.update_ticker_management(TickerManagementUpsertDTO(user.share_cod, old_ticker_management.counter - 1))
+                new_ticker_management = ticker_management_repository_reader.get_ticker_management_by_code(request.share)
+                if new_ticker_management is None:
+                    ticker_management_repository_writer.create_ticker_management(TickerManagementUpsertDTO(request.share, 1))
+                else:
+                    ticker_management_repository_writer.update_ticker_management(TickerManagementUpsertDTO(request.share, new_ticker_management.counter + 1))
             logging.info("Update")
             self.content = True
 

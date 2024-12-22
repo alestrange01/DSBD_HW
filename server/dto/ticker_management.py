@@ -1,5 +1,5 @@
 class TickerManagementUpsertDTO:
-    def __init__(self, share_cod, counter):
+    def __init__(self, share_cod, counter=1):
         self.share_cod = share_cod
         self.counter = counter
 

@@ -190,20 +190,21 @@ def update():
     while True:
         high_value = input("Inserisci il valore massimo per cui vuoi essere notificato(n per saltare): ")
         low_value = input("Inserisci il valore minimo per cui vuoi essere notificato(n per saltare): ")
-        if ((high_value.isdigit() and Decimal(high_value) < 0) or (high_value.isalpha() and high_value.capitalize() != "N")) or \
-           ((low_value.isdigit() and Decimal(low_value) < 0) or (low_value.isalpha() and low_value.capitalize() != "N")):
-            print("Numeri non validi")
+        try:
+            high_value = None if high_value.lower() == "n" else float(high_value)
+            low_value = None if low_value.lower() == "n" else float(low_value)
+        except ValueError:
+            print("Valori non validi. Inserisci numeri validi o 'n' per saltare.")
             continue
-        else:
-            print("Numeri validi")
-            if low_value.isalpha() and low_value.capitalize() == "N":
-                low_value = None
-            if high_value.isalpha() and high_value.capitalize() == "N":
-                high_value = None
-            if high_value and low_value and Decimal(high_value) < Decimal(low_value):
-                print("Valore massimo minore del valore minimo")
-                continue
-            break
+
+        if high_value is not None and low_value is not None and high_value < low_value:
+            print("Il valore massimo non può essere inferiore al valore minimo.")
+            continue
+
+        print(f"High value: {high_value}, Low value: {low_value}")
+        print(f"typeof high value: {type(high_value)}, typeof low value: {type(low_value)}")
+        break
+
     with grpc.insecure_channel(target) as channel:
         stub = homework1_pb2_grpc.ServerServiceStub(channel)
         request = homework1_pb2.UpdateRequest(email=session.logged_email, share=share, highValue=high_value, lowValue=low_value)
