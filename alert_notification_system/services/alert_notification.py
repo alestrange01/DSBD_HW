@@ -1,7 +1,7 @@
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from jinja2 import Environment, FileSystemLoader
-from confluent_kafka import Consumer, KafkaException
+from confluent_kafka import Consumer, KafkaError
 import smtplib
 import json
 import logging
@@ -64,7 +64,7 @@ class AlertNotification:
 
     def __handle_message(self, msg):
         if msg.error():
-            if msg.error().code() == KafkaException._PARTITION_EOF:
+            if msg.error().code() == KafkaError._PARTITION_EOF:
                 logging.error(f"End of partition reached {msg.topic()} [{msg.partition()}]")
             else:
                 logging.error(f"Consumer error: {msg.error()}")
@@ -97,18 +97,3 @@ class AlertNotification:
         finally:
             self.consumer.close()
             logging.info("Consumer closed.")
-
-        # body = "Il valore del tuo share: AAPL è al limite minimo!"
-        # message = {
-        #         "to_email":"dr.russodaniele@gmail.com",
-        #         "subject":"Il valore del tuo share è al limite!",
-        #         "template_name_html":"email-template.html",
-        #         "template_name_txt":"email-template.txt",
-        #         "context":{
-        #                 "name": "Daniele",
-        #                 "message": body,
-        #                 }
-        #     }  
-        # send_email(
-        #     data = message
-        # )

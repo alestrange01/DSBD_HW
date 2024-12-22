@@ -2,6 +2,7 @@ import logging
 import sys
 import threading
 from services.alerts import Alerts
+from db.db import DB
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,6 +14,7 @@ logging.basicConfig(
 )
 
 if __name__ == '__main__':
+    DB.initialize()
     alert = Alerts()
     alert_thread = threading.Thread(target=alert.alerts)
     alert_thread.start()

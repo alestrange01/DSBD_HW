@@ -1,4 +1,4 @@
-from confluent_kafka import Consumer, KafkaException, Producer
+from confluent_kafka import Consumer, KafkaError, Producer
 import logging
 import time
 import json
@@ -60,7 +60,7 @@ class Alerts:
             logging.error(f"Unexpected error in Kafka consumer loop: {e}")
 
     def __handle_consumer_error(self, msg):
-        if msg.error().code() == KafkaException._PARTITION_EOF:
+        if msg.error().code() == KafkaError._PARTITION_EOF:
             logging.error(f"End of partition reached {msg.topic()} [{msg.partition()}]")
         else:
             logging.error(f"Consumer error: {msg.error()}")
@@ -82,8 +82,9 @@ class Alerts:
             if data['msg'] != 'Share value updated':
                 logging.error(f"Invalid message received: {data}")
                 return False
-            logging.info(f"Consumed: {data}")
+            logging.info(f"Consumed __process: {data}")
             users = self.user_repository_reader.get_all_users()
+            logging.info(f"Users: {users}")
             for user in users:
                 latest_share = self.share_repository_reader.get_latest_share_by_name(user.share_cod)
                 if latest_share:

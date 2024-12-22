@@ -92,8 +92,6 @@ def register():
             print("Il valore massimo non può essere inferiore al valore minimo.")
             continue
 
-        print(f"High value: {high_value}, Low value: {low_value}")
-        print(f"typeof high value: {type(high_value)}, typeof low value: {type(low_value)}")
         break
     with grpc.insecure_channel(target) as channel:
         stub = homework2_pb2_grpc.ServerStub(channel)
