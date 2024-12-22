@@ -18,7 +18,7 @@ class DB:
             postgres_db = os.getenv('POSTGRES_DB', 'postgres')
             postgres_port = os.getenv('POSTGRES_PORT', 5532)
 
-            cls.DATABASE_URL = f"postgresql://{postgres_user}:{postgres_password}@postgres:{postgres_port}/{postgres_db}"
+            cls.DATABASE_URL = f"postgresql://{postgres_user}:{postgres_password}@localhost:{postgres_port}/{postgres_db}" #TODO: Cambiare localhost in postgres
             cls.engine = create_engine(cls.DATABASE_URL, echo=False)
             cls.Session = sessionmaker(bind=cls.engine)
 

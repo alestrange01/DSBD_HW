@@ -31,19 +31,15 @@ class RegisterCommand:
                 logging.error("User already exists")
                 raise ValueError("User already exists")
             else:
+                request_high_value = Decimal(request.highValue) if request.HasField("highValue") else None
+                request_low_value = Decimal(request.lowValue) if request.HasField("lowValue") else None
                 hashed_password = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
                 self.email = request.email
                 self.password = hashed_password
                 self.share = request.share
                 self.role = request.role
-                if request.highValue:
-                    self.high_value = Decimal(request.highValue)
-                else:
-                    self.high_value = None
-                if request.lowValue:
-                    self.low_value = Decimal(request.lowValue)
-                else:
-                    self.low_value = None
+                self.high_value = request_high_value
+                self.low_value = request_low_value
                 ticker_management = ticker_management_repository_reader.get_ticker_management_by_code(request.share) #TODO Non query perchè non ha logica?
                 if ticker_management is None:
                     ticker_management_repository_writer.create_ticker_management(TickerManagementUpsertDTO(request.share, 1)) #TODO Non command perchè non ha logica o bisogna crearlo?
