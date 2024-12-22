@@ -24,7 +24,7 @@ class DB:
     @contextmanager
     def get_db_session(self):
         """Context manager per gestire automaticamente la sessione del DB."""
-        session = self.session()
+        session = self.Session()
         try:
             yield session
         finally:

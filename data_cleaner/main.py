@@ -3,6 +3,7 @@ import sys
 import schedule
 import time
 from services.data_cleaner import DataCleaner
+from db.db import DB
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,6 +16,7 @@ logging.basicConfig(
 
 
 if __name__ == '__main__':
+    DB.initialize()
     data_cleaner = DataCleaner()
     data_cleaner.clean() #TODO rimuovere
     schedule.every().day.do(data_cleaner.clean) 
