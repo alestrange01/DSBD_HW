@@ -70,7 +70,6 @@ class Alerts:
             data = json.loads(msg.value().decode('utf-8'))
             logging.info(f"Consumed: {data}")
             if self.__process(data):
-                #self.consumer.commit(asynchronous=False) #TODO Il commit non va fatto a priori?
                 logging.info(f"Offset committed: {msg.offset()}")
             else:
                 logging.error(f"Error processing message: {data}")
@@ -84,7 +83,6 @@ class Alerts:
                 return False
             logging.info(f"Consumed __process: {data}")
             users = self.user_repository_reader.get_all_users()
-            logging.info(f"Users: {users}")
             for user in users:
                 latest_share = self.share_repository_reader.get_latest_share_by_name(user.share_cod)
                 if latest_share:

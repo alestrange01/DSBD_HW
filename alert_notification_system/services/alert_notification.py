@@ -75,7 +75,6 @@ class AlertNotification:
         data = json.loads(msg.value().decode('utf-8'))
         logging.info(f"Consumed: {data}")
         if self.__deliver_email(data):
-            #self.consumer.commit(asynchronous=False) #TODO Il commit non va fatto a priori?
             logging.info(f"Offset committed for message: {msg.offset()}")
         else:
             logging.error(f"Failed to process email notification: {data}")
