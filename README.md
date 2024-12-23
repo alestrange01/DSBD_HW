@@ -170,6 +170,7 @@ Abbiamo utilizzato Apache Kafka come broker di messaggi per comunicare tra i mic
 ---
 
 ## **Diagramma architetturale**
+![architettura](https://github.com/alestrange01/DSBD_HW/blob/main/img/Diagramma_architettura.png)
 
 ## **Diagramma delle interazioni**
 
@@ -240,10 +241,12 @@ Il DataCleaner è un microservizio che opera autonomamente per garantire la puli
 **Alert system**
 
 L'AlertSystem è un microservizio che opera da producer per il topic `to-notifier` e da consumer per il topic `to-alert-system`, il suo ruolo è quello di valutare al termine del lavoro del `data_collector` se è stata ecceduta una soglia, minima o massima, per ogni utente ed in caso affemativo andare ad inviare un messaggio sul topic `to-notifier`.
+![alert system](https://github.com/alestrange01/DSBD_HW/blob/main/img/AlertSystem.png)
 
 **Alert notification system**
 
 L'AlertNotificationSystem è un microservizio che opera da consumer del topic `to-notifier`, il suo ruolo è quello di inviare una mail, sfruttando il package python `email` ed il template engine `jinja` per poter inviare email con template html oltre che text.
+![alert notification system](https://github.com/alestrange01/DSBD_HW/blob/main/img/AlertNotificationSystem.png)
 
 ## **Schema del database**
 
