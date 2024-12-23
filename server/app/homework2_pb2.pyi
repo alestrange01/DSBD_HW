@@ -9,16 +9,20 @@ class NoneRequest(_message.Message):
     def __init__(self) -> None: ...
 
 class RegisterRequest(_message.Message):
-    __slots__ = ("email", "password", "role", "share")
+    __slots__ = ("email", "password", "role", "share", "highValue", "lowValue")
     EMAIL_FIELD_NUMBER: _ClassVar[int]
     PASSWORD_FIELD_NUMBER: _ClassVar[int]
     ROLE_FIELD_NUMBER: _ClassVar[int]
     SHARE_FIELD_NUMBER: _ClassVar[int]
+    HIGHVALUE_FIELD_NUMBER: _ClassVar[int]
+    LOWVALUE_FIELD_NUMBER: _ClassVar[int]
     email: str
     password: str
     role: str
     share: str
-    def __init__(self, email: _Optional[str] = ..., password: _Optional[str] = ..., role: _Optional[str] = ..., share: _Optional[str] = ...) -> None: ...
+    highValue: float
+    lowValue: float
+    def __init__(self, email: _Optional[str] = ..., password: _Optional[str] = ..., role: _Optional[str] = ..., share: _Optional[str] = ..., highValue: _Optional[float] = ..., lowValue: _Optional[float] = ...) -> None: ...
 
 class LoginRequest(_message.Message):
     __slots__ = ("email", "password")
@@ -29,12 +33,16 @@ class LoginRequest(_message.Message):
     def __init__(self, email: _Optional[str] = ..., password: _Optional[str] = ...) -> None: ...
 
 class UpdateRequest(_message.Message):
-    __slots__ = ("email", "share")
+    __slots__ = ("email", "share", "highValue", "lowValue")
     EMAIL_FIELD_NUMBER: _ClassVar[int]
     SHARE_FIELD_NUMBER: _ClassVar[int]
+    HIGHVALUE_FIELD_NUMBER: _ClassVar[int]
+    LOWVALUE_FIELD_NUMBER: _ClassVar[int]
     email: str
     share: str
-    def __init__(self, email: _Optional[str] = ..., share: _Optional[str] = ...) -> None: ...
+    highValue: float
+    lowValue: float
+    def __init__(self, email: _Optional[str] = ..., share: _Optional[str] = ..., highValue: _Optional[float] = ..., lowValue: _Optional[float] = ...) -> None: ...
 
 class DeleteRequest(_message.Message):
     __slots__ = ("email",)

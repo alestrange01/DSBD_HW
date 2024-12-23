@@ -2,8 +2,10 @@ import random
 import time
 import re
 import grpc
-import services.homework1_pb2 as homework1_pb2
-import services.homework1_pb2_grpc as homework1_pb2_grpc
+import json
+from decimal import Decimal
+import app.homework2_pb2 as homework2_pb2
+import app.homework2_pb2_grpc as homework2_pb2_grpc
 
 target = 'localhost:50051'
 INSERT_YOUR_CHOICE = "Inserisci la tua scelta: "
@@ -43,8 +45,8 @@ def login():
     password = input("Inserisci la tua password: ")
     
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.LoginRequest(email=email, password=password)
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.LoginRequest(email=email, password=password)
         metadata = [
             ('user_email', email),
             ('request_id', str(random.randint(1, 1000))),
@@ -76,10 +78,24 @@ def register():
             print("Formato email non valido. Riprova.")
     password = input("Inserisci la tua password: ")
     share = input("Inserisci il Ticker: ")
-    
+    while True:
+        high_value = input("Inserisci il valore massimo per cui vuoi essere notificato(n per saltare): ")
+        low_value = input("Inserisci il valore minimo per cui vuoi essere notificato(n per saltare): ")
+        try:
+            high_value = None if high_value.lower() == "n" else float(high_value)
+            low_value = None if low_value.lower() == "n" else float(low_value)
+        except ValueError:
+            print("Valori non validi. Inserisci numeri validi o 'n' per saltare.")
+            continue
+
+        if high_value is not None and low_value is not None and high_value < low_value:
+            print("Il valore massimo non può essere inferiore al valore minimo.")
+            continue
+
+        break
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.RegisterRequest(email=email, password=password, role="user", share=share)
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.RegisterRequest(email=email, password=password, role="user", share=share, highValue=high_value, lowValue=low_value)
         metadata = [
             ('user_email', email),
             ('request_id', str(random.randint(1, 1000))), 
@@ -91,10 +107,7 @@ def register():
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
         else:
-            if response.statusCode == 204:
-                login()
-            else:
-                login_or_register()
+            login_or_register()
 
 def run():
     while True:
@@ -172,9 +185,24 @@ def admin_run():
     
 def update():
     share = input("Inserisci il tuo nuovo share d'interesse: ")
+    while True:
+        high_value = input("Inserisci il valore massimo per cui vuoi essere notificato(n per saltare): ")
+        low_value = input("Inserisci il valore minimo per cui vuoi essere notificato(n per saltare): ")
+        try:
+            high_value = None if high_value.lower() == "n" else float(high_value)
+            low_value = None if low_value.lower() == "n" else float(low_value)
+        except ValueError:
+            print("Valori non validi. Inserisci numeri validi o 'n' per saltare.")
+            continue
+
+        if high_value is not None and low_value is not None and high_value < low_value:
+            print("Il valore massimo non può essere inferiore al valore minimo.")
+            continue
+        break
+
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.UpdateRequest(email=session.logged_email, share=share)
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.UpdateRequest(email=session.logged_email, share=share, highValue=high_value, lowValue=low_value)
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -188,8 +216,8 @@ def update():
 
 def delete():  
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.DeleteRequest(email=session.logged_email)
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.DeleteRequest(email=session.logged_email)
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -203,8 +231,8 @@ def delete():
             
 def get_value_share():
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.NoneRequest()
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.NoneRequest()
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -228,8 +256,8 @@ def get_mean_share():
     n = int(n)
     
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.MeanRequest(n=n)
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.MeanRequest(n=n)
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -241,7 +269,7 @@ def get_mean_share():
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
 
-def admin_register_user(): 
+def admin_register_user():
     email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
     while True:
         email = input("Inserisci l'email: ")
@@ -262,9 +290,24 @@ def admin_register_user():
     password = input("Inserisci la password: ")
     share = input("Inserisci il Ticker: ") 
     
+    while True:
+        high_value = input("Inserisci il valore massimo per cui vuoi essere notificato(n per saltare): ")
+        low_value = input("Inserisci il valore minimo per cui vuoi essere notificato(n per saltare): ")
+        try:
+            high_value = None if high_value.lower() == "n" else float(high_value)
+            low_value = None if low_value.lower() == "n" else float(low_value)
+        except ValueError:
+            print("Valori non validi. Inserisci numeri validi o 'n' per saltare.")
+            continue
+
+        if high_value is not None and low_value is not None and high_value < low_value:
+            print("Il valore massimo non può essere inferiore al valore minimo.")
+            continue
+        break
+
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.RegisterRequest(email=email, password=password, role=role, share=share)
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.RegisterRequest(email=email, password=password, role=role, share=share, highValue=high_value, lowValue=low_value)
         metadata = [
             ('user_email', email),
             ('request_id', str(random.randint(1, 1000))), 
@@ -276,12 +319,26 @@ def admin_register_user():
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
                 
-def admin_update():
+def admin_update():  
     email = input("Inserisci l'email dell'utente da modificare: ")
     share = input("Inserisci il nuovo share d'interesse: ")
+    while True:
+        high_value = input("Inserisci il valore massimo per cui vuoi essere notificato(n per saltare): ")
+        low_value = input("Inserisci il valore minimo per cui vuoi essere notificato(n per saltare): ")
+        try:
+            high_value = None if high_value.lower() == "n" else float(high_value)
+            low_value = None if low_value.lower() == "n" else float(low_value)
+        except ValueError:
+            print("Valori non validi. Inserisci numeri validi o 'n' per saltare.")
+            continue
+
+        if high_value is not None and low_value is not None and high_value < low_value:
+            print("Il valore massimo non può essere inferiore al valore minimo.")
+            continue
+        break
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.UpdateRequest(email=email, share=share)
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.UpdateRequest(email=email, share=share, highValue=high_value, lowValue=low_value)
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -301,8 +358,8 @@ def admin_delete():
     choice = input(INSERT_YOUR_CHOICE)
     if choice == "1":
         with grpc.insecure_channel(target) as channel:
-            stub = homework1_pb2_grpc.ServerServiceStub(channel)
-            request = homework1_pb2.DeleteRequest(email=email)
+            stub = homework2_pb2_grpc.ServerStub(channel)
+            request = homework2_pb2.DeleteRequest(email=email)
             metadata = [
                 ('user_email', session.logged_email),
                 ('request_id', str(random.randint(1, 1000))),
@@ -318,8 +375,8 @@ def admin_delete():
 
 def view_all_users():
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.NoneRequest()
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.NoneRequest()
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -328,10 +385,10 @@ def view_all_users():
         try:
             response = stub.ViewAllUsers(request, metadata=metadata)
             print(f"Response received: status code {response.statusCode}, message {response.message}")
-            users = parse(response.content, "User")
+            users = json.loads(response.content)
             print("\nLista degli utenti registrati:")
             for user in users:
-                print(f"- ID: {user['id']}, Email: {user['email']}, Role: {user['role']}, Share: {user['share_cod']}")
+                print(f"- Email: {user['email']}, Role: {user['role']}, Share: {user['share_cod']}, High Value: {user['high_value']}, Low Value: {user['low_value']}")
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
         except Exception as e:
@@ -339,8 +396,8 @@ def view_all_users():
 
 def view_ticker_management():
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.NoneRequest()
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.NoneRequest()
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -349,10 +406,10 @@ def view_ticker_management():
         try:
             response = stub.ViewTickerManagement(request, metadata=metadata)
             print(f"Response received: status code {response.statusCode}, message {response.message}")
-            ticker_managements = parse(response.content, "TickerManagement")
+            ticker_managements = json.loads(response.content)
             print("\nTicker management:")
             for ticker_management in ticker_managements:
-                print(f"- ID: {ticker_management['id']}, Share Cod: {ticker_management['share_cod']}, Counter: {ticker_management['counter']}")
+                print(f"- Share Cod: {ticker_management['share_cod']}, Counter: {ticker_management['counter']}")
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
         except Exception as e:
@@ -360,8 +417,8 @@ def view_ticker_management():
 
 def view_all_shares():
     with grpc.insecure_channel(target) as channel:
-        stub = homework1_pb2_grpc.ServerServiceStub(channel)
-        request = homework1_pb2.NoneRequest()
+        stub = homework2_pb2_grpc.ServerStub(channel)
+        request = homework2_pb2.NoneRequest()
         metadata = [
             ('user_email', session.logged_email),
             ('request_id', str(random.randint(1, 1000))),
@@ -370,10 +427,10 @@ def view_all_shares():
         try:
             response = stub.ViewAllShares(request, metadata=metadata)
             print(f"Response received: status code {response.statusCode}, message {response.message}")
-            shares = parse(response.content, "Share")
+            shares = json.loads(response.content)
             print("\nLista delle share:")
             for share in shares:
-                print(f"- ID: {share['id']}, Share Cod: {share['share']}, Value: {share['value']}, Timestamp: {share['timestamp']}")
+                print(f"- Share Cod: {share['share_name']}, Value: {share['value']}, Timestamp: {share['timestamp']}")
         except grpc.RpcError as e:
             print(f"RPC failed with code {e.code()}: {e.details()}")
         except Exception as e:
@@ -389,13 +446,13 @@ def test_at_most_once_policy():
         try:
             start_time = time.time()
             with grpc.insecure_channel(target) as channel:
-                stub = homework1_pb2_grpc.ServerServiceStub(channel)
+                stub = homework2_pb2_grpc.ServerStub(channel)
                 metadata = [
                     ('user_email', session.logged_email), 
                     ('request_id', request_id),
                     ('op_code', 'GET')
                 ]
-                request = homework1_pb2.NoneRequest()
+                request = homework2_pb2.NoneRequest()
                 response = stub.TestAtMostOncePolicy(request, timeout=timeout, metadata=metadata)
                 elapsed_time = time.time() - start_time
                 print(f"Response received at {retries + 1} attempt after {elapsed_time:.5f} seconds: {response.content}")
@@ -409,27 +466,3 @@ def test_at_most_once_policy():
             retries += 1
     else:
         print("All retries done.")
-
-def parse(raw_content, object_name):
-    try:
-        start_index = raw_content.find("[")
-        end_index = raw_content.find("]")
-        objects_raw = raw_content[start_index + 1:end_index]
-        parsed_objects = []
-        object_prefix = f"<{object_name}(" if "<" in objects_raw else f"{object_name}("
-        
-        for obj_raw in objects_raw.split(f", {object_prefix}"):
-            obj_raw = obj_raw.replace(object_prefix, "").replace(")>", "").replace(")", "").strip()
-            if not obj_raw:
-                continue
-            obj_dict = {}
-            for field in obj_raw.split(", "):
-                key, value = field.split("=")
-                value = value.strip().strip("'")
-                obj_dict[key.strip()] = value
-            parsed_objects.append(obj_dict)
-        
-        return parsed_objects
-    except Exception as e:
-        print(f"Error parsing {object_name} data: {e}")
-        return []

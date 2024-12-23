@@ -2,7 +2,8 @@ import logging
 import sys
 import schedule
 import time
-from services.data_cleaner import clean
+from services.data_cleaner import DataCleaner
+from db.db import DB
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,8 +14,11 @@ logging.basicConfig(
     ]
 )
 
+
 if __name__ == '__main__':
-    schedule.every().day.do(clean)
+    DB.initialize()
+    data_cleaner = DataCleaner()
+    schedule.every().day.do(data_cleaner.clean) 
 
     while True:
         schedule.run_pending()

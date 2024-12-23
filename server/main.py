@@ -3,8 +3,8 @@ import sys
 import schedule
 import time
 import threading
-from db.db import initialize_database
-from services.server import serve, clean_cache
+from db.db import DB
+from app.server import serve, clean_cache
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,7 +16,8 @@ logging.basicConfig(
 )
 
 if __name__ == '__main__':
-    initialize_database()
+    DB.initialize()
+    DB.initialize_database()
     serve_thread = threading.Thread(target=serve, daemon=True)
     serve_thread.start()
 

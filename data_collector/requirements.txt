@@ -2,3 +2,4 @@ SQLAlchemy
 yfinance
 psycopg2-binary
 schedule
+confluent_kafka

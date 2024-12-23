@@ -1,22 +1,33 @@
+from datetime import datetime, timedelta
 import logging
 import time
-from datetime import datetime, timedelta
-from repositories import ticker_management_repository
-from repositories import share_repository
+from db.db import DB
+from repositories.share_repository_reader import ShareRepositoryReader
+from repositories.share_repository_writer import ShareRepositoryWriter
+from repositories.ticker_management_repository_reader import TickerManagementRepositoryReader
+from repositories.ticker_management_repository_writer import TickerManagementRepositoryWriter
 
 logging = logging.getLogger(__name__)
 
-def clean():
-    shares = share_repository.get_all_shares()
-    for share in shares:
-        if share.timestamp < datetime.now() - timedelta(days=14):
-            share_repository.delete_share(share)
-            logging.info(f"Share eliminato: {share}, perche' vecchio di 14 giorni.")
-    ticker_management = ticker_management_repository.get_all_ticker_management()
-    for ticker in ticker_management:
-        if ticker.counter == 0:
-            shares = share_repository.get_all_shares_by_share_code(ticker.share_cod)
-            for share in shares:
-                share_repository.delete_share(share)
-                logging.info(f"Share eliminato: {share}, perche' non piu' utilizzato.")
-            ticker_management_repository.delete_ticker_management(ticker.share_cod)
+class DataCleaner():
+    def __init__(self):
+        self.db = DB()
+        self.share_repository_reader = ShareRepositoryReader(self.db)
+        self.share_repository_writer = ShareRepositoryWriter(self.db)
+        self.ticker_management_repository_reader = TickerManagementRepositoryReader(self.db)
+        self.ticker_management_repository_writer = TickerManagementRepositoryWriter(self.db)
+        
+    def clean(self):
+        shares = self.share_repository_reader.get_all_shares()
+        for share in shares:
+            if share.timestamp < datetime.now() - timedelta(days=14):
+                self.share_repository_writer.delete_share(share)
+                logging.info(f"Share eliminato: {share}, perche' vecchio di 14 giorni.")
+        ticker_managements = self.ticker_management_repository_reader.get_all_ticker_management()
+        for ticker_management in ticker_managements:
+            if ticker_management.counter == 0:
+                shares = self.share_repository_reader.get_all_shares_by_share_code(ticker_management.share_cod)
+                for share in shares:
+                    self.share_repository_writer.delete_share(share)
+                    logging.info(f"Share eliminato: {share}, perche' non piu' utilizzato.")
+                self.ticker_management_repository_writer.delete_ticker_management(ticker_management)
