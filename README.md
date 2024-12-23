@@ -1,8 +1,8 @@
 Sistema distribuito di ticker
 # Sistema distribuito di ticker
 Questo progetto implementa un sistema distribuito basato su un'architettura a microservizi per la gestione di utenti e dei ticker di loro interesse.
-L'applicazione è suddivisa in tre componenti principali
-(`server`, `data_collector` e `data_cleaner`), sfruttando un approccio modulare per garantire scalabilità e resilienza.
+L'applicazione è suddivisa in cinque componenti principali
+(`server`, `data_collector`, `data_cleaner`, `alert_system` e `alert_notification_system`), sfruttando un approccio modulare per garantire scalabilità e resilienza.
 ---
 
 ---
@@ -12,15 +12,17 @@ Questo progetto realizza un sistema distribuito basato su un'architettura a micr
 
 La comunicazione tra client e server avviene tramite gRPC, garantendo trasparenza ed efficienza. Il server adotta la politica di at-most-once per assicurare che ogni richiesta sia processata al massimo una volta, per garantire l’idempotenza delle operazioni e migliorare l’efficienza del sistema. Gli altri microservizi operano autonomamente, attivati periodicamente da uno scheduler per raccogliere e pulire i dati.
 
+La comunicazione tra `data_collector` e `alert_system` e tra `alert_system` e `alert_notification_system` avviente tramite kafka, un broker che permette di avere maggior robustezza, una maggiore resilienza del sistema e una migliore gestione dei picchi di traffico.
+
 La gestione dei dati è centralizzata in un database relazionale composto da tre tabelle principali. La tabella users gestisce le informazioni sugli utenti, tra cui email e il ticker azionario associato. La tabella shares registra i dati relativi ai titoli azionari (titolo, valore e un timestamp). Infine, la tabella ticker_management tiene traccia dell'utilizzo dei ticker azionari tramite un contatore, garantendo che i ticker non utilizzati vengano eliminati poi per ottimizzare lo spazio.
 
 Il pattern Circuit Breaker gestisce le chiamate verso servizi esterni, come Yahoo Finance, proteggendo da guasti e fallimenti ripetuti. In caso di errori, il circuito si apre temporaneamente, impedendo nuove richieste, e passa successivamente a uno stato "half-open" per verificare il recupero del servizio. 
 
 ---
 ## **Scelte architetturali**
-Abbiamo scelto di suddividere il sistema in tre microservizi distinti per garantire una chiara separazione delle responsabilità e una maggiore modularità. 
+Abbiamo scelto di suddividere il sistema in cinque microservizi distinti per garantire una chiara separazione delle responsabilità e una maggiore modularità. 
 
-In particolare, abbiamo deciso di creare un terzo microservizio dedicato, il Data Cleaner, separato logicamente dal Data Collector, nonostante entrambi operino sui dati dei ticker azionari. Questa scelta è stata motivata dall'esigenza di distinguere nettamente le operazioni di raccolta e aggiornamento dei dati da quelle di pulizia e ottimizzazione del database.
+In particolare, abbiamo deciso di creare un microservizio dedicato, il Data Cleaner, separato logicamente dal Data Collector, nonostante entrambi operino sui dati dei ticker azionari. Questa scelta è stata motivata dall'esigenza di distinguere nettamente le operazioni di raccolta e aggiornamento dei dati da quelle di pulizia e ottimizzazione del database.
 
 Ogni microservizio ha un ruolo ben definito e indipendente, consentendo di isolare eventuali problematiche e facilitare la risoluzione dei guasti. Questo approccio offre diversi vantaggi:
 - Scalabilità: Ogni componente può essere scalato indipendentemente in base al carico specifico, ottimizzando l'uso delle risorse senza dover aumentare inutilmente le capacità dell'intero sistema.
@@ -28,31 +30,65 @@ Ogni microservizio ha un ruolo ben definito e indipendente, consentendo di isola
 - Resilienza: L'indipendenza tra i microservizi limita l'impatto di eventuali guasti, mantenendo operativo il resto del sistema. Inoltre, il Data Collector utilizza un pattern come il Circuit Breaker per isolare i problemi legati ai servizi esterni.
 - Flessibilità nello sviluppo: Il team può lavorare su diversi microservizi in parallelo, scegliendo tecnologie e strumenti più adatti per ciascun componente.
 
+Abbiamo scelto di adottare il pattern CQRS (Command and Query Responsibility Segregation) sia nei service del server che nei repository di tutti i microservizi per i seguenti motivi:
+- Separazione delle responsabilità:
+  - CQRS separa le operazioni di lettura (Query) da quelle di scrittura (Command), semplificando ciascuna delle due. Questo approccio si traduce in codice più chiaro e più facile da mantenere.
+- Scalabilità:
+  - Con CQRS è possibile ottimizzare la lettura e la scrittura in modo indipendente.
+- Flessibilità evolutiva:
+  - CQRS facilita l'introduzione di nuove funzionalità, come cache dedicate per le query o pipeline di eventi per aggiornamenti asincroni dei dati.
+
+Abbiamo utilizzato Apache Kafka come broker di messaggi per comunicare tra i microservizi per queste ragioni:
+- Alta affidabilità:
+  - Kafka garantisce durabilità e tolleranza ai guasti, essenziali in un sistema distribuito. Le opzioni di configurazione (es. acks=all) assicurano che i messaggi siano confermati solo quando sono stati replicati in tutti i broker.
+- Gestione del carico elevato:
+  - Kafka è ottimizzato per throughput elevati, gestendo milioni di messaggi al secondo, ideale per un ecosistema di microservizi.
+- Consistenza ed elaborazione garantita:
+  - Con configurazioni come enable.auto.commit=False, possiamo gestire manualmente il commit degli offset, garantendo che i messaggi vengano elaborati esattamente una volta, evitando duplicazioni o perdite.
+- Facilità di integrazione:
+  - Kafka offre un supporto nativo per le code di messaggi persistenti e distribuite, semplificando il coordinamento tra i microservizi.
+
 ---
 ## **Scelte implementative**
-La politica di *at-most-once* è stata implementata utilizzando un meccanismo basato su un identificativo univoco della richiesta (`request_id`), generato dal client per ogni richiesta. Il server mantiene una cache strutturata organizzata come un dizionario annidato, in cui:
+- La politica di *at-most-once* è stata implementata utilizzando un meccanismo basato su un identificativo univoco della richiesta (`request_id`), generato dal client per ogni richiesta. Il server mantiene una cache strutturata organizzata come un dizionario annidato, in cui:
+  
+  - Il primo livello di chiave rappresenta il tipo di operazione (`op_code`, come `GET`, `POST`, `PUT`, `DEL`).
+  - Il secondo livello utilizza una chiave unica costruita combinando l'email del client (`user_email`) e il `request_id` della richiesta. 
+  
+  Questa combinazione, denominata `user_request_id`, garantisce che ogni richiesta venga identificata in modo univoco. 
+  
+  Quando il server riceve una nuova richiesta, verifica nella cache se esiste già una risposta associata a quel `request_id`:
+  - **Se presente**, restituisce direttamente la risposta memorizzata, evitando di rielaborare la richiesta.
+  - **Se assente**, il server elabora la richiesta, genera una risposta e memorizza nella cache un oggetto che include:
+    - La risposta generata.
+    - Un `timestamp` che rappresenta il momento dell'elaborazione.
+  
+  Il `timestamp` è utilizzato per gestire la pulizia periodica della cache, eliminando voci obsolete e garantendo che la memoria occupata dalla cache rimanga sotto controllo.
+  
+  Questo approccio garantisce che ogni richiesta venga processata al massimo una volta, evitando computazioni ridondanti, anche in caso di retry da parte del client a causa di timeout o perdita della risposta. Il sistema è progettato per isolare le richieste dei diversi client e per rendere la gestione dei duplicati trasparente e affidabile.
 
-- Il primo livello di chiave rappresenta il tipo di operazione (`op_code`, come `GET`, `POST`, `PUT`, `DEL`).
-- Il secondo livello utilizza una chiave unica costruita combinando l'email del client (`user_email`) e il `request_id` della richiesta. 
+- Il pattern CQRS è stato implementato:
+  - nel server gRPC andando a dividere le operazioni di scrittura da quelle di lettura creando lo `UserReaderService` e `UserWriterService`.
+  - nei repository creando per ogni entity un repository di lettura(reader) e uno di scrittura(writer).
 
-Questa combinazione, denominata `user_request_id`, garantisce che ogni richiesta venga identificata in modo univoco. 
-
-Quando il server riceve una nuova richiesta, verifica nella cache se esiste già una risposta associata a quel `request_id`:
-- **Se presente**, restituisce direttamente la risposta memorizzata, evitando di rielaborare la richiesta.
-- **Se assente**, il server elabora la richiesta, genera una risposta e memorizza nella cache un oggetto che include:
-  - La risposta generata.
-  - Un `timestamp` che rappresenta il momento dell'elaborazione.
-
-Il `timestamp` è utilizzato per gestire la pulizia periodica della cache, eliminando voci obsolete e garantendo che la memoria occupata dalla cache rimanga sotto controllo.
-
-Questo approccio garantisce che ogni richiesta venga processata al massimo una volta, evitando computazioni ridondanti, anche in caso di retry da parte del client a causa di timeout o perdita della risposta. Il sistema è progettato per isolare le richieste dei diversi client e per rendere la gestione dei duplicati trasparente e affidabile.
-
+- Abbiamo configurato i producer ed i consumer all'interno della nostra applicazione adattandoli alle nostre esigenze:
+  - Data collector producer:
+    ```
+    'bootstrap.servers': 'kafka-broker:9092',  
+    'acks': 'all',  
+    'batch.size': 500,  
+    'linger.ms': 500,
+    'max.in.flight.requests.per.connection': 1,      
+    'retries': 3 
+    ```
+    dove acks ci permette di avere la garanzia che il messaggio sia confermato dopo esser stato replicato da tutti i broker [TODO Continuare]
 ---
 ## **Diagramma architetturale**
 ![Architettura](https://github.com/alestrange01/APL_prove/blob/main/img/Diagramma_architettura.png)
+[TODO Aggiornare la foto]
 ---
 ## **Diagramma delle interazioni**
-
+[TODO Specificare che viene usato il CQRS mettendo magari user writer service o reader dove serve?]
 **Registra Utente**
 
 L'utente invia una richiesta per registrarsi al sistema. Il server verifica se la richiesta è già in cache. In caso contrario, tenta l’inserimento del nuovo record nella tabella users ed in caso aggiorna la tabella ticker_management per tracciare il ticker azionario associato all'utente.
@@ -115,10 +151,21 @@ Il DataCleaner è un microservizio che opera autonomamente per garantire la puli
 - Verifica e rimozione ticker inutilizzati: Seleziona i ticker dalla tabella ticker_management con contatore a zero (indicando che non sono associati ad alcun utente attivo) e ne rimuove i record.
 ![data_cleaner](https://github.com/alestrange01/APL_prove/blob/main/img/DataCleaner.png)
 
+**Alert system**
+
+L'AlertSystem è un microservizio che opera da producer per il topic `to-notifier` e da consumer per il topic `to-alert-system`, il suo ruolo è quello di valutare al termine del lavoro del `data_collector` se è stata ecceduta una soglia, minima o massima, per ogni utente ed in caso affemativo andare ad inviare un messaggio sul topic `to-notifier`.
+
+[TODO Manca la foto]
+
+**Alert notification system**
+
+L'AlertNotificationSystem è un microservizio che opera da consumer del topic `to-notifier`, il suo ruolo è quello di inviare una mail, sfruttando il package python `email` ed il template engine `jinja` per poter inviare email con template html oltre che text.
+
+[TODO Manca la foto]
 ---
 ## **Schema del database**
 1. Tabella **users**:  Memorizza le informazioni dell'utente, come l'e-mail e il ticker azionario associato.
- - Colonne: `id`, `email`, `password`, `ticker`.
+ - Colonne: `id`, `email`, `password`, `ticker`, `hig_value`, `low_value` .
 2. Tabella **shares**: Registra i dati delle azioni, cioé ticker, valore e timestamp.
  - Colonne: `id`, `ticker`, `valore`, `timestamp`.
 3. Tabella **gestione_ticker**: Tiene traccia dell'uso dei ticker da parte degli utenti e rimuove quelli inutilizzati per ottimizzare lo spazio.
@@ -170,6 +217,8 @@ Il sistema comprende:
 - **Server**: Gestisce le interazioni con gli utenti e le operazioni del database.
 - **Data Collector**: Recupera periodicamente i dati sugli shares.
 - **Data Cleaner**: Ottimizza il database rimuovendo le informazioni obsolete.
+- **Alert System**: Valuta al termine del lavoro del data collector se qualche soglia è stata superata.
+- **Alert Notification System**: Si occupa di inviare le notifiche via email agli utenti.
 - **Database**: Istanza PostgreSQL per la persistenza dei dati.
 
 Tutti i microservizi sono orchestrati utilizzando **Docker Compose** e la comunicazione tra client e server avviene tramite **gRPC**.
