@@ -83,7 +83,7 @@ Abbiamo utilizzato Apache Kafka come broker di messaggi per comunicare tra i mic
   - nei repository creando per ogni entity un repository di lettura(reader) e uno di scrittura(writer).
 - Abbiamo configurato i producer ed i consumer all'interno della nostra applicazione adattandoli alle nostre esigenze:
 
-  - **Data Collector Producer**:
+  - **Data Collector Producer**
 
     ```
     'bootstrap.servers': 'kafka-broker:9092',  
