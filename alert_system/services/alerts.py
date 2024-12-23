@@ -15,6 +15,7 @@ class Alerts:
             'bootstrap.servers': 'kafka-broker:9092',  
             'acks': 'all',  
             'batch.size': 500,  
+            'linger.ms': 500,
             'max.in.flight.requests.per.connection': 1, 
             'retries': 3 
         }
@@ -23,9 +24,9 @@ class Alerts:
 
         consumer_config = {
             'bootstrap.servers': 'kafka-broker:9092',  
-            'group.id': 'group2', 
+            'group.id': 'group1', 
             'auto.offset.reset': 'earliest',  
-            'enable.auto.commit': True 
+            'enable.auto.commit': False
         }
 
         self.consumer = Consumer(consumer_config) 
@@ -70,6 +71,7 @@ class Alerts:
             data = json.loads(msg.value().decode('utf-8'))
             logging.info(f"Consumed: {data}")
             if self.__process(data):
+                self.consumer.commit(asynchronous=False)
                 logging.info(f"Offset committed: {msg.offset()}")
             else:
                 logging.error(f"Error processing message: {data}")

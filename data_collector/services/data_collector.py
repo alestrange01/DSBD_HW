@@ -18,6 +18,7 @@ class DataCollector:
             'bootstrap.servers': 'kafka-broker:9092',  
             'acks': 'all',  
             'batch.size': 500,  
+            'linger.ms': 500,
             'max.in.flight.requests.per.connection': 1,      
             'retries': 3  
         }

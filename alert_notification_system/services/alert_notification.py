@@ -19,7 +19,7 @@ class AlertNotification:
             'bootstrap.servers': 'kafka-broker:9092',  
             'group.id': 'group2', 
             'auto.offset.reset': 'earliest',  
-            'enable.auto.commit': True 
+            'enable.auto.commit': True
         }
 
         self.consumer = Consumer(consumer_config) 
