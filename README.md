@@ -40,7 +40,7 @@ Abbiamo scelto di adottare il pattern CQRS (Command and Query Responsibility Seg
 
 Abbiamo utilizzato Apache Kafka come broker di messaggi per comunicare tra i microservizi per queste ragioni:
 - Alta affidabilità:
-  - Kafka garantisce durabilità e tolleranza ai guasti, essenziali in un sistema distribuito. Le opzioni di configurazione (es. acks=all) assicurano che i messaggi siano confermati solo quando sono stati replicati in tutti i broker.
+  - Kafka garantisce durabilità e tolleranza ai guasti, essenziali in un sistema distribuito. Le opzioni di configurazione (es. acks=all) assicurano che i messaggi siano confermati solo quando sono stati replicati in tutti i broker. TODO: da sistemare
 - Gestione del carico elevato:
   - Kafka è ottimizzato per throughput elevati, gestendo milioni di messaggi al secondo, ideale per un ecosistema di microservizi.
 - Consistenza ed elaborazione garantita:
@@ -72,7 +72,7 @@ Abbiamo utilizzato Apache Kafka come broker di messaggi per comunicare tra i mic
   - nei repository creando per ogni entity un repository di lettura(reader) e uno di scrittura(writer).
 
 - Abbiamo configurato i producer ed i consumer all'interno della nostra applicazione adattandoli alle nostre esigenze:
-  - Data collector producer:
+  - **Data Collector Producer**:
     ```
     'bootstrap.servers': 'kafka-broker:9092',  
     'acks': 'all',  
@@ -81,10 +81,75 @@ Abbiamo utilizzato Apache Kafka come broker di messaggi per comunicare tra i mic
     'max.in.flight.requests.per.connection': 1,      
     'retries': 3 
     ```
-    dove acks ci permette di avere la garanzia che il messaggio sia confermato dopo esser stato replicato da tutti i broker [TODO Continuare]
+    Il producer del **Data Collector** è responsabile di inviare messaggi al topic `to-alert-system`. La configurazione del producer include i seguenti parametri:
+    - **`bootstrap.servers`**: Specifica il broker Kafka a cui connettersi (`kafka-broker:9092`).
+    - **`acks: 'all'`**:
+      - Garantisce che il messaggio sia scritto in **tutte le repliche** delle partizioni prima di essere confermato come consegnato.
+      - Fornisce **robustezza** e **durabilità** maggiore, ma aumenta la latenza.
+    - **`batch.size: 500`**:  
+      - Limita la dimensione massima del batch (in byte) che il producer accumula prima di inviarlo.
+      - Accumulare batch riduce il numero di richieste al broker, migliorando l'efficienza.
+    - **`linger.ms: 500`**:
+      - Introduce un **ritardo massimo di 500 ms** per consentire l'accumulo di più messaggi in batch prima di inviarli.
+      - Se il batch si riempie prima del timeout, viene inviato immediatamente.
+    - **`max.in.flight.requests.per.connection: 1`**:
+      - Garantisce che una sola richiesta sia inviata alla volta, prevenendo potenziali problemi di ordine nel caso di ritrasmissioni.
+    - **`retries: 3`**:
+      - Specifica il numero massimo di tentativi che il producer farà in caso di errori temporanei (es. rete non disponibile o leader della partizione non trovato).
+
+    Questa configurazione privilegia la **robustezza** e l'**affidabilità** rispetto alla latenza, garantendo che i messaggi siano sempre consegnati e replicati correttamente.
+
+    - **Alert System Consumer**
+    ```
+    'bootstrap.servers': 'kafka-broker:9092',  
+    'group.id': 'group1', 
+    'auto.offset.reset': 'earliest',  
+    'enable.auto.commit': False
+    ```
+    Il **consumer** del topic `to-alert-system` nell'**Alert System** è stato configurato per leggere i messaggi prodotti dal **Data Collector**.  La configurazione del consumer include i seguenti parametri:
+    - **`bootstrap.servers`**: Specifica il broker Kafka a cui connettersi.
+    - **`group.id`**: Identifica il gruppo di consumer come `group1`. Tutti i consumer che appartengono a questo gruppo condividono il carico del topic assegnato, consumando messaggi in modo bilanciato.
+    - **`auto.offset.reset`**: Specifica il comportamento del consumer in caso di mancanza di un offset salvato:
+      - `earliest`: Legge i messaggi dalla prima posizione disponibile.
+      - `latest`: Consuma solo i messaggi pubblicati dopo l'avvio del consumer.
+    - **`enable.auto.commit`**: False, il consumer salva manualmente l'offset dopo aver elaborato i messaggi. Questo approccio garantisce che i messaggi vengano processati con successo prima di aggiornare l'offset.
+
+
+    - **Alert System Producer**
+    ```
+    'bootstrap.servers': 'kafka-broker:9092',  
+    'acks': 'all',
+    'batch.size': 500,
+    'linger.ms': 500,
+    'retries': 3
+    ```
+    Il producer dell'**Alert System** è responsabile di inviare messaggi al topic `to-notifier`. La configurazione del producer include i seguenti parametri:
+    - **`bootstrap.servers`**: Specifica il broker Kafka a cui connettersi.
+    - **`acks`**: Con `all`, il producer attende la conferma di tutte le repliche, garantendo una maggiore robustezza dei dati.
+    - **`batch.size`**: Accumula messaggi fino a un massimo di 500 byte prima di inviarli, ottimizzando le prestazioni.
+    - **`linger.ms`**: Introduce un ritardo massimo di 500 ms per consentire l'accumulo di più messaggi in batch prima dell'invio.
+    - **`retries`**: Specifica il numero massimo di tentativi per inviare un messaggio in caso di errore temporaneo.
+
+    Questa configurazione garantisce una buona combinazione tra robustezza e performance, assicurando che i messaggi critici vengano consegnati correttamente.
+
+
+    - **Alert Notification System Consumer**
+    ```
+    'bootstrap.servers': 'kafka-broker:9092',  
+    'group.id': 'group2',
+    'auto.offset.reset': 'earliest',
+    'enable.auto.commit': True  
+    ```
+    L'**Alert Notification System** consuma i messaggi dal topic `to-notifier`, prodotti dall'**Alert System**. La configurazione del consumer include i seguenti parametri:
+    - **`bootstrap.servers`**: Specifica il broker Kafka a cui connettersi.
+    - **`group.id`**: Identifica il gruppo di consumer come `group2`. Tutti i consumer che appartengono a questo gruppo condividono il carico del topic assegnato, consumando messaggi in modo bilanciato.
+    - **`auto.offset.reset`**: Impostato su `earliest`, consente di leggere i messaggi dall'inizio del topic se non sono presenti offset salvati.
+    - **`enable.auto.commit`**: Abilitato (`True`), salva automaticamente l'offset dei messaggi dopo la lettura, semplificando la gestione degli offset.
+
+    
 ---
 ## **Diagramma architetturale**
-![Architettura](https://github.com/alestrange01/APL_prove/blob/main/img/Diagramma_architettura.png)
+![Architettura](https://github.com/alestrange01/DSBD_HW/blob/main/img/Diagramma_architettura.png)
 [TODO Aggiornare la foto]
 ---
 ## **Diagramma delle interazioni**
@@ -92,47 +157,47 @@ Abbiamo utilizzato Apache Kafka come broker di messaggi per comunicare tra i mic
 **Registra Utente**
 
 L'utente invia una richiesta per registrarsi al sistema. Il server verifica se la richiesta è già in cache. In caso contrario, tenta l’inserimento del nuovo record nella tabella users ed in caso aggiorna la tabella ticker_management per tracciare il ticker azionario associato all'utente.
-![op1](https://github.com/alestrange01/APL_prove/blob/main/img/op1.png)
+![op1](https://github.com/alestrange01/DSBD_HW/blob/main/img/op1.png)
 
 **Login**
 
 Un utente o un amministratore invia una richiesta di login. Il server controlla la cache o legge dalla tabella users per autenticare l'utente. A seconda del ruolo, restituisce un oggetto user o admin.
-![op2](https://github.com/alestrange01/APL_prove/blob/main/img/op2.png)
+![op2](https://github.com/alestrange01/DSBD_HW/blob/main/img/op2.png)
 
 **Elimina Utente**
 
 Un amministratore richiede la cancellazione di un utente o un utente del proprio account. Il server verifica prima in cache e poi elimina il record dalla tabella users. Successivamente, aggiorna la tabella ticker_management per decrementare il counter del tiker associato all’utente eleliminato.
-![op3](https://github.com/alestrange01/APL_prove/blob/main/img/op3.png)
+![op3](https://github.com/alestrange01/DSBD_HW/blob/main/img/op3.png)
 
 **Modifica Utente**
 
 Un utente o un admin invia una richiesta per aggiornare i propri dati (o quelli di un altro utente). Il server verifica la cache e, in caso di assenza, aggiorna il record nella tabella users. Viene anche aggiornata la tabella ticker_management per riflettere eventuali cambiamenti.
-![op4](https://github.com/alestrange01/APL_prove/blob/main/img/op4.png)
+![op4](https://github.com/alestrange01/DSBD_HW/blob/main/img/op4.png)
 
 **Richiedi share value**
 
 L'utente richiede il valore più recente di un titolo azionario specifico. Il server controlla la cache o esegue una query nella tabella shares per recuperare il valore associato al ticker specificato.
-![op5](https://github.com/alestrange01/APL_prove/blob/main/img/op5.png)
+![op5](https://github.com/alestrange01/DSBD_HW/blob/main/img/op5.png)
 
 **Richiedi share mean**
 
 L'utente richiede il valore medio dei titoli azionari per un determinato nome di share. Il server esegue una query nella tabella shares per calcolare e restituire il valore medio.
-![op6](https://github.com/alestrange01/APL_prove/blob/main/img/op6.png)
+![op6](https://github.com/alestrange01/DSBD_HW/blob/main/img/op6.png)
 
 **Richiedi tutti gli utenti**
 
 Un amministratore richiede la lista di tutti gli utenti registrati. Il server verifica se i dati sono già in cache, altrimenti esegue una query sulla tabella users e restituisce l'elenco degli utenti.
-![op7](https://github.com/alestrange01/APL_prove/blob/main/img/op7.png)
+![op7](https://github.com/alestrange01/DSBD_HW/blob/main/img/op7.png)
 
 **Richiedi tutti gli shares**
 
 Un amministratore richiede la lista di tutti i titoli azionari. Il server controlla la cache o esegue una query sulla tabella shares per restituire i dati di tutti i titoli.
-![op8](https://github.com/alestrange01/APL_prove/blob/main/img/op8.png)
+![op8](https://github.com/alestrange01/DSBD_HW/blob/main/img/op8.png)
 
 **Richiedi tutti i ticker managements**
 
 Un amministratore richiede i dati di gestione dei ticker. Il server verifica la cache o esegue una query sulla tabella ticker_management per restituire i dati relativi ai ticker.
-![op9](https://github.com/alestrange01/APL_prove/blob/main/img/op9.png)
+![op9](https://github.com/alestrange01/DSBD_HW/blob/main/img/op9.png)
 
 **Data collector**
 
@@ -141,7 +206,7 @@ Il DataCollector è un microservizio responsabile della raccolta e dell'aggiorna
 - Selezione ticker attivi: Interroga la tabella ticker_management per recuperare i ticker con contatore diverso da zero, che rappresentano i ticker attivamente monitorati dagli utenti.
 - Chiamate al Circuit Breaker: Per ogni ticker, utilizza il Circuit Breaker per effettuare richieste a Yahoo Finance. Il Circuit Breaker gestisce guasti e fallback in caso di errori temporanei.
 - Recupero e inserimento dati: Dopo aver recuperato il valore del titolo, il servizio inserisce un nuovo record nella tabella shares con il valore recuperato.
-![data_collector](https://github.com/alestrange01/APL_prove/blob/main/img/DataCollector.png)
+![data_collector](https://github.com/alestrange01/DSBD_HW/blob/main/img/DataCollector.png)
 
 **Data cleaner**
 
@@ -149,7 +214,7 @@ Il DataCleaner è un microservizio che opera autonomamente per garantire la puli
 - Loop continuo: Il DataCleaner esegue periodicamente un ciclo per effettuare operazioni di pulizia.
 - Eliminazione dati obsoleti: Vengono rimossi i record dalla tabella shares con un timestamp più vecchio di 14 giorni, assicurandosi che solo dati recenti siano mantenuti.
 - Verifica e rimozione ticker inutilizzati: Seleziona i ticker dalla tabella ticker_management con contatore a zero (indicando che non sono associati ad alcun utente attivo) e ne rimuove i record.
-![data_cleaner](https://github.com/alestrange01/APL_prove/blob/main/img/DataCleaner.png)
+![data_cleaner](https://github.com/alestrange01/DSBD_HW/blob/main/img/DataCleaner.png)
 
 **Alert system**
 
