@@ -297,7 +297,7 @@ Assicurarsi che siano installati i seguenti elementi:
 1. **Clonare il repository**
 
 ```bash
- git clone https://github.com/alestrange01/DSBD_HW1.git
+ git clone https://github.com/alestrange01/DSBD_HW.git
  cd root/project
 ```
 
