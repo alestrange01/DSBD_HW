@@ -50,6 +50,8 @@ services:
     depends_on:
       - postgres
       - kafka-broker
+    ports:
+      - "9999:9999"
     
   data_cleaner:
     build:
@@ -144,8 +146,19 @@ services:
     volumes:
       - kafka_data:/var/lib/kafka/data
 
+  prometheus:
+    build:
+      context: ./prometheus
+      dockerfile: dockerfile-prometheus
+    volumes:
+      - prometheus-data:/prometheus  # Volume persistente per i dati di Prometheus
+    container_name: prometheus-service
+    ports: 
+      - 53120:9090
 
 volumes:
   pg_data:
   zookeeper_data:
   kafka_data:
+  prometheus-data:
+    driver: local

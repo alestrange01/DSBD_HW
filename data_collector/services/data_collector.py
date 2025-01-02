@@ -9,6 +9,7 @@ from dto.share import ShareCreationDTO
 from repositories.ticker_management_repository_reader import TickerManagementRepositoryReader
 from repositories.share_repository_writer import ShareRepositoryWriter
 from utils.circuit_breaker import CircuitBreaker, CBException, CBOpenException
+from metrics import tickers_count, yf_count, HOSTNAME, APP_NAME
 
 logging = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class DataCollector:
             share = ticker.share_cod
             try:
                 share_value = circuit_breaker.call(self.__retrieve_share_value, share)
+                yf_count.labels(server='random-node', hostname=HOSTNAME, app=APP_NAME).inc()
                 if share_value is None:
                     logging.info(f"Could not retrieve share value for {share}. Skipping.")
                     continue
@@ -55,6 +57,8 @@ class DataCollector:
                 self.share_repository_writer.create_share(share_dto)
                 logging.info(f"Share value for {share}: {float(share_value)}")
         
+        tickers_count.labels(server='random-node', hostname=HOSTNAME, app=APP_NAME).set(len(tickers))
+
         message = {"msg" : "Share value updated"}
         self.producer.produce(self.topic, json.dumps(message), callback=self.__delivery_report)
         self.producer.flush() 

@@ -4,6 +4,7 @@ import schedule
 import time
 from db.db import DB
 from services.data_collector import DataCollector
+import metrics
 
 logging.basicConfig(
     level=logging.INFO,
@@ -20,6 +21,8 @@ if __name__ == '__main__':
     data_collector = DataCollector()
     #data_collector.test_circuit_breaker_behavior() #TOTEST rimuovere il commento per testare il circuit breaker
     schedule.every(30).seconds.do(data_collector.collect) #TODO cambiare il tempo 
+    metrics.prometheus_client.start_http_server(9999)
+    print(f"Le metriche Proimetheus sono disponibili all'indirizzo: http://{metrics.HOSTNAME}:9999/metrics")
 
     while True:
         schedule.run_pending()
