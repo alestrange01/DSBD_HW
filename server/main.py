@@ -3,6 +3,7 @@ import sys
 import schedule
 import time
 import threading
+import metrics
 from db.db import DB
 from app.server import serve, clean_cache
 
@@ -20,6 +21,7 @@ if __name__ == '__main__':
     DB.initialize_database()
     serve_thread = threading.Thread(target=serve, daemon=True)
     serve_thread.start()
+    metrics.prometheus_client.start_http_server(50055)
 
     schedule.every(5).minutes.do(clean_cache)
     while True:
@@ -28,4 +30,3 @@ if __name__ == '__main__':
         if next_run is None or next_run < 0:
             next_run = 1  
         time.sleep(min(next_run, 60))   
-    

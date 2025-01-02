@@ -1,24 +1,23 @@
 import prometheus_client
 import socket
 
-HOSTNAME = socket.gethostname()
-APP_NAME = "data_collector_exporter" 
+SERVICE_NAME = 'data_collector'
+NODE_NAME = socket.gethostname()
 
 tickers_count = prometheus_client.Gauge(
     'tickers_count', 
-    'Fake response time', #che vuo dire fake response time?
-    ['server', 'hostname', 'app']
+    'Number of tickers being monitored', 
+    ['service', 'node']
 )
  
-# Prometheus Counter metric for number of iterations, with server, hostname, and app as labels
 yf_count = prometheus_client.Counter(
     'yf_count', 
-    'Real iterations value', 
-    ['server', 'hostname', 'app']
+    'Number of yf call', 
+    ['service', 'node']
 )
 
 yf_request_duration = prometheus_client.Histogram(
     'yf_request_duration_seconds',
     'Duration of yfinance requests in seconds',
-    ['server', 'hostname', 'app']
+    ['service', 'node']
 )

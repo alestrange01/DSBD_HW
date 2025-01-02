@@ -5,3 +5,4 @@ SQLAlchemy
 grpcio-tools
 psycopg2-binary
 schedule
+prometheus-client

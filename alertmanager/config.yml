@@ -1,0 +1,15 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: 'default-receiver'
+
+receivers:
+  - name: 'default-receiver'
+    email_configs:
+      - to: 'fraromeo14@gmail.com'
+        from: 'fraromeo69@gmail.com'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: 'fraromeo69@gmail.com'
+        auth_password: 'nxis zslg ywts rpyj'
+        auth_identity: 'fraromeo69@gmail.com'

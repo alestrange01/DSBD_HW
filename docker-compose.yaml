@@ -29,8 +29,6 @@ services:
     depends_on:
       - postgres
       - kafka-broker
-    ports:
-      - "50051:50051"
       
   data_collector:
     build:
@@ -50,8 +48,6 @@ services:
     depends_on:
       - postgres
       - kafka-broker
-    ports:
-      - "9999:9999"
     
   data_cleaner:
     build:
@@ -151,10 +147,23 @@ services:
       context: ./prometheus
       dockerfile: dockerfile-prometheus
     volumes:
-      - prometheus-data:/prometheus  # Volume persistente per i dati di Prometheus
+      - prometheus-data:/prometheus 
     container_name: prometheus-service
     ports: 
       - 53120:9090
+
+  alertmanager:
+    image: prom/alertmanager:v0.21.0
+    container_name: alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager:/etc/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+    environment:
+      EMAIL_SENDER_USER: "fraromeo69@gmail.com"
+      EMAIL_SENDER_PASSWORD: "nxis zslg ywts rpyj"
 
 volumes:
   pg_data:
