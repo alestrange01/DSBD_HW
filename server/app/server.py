@@ -30,6 +30,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
             user_email, request_id, op_code = self.__GetMetadata(context)
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Login", response_type="cached").inc()
                 logging.info("Login cached response")
                 return cached_response
             else:
@@ -43,7 +44,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                     response = homework2_pb2.LoginReply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
                 finally:
                     self.__StoreInCache(user_email, request_id, op_code, response)
-                requests.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Login", response_type="processed").inc()
                 return response
     
 
@@ -52,6 +53,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
             user_email, request_id, op_code = self.__GetMetadata(context)
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Register", response_type="cached").inc()
                 logging.info("Register cached response")
                 return cached_response
             else:
@@ -66,7 +68,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                 finally:
                     self.__StoreInCache(user_email, request_id, op_code, message)
                     users.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
-                requests.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Register", response_type="processed").inc()
                 return message
     
     def Update(self, request, context):  
@@ -74,6 +76,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
             user_email, request_id, op_code = self.__GetMetadata(context)
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Update", response_type="cached").inc()
                 logging.info("Update cached response")
                 return cached_response
             if not self.__IsAuthorized(request.email, user_email):
@@ -91,7 +94,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                     message = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
                 finally:
                     self.__StoreInCache(user_email, request_id, op_code, message)
-                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Update").inc()
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Update", response_type="processed").inc()
                 return message
 
     def Delete(self, request, context):      
@@ -99,6 +102,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
             user_email, request_id, op_code = self.__GetMetadata(context)
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Delete", response_type="cached").inc()
                 logging.info("Delete cached response")
                 return cached_response
             if not self.__IsAuthorized(request.email, user_email):
@@ -117,7 +121,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                 finally:
                     self.__StoreInCache(user_email, request_id, op_code, message)     
                     users.labels(service=SERVICE_NAME, node=NODE_NAME).dec()
-                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Delete").inc()
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Delete", response_type="processed").inc()
                 return message
             
     def ViewAllUsers(self, request, context):
@@ -131,6 +135,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
 
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllUsers", response_type="cached").inc()
                 logging.info("View all users cached response")
                 return cached_response
             else:
@@ -145,7 +150,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                     response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
                 finally:   
                     self.__StoreInCache(user_email, request_id, op_code, response)
-                requests.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllUsers", response_type="processed").inc()
                 return response
 
     def ViewTickerManagement(self, request, context):
@@ -159,6 +164,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
 
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewTickerManagement", response_type="cached").inc()
                 logging.info("View ticker management cached response")
                 return cached_response
             else:
@@ -173,7 +179,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                     response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
                 finally:
                     self.__StoreInCache(user_email, request_id, op_code, response)
-                requests.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewTickerManagement", response_type="processed").inc()
                 return response
                 
     def ViewAllShares(self, request, context):
@@ -187,6 +193,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
 
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllShares", response_type="cached").inc()
                 logging.info("View all shares cached response")
                 return cached_response
             else:
@@ -202,7 +209,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                     response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
                 finally:
                     self.__StoreInCache(user_email, request_id, op_code, response)
-                requests.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllShares", response_type="processed").inc()
                 return response
             
     def GetValueShare(self, request, context):
@@ -210,6 +217,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
             user_email, request_id, op_code = self.__GetMetadata(context)
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetValueShare", response_type="cached").inc()
                 logging.info("Get value share cached response")
                 return cached_response
             else:
@@ -224,7 +232,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                     response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
                 finally:
                     self.__StoreInCache(user_email, request_id, op_code, response)
-                requests.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetValueShare", response_type="processed").inc()
                 return response
     
     def GetMeanShare(self, request, context):
@@ -232,6 +240,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
             user_email, request_id, op_code = self.__GetMetadata(context)
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetMeanShare", response_type="cached").inc()
                 logging.info("Get mean share cached response")
                 return cached_response
             else:
@@ -245,7 +254,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                     response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
                 finally:
                     self.__StoreInCache(user_email, request_id, op_code, response)
-                requests.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetMeanShare", response_type="processed").inc()
                 return response
             
     def TestAtMostOncePolicy(self, request, context):
@@ -253,6 +262,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
             user_email, request_id, op_code = self.__GetMetadata(context)
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="TestAtMostOncePolicy", response_type="cached").inc()
                 logging.info("Returning cached response")
                 del request_attempts[request_id]
                 return cached_response
@@ -276,7 +286,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                 content=f"Hello {user_email}, your request {request_id} has been processed."
             )
             self.__StoreInCache(user_email, request_id, op_code, response)
-            requests.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
+            requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="TestAtMostOncePolicy", response_type="processed").inc()
             return response
 
     def __GetMetadata(self, context): 
