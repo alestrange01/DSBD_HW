@@ -11,15 +11,19 @@ L'applicazione è suddivisa in cinque componenti principali
 
 ## **Abstract**
 
-Questo progetto realizza un sistema distribuito basato su un'architettura a microservizi per la gestione e l'elaborazione di dati relativi a titoli azionari. L'applicazione, suddivisa in tre componenti principali (server, data_collector e data_cleaner), utilizza un approccio modulare per garantire scalabilità e resilienza. Il sistema implementa un meccanismo di autenticazione che distingue tra utenti "user" e "admin", conferendo a quest'ultimo priorità operative come la registrazione, l'aggiornamento e la cancellazione di altri utenti ma anche la visualizzazione di tutte le informazioni presenti nel DB.
+Questo progetto realizza un **sistema distribuito** basato su un'**architettura a microservizi** per la gestione e l'elaborazione di dati relativi a titoli azionari. L'applicazione, suddivisa in tre componenti principali (server, data_collector e data_cleaner), utilizza un approccio modulare per garantire scalabilità e resilienza. Il sistema implementa un meccanismo di autenticazione che distingue tra utenti "user" e "admin", conferendo a quest'ultimo priorità operative come la registrazione, l'aggiornamento e la cancellazione di altri utenti ma anche la visualizzazione di tutte le informazioni presenti nel DB.
 
-La comunicazione tra client e server avviene tramite gRPC, garantendo trasparenza ed efficienza. Il server adotta la politica di at-most-once per assicurare che ogni richiesta sia processata al massimo una volta, per garantire l’idempotenza delle operazioni e migliorare l’efficienza del sistema. Gli altri microservizi operano autonomamente, attivati periodicamente da uno scheduler per raccogliere e pulire i dati.
+La comunicazione tra client e server avviene tramite **gRPC**, garantendo trasparenza ed efficienza. Il server adotta la politica di **at-most-once** per assicurare che ogni richiesta sia processata al massimo una volta, per garantire l’idempotenza delle operazioni e migliorare l’efficienza del sistema. Gli altri microservizi operano autonomamente, attivati periodicamente da uno scheduler per raccogliere e pulire i dati.
 
-La comunicazione tra `data_collector` e `alert_system` e tra `alert_system` e `alert_notification_system` avviente tramite kafka, un broker che permette di avere maggior robustezza, una maggiore resilienza del sistema e una migliore gestione dei picchi di traffico.
+La comunicazione tra `data_collector` e `alert_system` e tra `alert_system` e `alert_notification_system` avviente tramite **Apache Kafka**, un broker che permette di avere maggior robustezza, una maggiore resilienza del sistema e una migliore gestione dei picchi di traffico.
+
+L'alert_system utilizza il topic Kafka `to-alert-system` per rilevare quando il data_collector completa la raccolta dei dati. Legge i dati più recenti dal database, elabora eventuali valori che superano soglie predefinite (come limiti massimi o minimi) e invia notifiche sul topic `to-notifier`. L'alert_notification_system consuma questi messaggi dal topic e notifica gli utenti via email, garantendo un flusso reattivo ed efficace per la gestione degli alert.
 
 La gestione dei dati è centralizzata in un database relazionale composto da tre tabelle principali. La tabella users gestisce le informazioni sugli utenti, tra cui email e il ticker azionario associato. La tabella shares registra i dati relativi ai titoli azionari (titolo, valore e un timestamp). Infine, la tabella ticker_management tiene traccia dell'utilizzo dei ticker azionari tramite un contatore, garantendo che i ticker non utilizzati vengano eliminati poi per ottimizzare lo spazio.
 
-Il pattern Circuit Breaker gestisce le chiamate verso servizi esterni, come Yahoo Finance, proteggendo da guasti e fallimenti ripetuti. In caso di errori, il circuito si apre temporaneamente, impedendo nuove richieste, e passa successivamente a uno stato "half-open" per verificare il recupero del servizio.
+Il pattern **Circuit Breaker** gestisce le chiamate verso servizi esterni, come Yahoo Finance, proteggendo da guasti e fallimenti ripetuti. In caso di errori, il circuito si apre temporaneamente, impedendo nuove richieste, e passa successivamente a uno stato "half-open" per verificare il recupero del servizio.
+
+Per il monitoraggio del sistema, abbiamo integrato **Prometheus**, che raccoglie e analizza metriche chiave, offrendo una visione in tempo reale dello stato e delle prestazioni del sistema. Questa integrazione consente di identificare rapidamente eventuali anomalie, configurare alert basati su soglie critiche e ottimizzare i microservizi grazie a metriche come latenza, #richieste ed errori.
 
 ---
 
