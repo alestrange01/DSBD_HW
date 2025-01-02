@@ -10,7 +10,7 @@ from services.user_write_service import RegisterCommand, UpdateCommand, DeleteCo
 from services.user_reader_service import UserReaderService
 from services.ticker_management_reader_service import TickerManagementReaderService
 from services.share_reader_service import ShareReaderService
-from metrics import users, requests , login_request_duration, register_request_duration, update_request_duration, delete_request_duration, view_all_users_request_duration, view_ticker_management_request_duration, view_all_shares_request_duration, get_value_share_request_duration, get_mean_share_request_duration, test_at_most_once_policy_request_duration, SERVICE_NAME, NODE_NAME
+from metrics import users, requests , request_duration, SERVICE_NAME, NODE_NAME
 
 logging = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
         pass
             
     def Login(self, request, context): 
-        with login_request_duration.labels(service=SERVICE_NAME, node=NODE_NAME).time():
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="Login").time():
             user_email, request_id, op_code = self.__GetMetadata(context)
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:
@@ -49,7 +49,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
     
 
     def Register(self, request, context):   
-        with register_request_duration.labels(service=SERVICE_NAME, node=NODE_NAME).time():   
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="Register").time():
             user_email, request_id, op_code = self.__GetMetadata(context)
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:
@@ -72,7 +72,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                 return message
     
     def Update(self, request, context):  
-        with update_request_duration.labels(service=SERVICE_NAME, node=NODE_NAME).time():      
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="Update").time():  
             user_email, request_id, op_code = self.__GetMetadata(context)
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:
@@ -98,7 +98,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                 return message
 
     def Delete(self, request, context):      
-        with delete_request_duration.labels(service=SERVICE_NAME, node=NODE_NAME).time():
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="Delete").time():
             user_email, request_id, op_code = self.__GetMetadata(context)
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:
@@ -125,7 +125,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                 return message
             
     def ViewAllUsers(self, request, context):
-        with view_all_users_request_duration.labels(service=SERVICE_NAME, node=NODE_NAME).time():
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllUsers").time():
             user_email, request_id, op_code = self.__GetMetadata(context)
 
             if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
@@ -154,7 +154,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                 return response
 
     def ViewTickerManagement(self, request, context):
-        with view_ticker_management_request_duration.labels(service=SERVICE_NAME, node=NODE_NAME).time():
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewTickerManagement").time():
             user_email, request_id, op_code = self.__GetMetadata(context)
 
             if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
@@ -183,7 +183,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                 return response
                 
     def ViewAllShares(self, request, context):
-        with view_all_shares_request_duration.labels(service=SERVICE_NAME, node=NODE_NAME).time():
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllShares").time():
             user_email, request_id, op_code = self.__GetMetadata(context)
 
             if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
@@ -213,7 +213,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                 return response
             
     def GetValueShare(self, request, context):
-        with get_value_share_request_duration.labels(service=SERVICE_NAME, node=NODE_NAME).time():
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetValueShare").time():
             user_email, request_id, op_code = self.__GetMetadata(context)
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:
@@ -236,7 +236,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                 return response
     
     def GetMeanShare(self, request, context):
-        with get_mean_share_request_duration.labels(service=SERVICE_NAME, node=NODE_NAME).time():
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetMeanShare").time():
             user_email, request_id, op_code = self.__GetMetadata(context)
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:
@@ -258,7 +258,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
                 return response
             
     def TestAtMostOncePolicy(self, request, context):
-        with test_at_most_once_policy_request_duration.labels(service=SERVICE_NAME, node=NODE_NAME).time():
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="TestAtMostOncePolicy").time():
             user_email, request_id, op_code = self.__GetMetadata(context)
             cached_response = self.__GetFromCache(user_email, request_id, op_code)
             if cached_response is not None:

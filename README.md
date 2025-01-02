@@ -181,9 +181,9 @@ Per il monitoraggio del sistema, abbiamo scelto di integrare **Prometheus**. Que
    
 - Abbiamo integrato Prometheus per raccogliere e monitorare metriche chiave nei diversi microservizi del sistema: di seguito, un'analisi delle principali metriche implementate:
   - **Server**:
-    -**`users`**: Conta il numero totale di utenti gestiti dal sistema, fornendo una misura della crescita del database utenti e dell'interazione con il sistema.
+    - **`users`**: Conta il numero totale di utenti gestiti dal sistema, fornendo una misura della crescita del database utenti e dell'interazione con il sistema.
     - **`requests_total`**: Conta il numero di richieste ricevute dal server, distinguendo per metodo (`Login`, `Register`, ecc.) e tipo di risposta (`cached`, `processed`). Questa metrica permette di analizzare il carico del server e il comportamento delle risposte.
-    - **Durata delle richieste** (es. `login_request_duration_seconds`, `register_request_duration_seconds`): Histograms che misurano il tempo impiegato per completare richieste specifiche, come login, registrazioni o aggiornamenti. Forniscono una panoramica delle prestazioni per endpoint critici.
+    - **`request_duration`**: Misura il tempo impiegato per completare richieste specifiche, distinte per metodo (`Login`, `Register`, ecc.). Forniscono una panoramica delle prestazioni per endpoint critici.
 
 
   - **Data Collector**:
