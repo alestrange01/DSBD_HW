@@ -9,7 +9,7 @@ from dto.share import ShareCreationDTO
 from repositories.ticker_management_repository_reader import TickerManagementRepositoryReader
 from repositories.share_repository_writer import ShareRepositoryWriter
 from utils.circuit_breaker import CircuitBreaker, CBException, CBOpenException
-from metrics import tickers_count, yf_count, HOSTNAME, APP_NAME
+from metrics import tickers_count, yf_count, HOSTNAME, APP_NAME, yf_request_duration
 
 logging = logging.getLogger(__name__)
 
@@ -66,18 +66,20 @@ class DataCollector:
         
     def __retrieve_share_value(self, share):
         msft = yf.Ticker(share)
-        try:
-            last_price = msft.info.get('currentPrice')
-            if last_price is None:
-                history = msft.history(period="1d", interval="1m")
-                if not history.empty:
-                    last_price = history['Close'].iloc[-1]
-                else:
-                    raise ValueError(f"No data available for ticker {share}")
-        except Exception as e:
-            logging.error(f"Error retrieving data for {share}: {e}")
-            last_price = None
+        with yf_request_duration.labels(server='random-node', hostname=HOSTNAME, app=APP_NAME).time():
+            try:
+                last_price = msft.info.get('currentPrice')
+                if last_price is None:
+                    history = msft.history(period="1d", interval="1m")
+                    if not history.empty:
+                        last_price = history['Close'].iloc[-1]
+                    else:
+                        raise ValueError(f"No data available for ticker {share}")
+            except Exception as e:
+                logging.error(f"Error retrieving data for {share}: {e}")
+                last_price = None
         return last_price
+
         
     def __delivery_report(self, err, msg):
         if err:
