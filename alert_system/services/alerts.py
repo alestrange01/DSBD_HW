@@ -6,6 +6,7 @@ import json
 from db.db import DB
 from repositories.user_repository_reader import UserRepositoryReader
 from repositories.share_repository_reader import ShareRepositoryReader
+from metrics import alerts_sent, alert_send_latency, messages_consumed, processing_errors, messages_produced_for_notifications, delivery_failures, SERVICE_NAME, NODE_NAME
 
 logging = logging.getLogger(__name__)
 
@@ -56,8 +57,10 @@ class Alerts:
             if msg.error():
                 self.__handle_consumer_error(msg)
                 return
+            messages_consumed.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
             self.__handle_message(msg)
         except Exception as e:
+            processing_errors.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
             logging.error(f"Unexpected error in Kafka consumer loop: {e}")
 
     def __handle_consumer_error(self, msg):
@@ -82,6 +85,7 @@ class Alerts:
         try:
             if data['msg'] != 'Share value updated':
                 logging.error(f"Invalid message received: {data}")
+                processing_errors.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
                 return False
             logging.info(f"Consumed __process: {data}")
             users = self.user_repository_reader.get_all_users()
@@ -91,6 +95,8 @@ class Alerts:
                     high_value_exceeded = user.high_value is not None and latest_share.value > user.high_value
                     low_value_exceeded = user.low_value is not None and latest_share.value < user.low_value
                     if high_value_exceeded or low_value_exceeded:
+                        alert_type = "high_limit" if high_value_exceeded else "low_limit"
+                        alerts_sent.labels(service=SERVICE_NAME, node=NODE_NAME, alert_type=alert_type).inc()
                         limite = "massimo" if high_value_exceeded else "minimo"
                         body = f"Il valore del tuo share: {user.share_cod} è al limite {limite}: {latest_share.value}!"
                         message = {
@@ -103,20 +109,24 @@ class Alerts:
                                 "message": body,
                             },
                         }
-                        self.producer.produce(self.topic, json.dumps(message), callback=self.__delivery_report)
-                        self.producer.flush()
-                        logging.info(f"Produced: {message}")
+                        with alert_send_latency.labels(service=SERVICE_NAME, node=NODE_NAME).time():
+                            self.producer.produce(self.topic, json.dumps(message), callback=self.__delivery_report)
+                            self.producer.flush()
+                            logging.info(f"Produced: {message}")
             return True
         except Exception as e:
+            processing_errors.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
             logging.error(f"Error processing message: {e}")
             return False
 
     def __delivery_report(self, err, msg):
         if err:
+            delivery_failures.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
             print(f"Delivery failed: {err}, retrying...")
             message = msg  
             self.producer.produce(self.topic, json.dumps(message), callback=self.__delivery_report)
             self.producer.flush()
             print(f"Produced: {message}")
         else:
+            messages_produced_for_notifications.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
             print(f"Message delivered to {msg.topic()} [{msg.partition()}] at offset {msg.offset()}")
