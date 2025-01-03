@@ -8,8 +8,8 @@ receivers:
   - name: 'default-receiver'
     email_configs:
       - to: 'fraromeo14@gmail.com'
-        from: '${EMAIL_SENDER_USER}'
+        from: 'fraromeo69@gmail.com'
         smarthost: 'smtp.gmail.com:587'
-        auth_username: '${EMAIL_SENDER_USER}'
-        auth_password: '${EMAIL_SENDER_PASSWORD}'
-        auth_identity: '${EMAIL_SENDER_USER}'
+        auth_username: 'fraromeo69@gmail.com'
+        auth_password: 'nxis zslg ywts rpyj'
+        auth_identity: 'fraromeo69@gmail.com'

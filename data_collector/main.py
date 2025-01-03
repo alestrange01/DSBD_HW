@@ -4,7 +4,7 @@ import schedule
 import time
 from db.db import DB
 from services.data_collector import DataCollector
-import metrics
+from prometheus_client import start_http_server
 
 logging.basicConfig(
     level=logging.INFO,
@@ -20,8 +20,8 @@ if __name__ == '__main__':
     DB.initialize_database()   
     data_collector = DataCollector()
     #data_collector.test_circuit_breaker_behavior() #TOTEST rimuovere il commento per testare il circuit breaker
-    schedule.every(10).minutes.do(data_collector.collect) #TODO cambiare il tempo 
-    metrics.prometheus_client.start_http_server(9999)
+    schedule.every(30).seconds.do(data_collector.collect) #TODO cambiare il tempo 
+    start_http_server(9999) #TODO cambiare la porta: la rendiamo coerente alle altre?
 
     while True:
         schedule.run_pending()
