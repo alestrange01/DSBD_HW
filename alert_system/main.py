@@ -16,7 +16,7 @@ logging.basicConfig(
 
 if __name__ == '__main__':
     DB.initialize()
-    start_http_server(50057)
+    start_http_server(50058)
     alert = Alerts()
     alert_thread = threading.Thread(target=alert.alerts)
     alert_thread.start()

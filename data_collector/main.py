@@ -21,7 +21,7 @@ if __name__ == '__main__':
     data_collector = DataCollector()
     #data_collector.test_circuit_breaker_behavior() #TOTEST rimuovere il commento per testare il circuit breaker
     schedule.every(30).seconds.do(data_collector.collect) #TODO cambiare il tempo 
-    start_http_server(9999) #TODO cambiare la porta: la rendiamo coerente alle altre?
+    start_http_server(50056)
 
     while True:
         schedule.run_pending()

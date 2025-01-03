@@ -20,7 +20,7 @@ if __name__ == '__main__':
     DB.initialize()
     data_cleaner = DataCleaner()
     schedule.every().day.do(data_cleaner.clean) 
-    start_http_server(50056)
+    start_http_server(50057)
 
     while True:
         schedule.run_pending()

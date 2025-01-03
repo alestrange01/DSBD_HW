@@ -1,5 +1,5 @@
 groups:
-- name: example
+- name: dsbd-project
   rules:
   - alert: service_down  
     expr: up == 0        

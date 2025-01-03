@@ -1,4 +1,4 @@
-FROM prom/prometheus:v2.0.0
+FROM prom/prometheus:main
 
 COPY config.yml /etc/prometheus/config.yml
 COPY alert.rules /etc/prometheus/alert.rules

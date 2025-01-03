@@ -22,5 +22,8 @@ scrape_configs:
     static_configs:
          - targets:
            - prometheus-service:9090          
-           - data_collector_container:9999    
            - server_container:50055   
+           - data_collector_container:50056    
+           - data_cleaner_container:50057
+           - alert_system_container:50058
+           - alert_notification_system_container:50059

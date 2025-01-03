@@ -14,7 +14,7 @@ logging.basicConfig(
 )
 
 if __name__ == '__main__':
-    start_http_server(50058)
+    start_http_server(50059)
     alert_notification = AlertNotification()
     alert_thread = threading.Thread(target=alert_notification.consume_and_send_notifications)
     alert_thread.start()
