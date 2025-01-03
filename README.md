@@ -3,15 +3,15 @@ Sistema distribuito di ticker
 # Sistema distribuito di ticker
 
 Questo progetto implementa un sistema distribuito basato su un'architettura a microservizi per la gestione di utenti e dei ticker di loro interesse.
-L'applicazione è suddivisa in cinque componenti principali
-(`server`, `data_collector`, `data_cleaner`, `alert_system` e `alert_notification_system`), sfruttando un approccio modulare per garantire scalabilità e resilienza.
+L'applicazione è composta da cinque componenti principali
+(`server`, `data_collector`, `data_cleaner`, `alert_system` e `alert_notification_system`), che permette di sfruttare un approccio modulare per garantire scalabilità e resilienza, e da due componenti per la gestione del monitoraggio delle metriche (`prometheus` e `alert_manager`).
 --------------------------------------------------------------------------------------
 
 ---
 
 ## **Abstract**
 
-Questo progetto realizza un **sistema distribuito** basato su un'**architettura a microservizi** per la gestione e l'elaborazione di dati relativi a titoli azionari. L'applicazione, suddivisa in tre componenti principali (server, data_collector e data_cleaner), utilizza un approccio modulare per garantire scalabilità e resilienza. Il sistema implementa un meccanismo di autenticazione che distingue tra utenti "user" e "admin", conferendo a quest'ultimo priorità operative come la registrazione, l'aggiornamento e la cancellazione di altri utenti ma anche la visualizzazione di tutte le informazioni presenti nel DB.
+Questo progetto realizza un **sistema distribuito** basato su un'**architettura a microservizi** per la gestione e l'elaborazione di dati relativi a titoli azionari. L'applicazione, suddivisa in cinque componenti principali (server, data_collector, data_cleaner, alert_system e alert_notification_system), utilizza un approccio modulare per garantire scalabilità e resilienza. Il sistema implementa un meccanismo di autenticazione che distingue tra utenti "user" e "admin", conferendo a quest'ultimo priorità operative come la registrazione, l'aggiornamento e la cancellazione di altri utenti ma anche la visualizzazione di tutte le informazioni presenti nel DB.
 
 La comunicazione tra client e server avviene tramite **gRPC**, garantendo trasparenza ed efficienza. Il server adotta la politica di **at-most-once** per assicurare che ogni richiesta sia processata al massimo una volta, per garantire l’idempotenza delle operazioni e migliorare l’efficienza del sistema. Gli altri microservizi operano autonomamente, attivati periodicamente da uno scheduler per raccogliere e pulire i dati.
 
