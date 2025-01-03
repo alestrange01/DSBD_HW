@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager-deployment
+  labels:
+    app: alertmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      containers:
+      - name: alertmanager-container
+        image: prom/alertmanager:latest
+        args:
+        - "--config.file=/etc/alertmanager/config.yml"
+        - "--storage.path=/alertmanager"
+        volumeMounts:
+        - name: alertmanager-config
+          mountPath: /etc/alertmanager/
+        ports:
+        - containerPort: 9093
+      volumes:
+      - name: alertmanager-config
+        configMap:
+          name: alertmanager-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  labels:
+    app: alertmanager
+  namespace: default
+data:
+  config.yml: |
+    global:
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: '${EMAIL_SENDER_USER}'
+      smtp_auth_username: '${EMAIL_SENDER_USER}'
+      smtp_auth_password: '${EMAIL_SENDER_PASSWORD}'
+      smtp_require_tls: true
+
+    route:
+      receiver: 'default-receiver'
+
+    receivers:
+      - name: 'default-receiver'
+        email_configs:
+          - to: 'recipient@example.com'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager-service
+  labels:
+    app: alertmanager
+spec:
+  selector:
+    app: alertmanager
+  ports:
+  - name: http
+    protocol: TCP
+    port: 9093
+    targetPort: 9093
