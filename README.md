@@ -3,23 +3,27 @@ Sistema distribuito di ticker
 # Sistema distribuito di ticker
 
 Questo progetto implementa un sistema distribuito basato su un'architettura a microservizi per la gestione di utenti e dei ticker di loro interesse.
-L'applicazione è suddivisa in cinque componenti principali
-(`server`, `data_collector`, `data_cleaner`, `alert_system` e `alert_notification_system`), sfruttando un approccio modulare per garantire scalabilità e resilienza.
+L'applicazione è composta da cinque componenti principali
+(`server`, `data_collector`, `data_cleaner`, `alert_system` e `alert_notification_system`), che permette di sfruttare un approccio modulare per garantire scalabilità e resilienza, e da due componenti per la gestione del monitoraggio delle metriche (`prometheus` e `alert_manager`).
 --------------------------------------------------------------------------------------
 
 ---
 
 ## **Abstract**
 
-Questo progetto realizza un sistema distribuito basato su un'architettura a microservizi per la gestione e l'elaborazione di dati relativi a titoli azionari. L'applicazione, suddivisa in tre componenti principali (server, data_collector e data_cleaner), utilizza un approccio modulare per garantire scalabilità e resilienza. Il sistema implementa un meccanismo di autenticazione che distingue tra utenti "user" e "admin", conferendo a quest'ultimo priorità operative come la registrazione, l'aggiornamento e la cancellazione di altri utenti ma anche la visualizzazione di tutte le informazioni presenti nel DB.
+Questo progetto realizza un **sistema distribuito** basato su un'**architettura a microservizi** per la gestione e l'elaborazione di dati relativi a titoli azionari. L'applicazione, suddivisa in cinque componenti principali (server, data_collector, data_cleaner, alert_system e alert_notification_system), utilizza un approccio modulare per garantire scalabilità e resilienza. Il sistema implementa un meccanismo di autenticazione che distingue tra utenti "user" e "admin", conferendo a quest'ultimo priorità operative come la registrazione, l'aggiornamento e la cancellazione di altri utenti ma anche la visualizzazione di tutte le informazioni presenti nel DB.
 
-La comunicazione tra client e server avviene tramite gRPC, garantendo trasparenza ed efficienza. Il server adotta la politica di at-most-once per assicurare che ogni richiesta sia processata al massimo una volta, per garantire l’idempotenza delle operazioni e migliorare l’efficienza del sistema. Gli altri microservizi operano autonomamente, attivati periodicamente da uno scheduler per raccogliere e pulire i dati.
+La comunicazione tra client e server avviene tramite **gRPC**, garantendo trasparenza ed efficienza. Il server adotta la politica di **at-most-once** per assicurare che ogni richiesta sia processata al massimo una volta, per garantire l’idempotenza delle operazioni e migliorare l’efficienza del sistema. Gli altri microservizi operano autonomamente, attivati periodicamente da uno scheduler per raccogliere e pulire i dati.
 
-La comunicazione tra `data_collector` e `alert_system` e tra `alert_system` e `alert_notification_system` avviente tramite kafka, un broker che permette di avere maggior robustezza, una maggiore resilienza del sistema e una migliore gestione dei picchi di traffico.
+La comunicazione tra `data_collector` e `alert_system` e tra `alert_system` e `alert_notification_system` avviente tramite **Apache Kafka**, un broker che permette di avere maggior robustezza, una maggiore resilienza del sistema e una migliore gestione dei picchi di traffico.
+
+L'alert_system utilizza il topic Kafka `to-alert-system` per rilevare quando il data_collector completa la raccolta dei dati. Legge i dati più recenti dal database, elabora eventuali valori che superano soglie predefinite (come limiti massimi o minimi) e invia notifiche sul topic `to-notifier`. L'alert_notification_system consuma questi messaggi dal topic e notifica gli utenti via email, garantendo un flusso reattivo ed efficace per la gestione degli alert.
 
 La gestione dei dati è centralizzata in un database relazionale composto da tre tabelle principali. La tabella users gestisce le informazioni sugli utenti, tra cui email e il ticker azionario associato. La tabella shares registra i dati relativi ai titoli azionari (titolo, valore e un timestamp). Infine, la tabella ticker_management tiene traccia dell'utilizzo dei ticker azionari tramite un contatore, garantendo che i ticker non utilizzati vengano eliminati poi per ottimizzare lo spazio.
 
-Il pattern Circuit Breaker gestisce le chiamate verso servizi esterni, come Yahoo Finance, proteggendo da guasti e fallimenti ripetuti. In caso di errori, il circuito si apre temporaneamente, impedendo nuove richieste, e passa successivamente a uno stato "half-open" per verificare il recupero del servizio.
+Il pattern **Circuit Breaker** gestisce le chiamate verso servizi esterni, come Yahoo Finance, proteggendo da guasti e fallimenti ripetuti. In caso di errori, il circuito si apre temporaneamente, impedendo nuove richieste, e passa successivamente a uno stato "half-open" per verificare il recupero del servizio.
+
+Per il monitoraggio del sistema, abbiamo integrato **Prometheus**, che raccoglie e analizza metriche chiave, offrendo una visione in tempo reale dello stato e delle prestazioni del sistema. Questa integrazione consente di identificare rapidamente eventuali anomalie, configurare alert basati su soglie critiche e ottimizzare i microservizi grazie a metriche come latenza, #richieste ed errori.
 
 ---
 
@@ -31,30 +35,42 @@ In particolare, abbiamo deciso di creare un microservizio dedicato, il Data Clea
 
 Ogni microservizio ha un ruolo ben definito e indipendente, consentendo di isolare eventuali problematiche e facilitare la risoluzione dei guasti. Questo approccio offre diversi vantaggi:
 
-- Scalabilità: Ogni componente può essere scalato indipendentemente in base al carico specifico, ottimizzando l'uso delle risorse senza dover aumentare inutilmente le capacità dell'intero sistema.
-- Manutenibilità: Grazie alla suddivisione dei compiti, il codice di ciascun microservizio è più leggibile e modulare, facilitando sia lo sviluppo che l'introduzione di nuove funzionalità senza impattare sugli altri componenti.
-- Resilienza: L'indipendenza tra i microservizi limita l'impatto di eventuali guasti, mantenendo operativo il resto del sistema. Inoltre, il Data Collector utilizza un pattern come il Circuit Breaker per isolare i problemi legati ai servizi esterni.
-- Flessibilità nello sviluppo: Il team può lavorare su diversi microservizi in parallelo, scegliendo tecnologie e strumenti più adatti per ciascun componente.
+- **Scalabilità**: Ogni componente può essere scalato indipendentemente in base al carico specifico, ottimizzando l'uso delle risorse senza dover aumentare inutilmente le capacità dell'intero sistema.
+- **Manutenibilità**: Grazie alla suddivisione dei compiti, il codice di ciascun microservizio è più leggibile e modulare, facilitando sia lo sviluppo che l'introduzione di nuove funzionalità senza impattare sugli altri componenti.
+- **Resilienza**: L'indipendenza tra i microservizi limita l'impatto di eventuali guasti, mantenendo operativo il resto del sistema. Inoltre, il Data Collector utilizza un pattern come il Circuit Breaker per isolare i problemi legati ai servizi esterni.
+- **Flessibilità nello sviluppo**: Il team può lavorare su diversi microservizi in parallelo, scegliendo tecnologie e strumenti più adatti per ciascun componente.
 
-Abbiamo scelto di adottare il pattern CQRS (Command and Query Responsibility Segregation) sia nei service del server che nei repository di tutti i microservizi per i seguenti motivi:
+Abbiamo scelto di adottare il pattern **CQRS** (Command and Query Responsibility Segregation) sia nei service del server che nei repository di tutti i microservizi per i seguenti motivi:
 
-- Separazione delle responsabilità:
+- **Separazione delle responsabilità**:
   - CQRS separa le operazioni di lettura (Query) da quelle di scrittura (Command), semplificando ciascuna delle due. Questo approccio si traduce in codice più chiaro e più facile da mantenere.
-- Scalabilità:
+- **Scalabilità**:
   - Con CQRS è possibile ottimizzare la lettura e la scrittura in modo indipendente.
-- Flessibilità evolutiva:
+- **Flessibilità evolutiva**:
   - CQRS facilita l'introduzione di nuove funzionalità, come cache dedicate per le query o pipeline di eventi per aggiornamenti asincroni dei dati.
 
-Abbiamo utilizzato Apache Kafka come broker di messaggi per comunicare tra i microservizi per queste ragioni:
+Abbiamo utilizzato **Apache Kafka** come broker di messaggi per comunicare tra i microservizi per queste ragioni:
 
-- Alta affidabilità:
+- **Alta affidabilità**:
   - Kafka garantisce durabilità e tolleranza ai guasti, essenziali in un sistema distribuito. Le opzioni di configurazione (es. acks=all) assicurano che i messaggi siano confermati solo quando sono stati scritti in tutte le partizioni.
-- Gestione del carico elevato:
+- **Gestione del carico elevato**:
   - Kafka è ottimizzato per throughput elevati, gestendo milioni di messaggi al secondo, ideale per un ecosistema di microservizi.
-- Consistenza ed elaborazione garantita:
+- **Consistenza ed elaborazione garantita**:
   - Con configurazioni come enable.auto.commit=False, possiamo gestire manualmente il commit degli offset, garantendo che i messaggi vengano elaborati esattamente una volta, evitando duplicazioni o perdite.
-- Facilità di integrazione:
+- **Facilità di integrazione**:
   - Kafka offre un supporto nativo per le code di messaggi persistenti e distribuite, semplificando il coordinamento tra i microservizi.
+ 
+Per il monitoraggio del sistema, abbiamo scelto di integrare **Prometheus**. Questa scelta ci consente di beneficiare dei seguenti vantaggi:
+
+- **Visibilità in tempo reale**:
+  - Prometheus raccoglie e visualizza metriche in tempo reale, permettendoci di monitorare lo stato di ogni microservizio e identificare rapidamente eventuali problemi.
+- **Allarmi configurabili**:
+  - Grazie alla sua capacità di definire regole di alerting, Prometheus ci notifica automaticamente in caso di anomalie o soglie critiche, migliorando la resilienza del sistema.
+- **Flessibilità nella definizione delle metriche**:
+  - Possiamo definire metriche personalizzate per ogni microservizio, monitorando aspetti specifici come il numero di messaggi elaborati, il tempo di risposta ed il numero di errori.
+- **Scalabilità**:
+  - Prometheus è ottimizzato per sistemi distribuiti, rendendolo ideale per l'integrazione in un'architettura basata su microservizi.
+
 
 ---
 
@@ -166,6 +182,44 @@ Abbiamo utilizzato Apache Kafka come broker di messaggi per comunicare tra i mic
     - **`group.id`**: Identifica il gruppo di consumer come `group2`. Tutti i consumer che appartengono a questo gruppo condividono il carico del topic assegnato, consumando messaggi in modo bilanciato.
     - **`auto.offset.reset`**: Impostato su `earliest`, consente di leggere i messaggi dall'inizio del topic se non sono presenti offset salvati.
     - **`enable.auto.commit`**: Abilitato (`True`), salva automaticamente l'offset dei messaggi dopo la lettura, semplificando la gestione degli offset.
+   
+- Abbiamo integrato Prometheus per raccogliere e monitorare metriche chiave nei diversi microservizi del sistema: di seguito, un'analisi delle principali metriche implementate:
+  - **Server**:
+    - **`users`**: Conta il numero totale di utenti gestiti dal sistema, fornendo una misura della crescita del database utenti e dell'interazione con il sistema.
+    - **`requests_total`**: Conta il numero di richieste ricevute dal server, distinguendo per metodo (`Login`, `Register`, ecc.) e tipo di risposta (`cached`, `processed`). Questa metrica permette di analizzare il carico del server e il comportamento delle risposte.
+    - **`request_duration`**: Misura il tempo impiegato per completare richieste specifiche, distinte per metodo (`Login`, `Register`, ecc.). Forniscono una panoramica delle prestazioni per endpoint critici.
+    - **`errors`**: Conta il numero di errori verificatisi durante l'elaborazione delle richieste, classificati per tipo di errore (es. `401 Unauthorized`, `500 Internal Server Error`). Aiuta a monitorare la stabilità del sistema e a identificare problemi ricorrenti.
+    - **`cache_size`**: Misura il numero di elementi attualmente presenti nella cache del server. Questa metrica consente di valutare l'efficienza della gestione della cache e di rilevare eventuali sovraccarichi o inefficienze.
+
+
+  - **Data Collector**:
+    - **`tickers_count`**: Numero di ticker monitorati attivamente dal sistema, utile per valutare la scalabilità.
+    - **`yf_count`**: Conta le chiamate effettuate a `yfinance`, tracciando l'attività del Data Collector.
+    - **`yf_request_duration_seconds`**: Misura la latenza delle chiamate a `yfinance`, evidenziando potenziali colli di bottiglia nelle comunicazioni con i servizi esterni.
+  
+  - **Data Cleaner**:
+    - **`shares_deleted`**: Conta il numero di azioni eliminate dal database, categorizzate per motivazione (`old` o `unused`), utile per monitorare le operazioni di pulizia.
+    - **`ticker_management_deleted`**: Conta il numero di ticker eliminati dal sistema di gestione dei ticker, utile per monitorare la pulizia dei dati ticker non più di interesse.
+    - **`cleaning_request_duration_seconds`**: Histograms che misurano il tempo impiegato per ogni ciclo di pulizia.
+    - **`old_shares_ratio`**: Calcola la percentuale di azioni eliminate perché obsolete rispetto al totale, fornendo informazioni sull'efficienza del Data Cleaner.
+  
+  - **Alert System**:
+    - **`alerts_sent`**: Conta gli alert inviati, distinguendo per tipo (`high_limit`, `low_limit`), utile per monitorare la frequenza e la natura delle notifiche.
+    - **`alert_send_latency_seconds`**: Misura il tempo impiegato per inviare un messaggio di alert, tracciando le prestazioni del sistema.
+    - **`messages_consumed`** e **`messages_produced_for_notifications`**: Monitorano rispettivamente i messaggi Kafka consumati e prodotti, fornendo visibilità sulle operazioni di comunicazione.
+    - **`processing_errors`**: Conta il numero di errori verificatisi durante l'elaborazione dei messaggi, utile per identificare problemi nei flussi di lavoro o nei dati ricevuti.
+    - **`delivery_failures`**: Conta i fallimenti nell'invio dei messaggi al topic Kafka, permettendo di monitorare l'affidabilità del sistema.
+
+  
+  - **Alert Notification System**:
+    - **`messages_consumed`**: Conta il numero di messaggi consumati dal topic Kafka `to-notifier`, garantendo visibilità sull'attività del consumer.
+    - **`emails_sent`**: Conta il numero di email inviate con successo agli utenti, evidenziando l'efficacia del sistema.
+    - **`email_send_errors`**: Monitora gli errori durante l'invio delle email, utile per identificare problemi nel sistema di notifiche.
+    - **`email_send_latency`**: Misura il tempo necessario per inviare un'email, fornendo indicazioni sulle prestazioni del servizio.
+      
+Queste metriche ci permettono di monitorare l'intero ecosistema di microservizi in modo dettagliato, fornendo una base solida per ottimizzazioni future e garantendo un livello elevato di affidabilità e scalabilità.
+
+
 
 ---
 

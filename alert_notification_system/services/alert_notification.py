@@ -6,6 +6,7 @@ import smtplib
 import json
 import logging
 import os
+from metrics import emails_sent, email_send_errors, email_send_latency, messages_consumed, SERVICE_NAME, NODE_NAME
 
 logging = logging.getLogger(__name__) 
 
@@ -72,12 +73,16 @@ class AlertNotification:
         return True
 
     def __process_message(self, msg):
+        messages_consumed.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
         data = json.loads(msg.value().decode('utf-8'))
         logging.info(f"Consumed: {data}")
-        if self.__deliver_email(data):
-            logging.info(f"Offset committed for message: {msg.offset()}")
-        else:
-            logging.error(f"Failed to process email notification: {data}")
+        with email_send_latency.labels(service=SERVICE_NAME, node=NODE_NAME).time():
+            if self.__deliver_email(data):
+                emails_sent.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
+                logging.info(f"Offset committed for message: {msg.offset()}")
+            else:
+                email_send_errors.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
+                logging.error(f"Failed to process email notification: {data}")
 
     def consume_and_send_notifications(self):
         try:

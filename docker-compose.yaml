@@ -26,11 +26,12 @@ services:
       POSTGRES_DB: postgres
       POSTGRES_PORT: 5432
       KAFKA_BOOTSTRAP_SERVERS: kafka-broker:9092
+    restart: always
+    ports:
+      - "50051:50051"
     depends_on:
       - postgres
       - kafka-broker
-    ports:
-      - "50051:50051"
       
   data_collector:
     build:
@@ -47,6 +48,7 @@ services:
       POSTGRES_DB: postgres
       POSTGRES_PORT: 5432
       KAFKA_BOOTSTRAP_SERVERS: kafka-broker:9092
+    restart: always
     depends_on:
       - postgres
       - kafka-broker
@@ -125,8 +127,6 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
-    volumes:
-      - zookeeper_data:/var/lib/zookeeper
 
   kafka-broker:
     image: confluentinc/cp-kafka:latest
@@ -141,11 +141,29 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT, PLAINTEXT_INTERNAL:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker:9092, PLAINTEXT_INTERNAL://localhost:19092  
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    volumes:
-      - kafka_data:/var/lib/kafka/data
 
+  prometheus:
+    build:
+      context: ./prometheus
+    volumes:
+      - prometheus-data:/prometheus 
+    container_name: prometheus-service
+    ports: 
+      - 53120:9090
+
+  alert_manager:
+    container_name: alert_manager
+    build:
+      context: ./alert_manager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alert_manager:/etc/alertmanager
+    environment:
+      EMAIL_SENDER_USER: "fraromeo69@gmail.com"
+      EMAIL_SENDER_PASSWORD: "nxis zslg ywts rpyj"
 
 volumes:
   pg_data:
-  zookeeper_data:
-  kafka_data:
+  prometheus-data:
+    driver: local

@@ -3,6 +3,7 @@ import sys
 import threading
 from services.alerts import Alerts
 from db.db import DB
+from prometheus_client import start_http_server
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,6 +16,7 @@ logging.basicConfig(
 
 if __name__ == '__main__':
     DB.initialize()
+    start_http_server(50058)
     alert = Alerts()
     alert_thread = threading.Thread(target=alert.alerts)
     alert_thread.start()

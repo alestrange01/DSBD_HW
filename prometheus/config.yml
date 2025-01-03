@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 30s 
+  evaluation_interval: 30s
+  external_labels:
+      monitor: 'DSBD'
+
+rule_files:
+  - 'alert.rules'
+
+alerting:
+ alertmanagers:
+ - scheme: http
+   static_configs:
+   - targets:
+     - "alert_manager:9093"
+
+scrape_configs:
+  - job_name: 'prometheus'   
+    scrape_interval: 25s    
+    metrics_path: '/metrics' 
+    scheme: 'http'
+    static_configs:
+         - targets:
+           - prometheus-service:9090          
+           - server_container:50055   
+           - data_collector_container:50056    
+           - data_cleaner_container:50057
+           - alert_system_container:50058
+           - alert_notification_system_container:50059

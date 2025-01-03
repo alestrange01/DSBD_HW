@@ -10,12 +10,13 @@ from services.user_write_service import RegisterCommand, UpdateCommand, DeleteCo
 from services.user_reader_service import UserReaderService
 from services.ticker_management_reader_service import TickerManagementReaderService
 from services.share_reader_service import ShareReaderService
-
+from metrics import users, requests , request_duration, errors, cache_size, SERVICE_NAME, NODE_NAME
 logging = logging.getLogger(__name__)
 
 request_cache = {'GET': {}, 'POST': {}, 'PUT': {}, 'DEL': {}}
 request_attempts = {}
 cache_lock = Lock()
+cache_count = 0
 BAD_REQUEST_MESSAGE = "Bad request"
 UNOTHORIZED_MESSAGE = "Unauthorized"
 OK_MESSAGE = "OK"
@@ -25,236 +26,286 @@ class Server(homework2_pb2_grpc.ServerServicer):
         pass
             
     def Login(self, request, context): 
-        user_email, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_email, request_id, op_code)
-        if cached_response is not None:
-            logging.info("Login cached response")
-            return cached_response
-        else:
-            try:
-                user_reader_service = UserReaderService()
-                content, role = user_reader_service.login(request)
-                response = homework2_pb2.LoginReply(statusCode=200, message=OK_MESSAGE, content=content, role=role)
-            except ValueError as e:
-                response = homework2_pb2.LoginReply(statusCode=401, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
-            except Exception as e:
-                response = homework2_pb2.LoginReply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
-            finally:
-                self.__StoreInCache(user_email, request_id, op_code, response)
-            return response
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="Login").time():
+            user_email, request_id, op_code = self.__GetMetadata(context)
+            cached_response = self.__GetFromCache(user_email, request_id, op_code)
+            if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Login", response_type="cached").inc()
+                logging.info("Login cached response")
+                return cached_response
+            else:
+                try:
+                    user_reader_service = UserReaderService()
+                    content, role = user_reader_service.login(request)
+                    response = homework2_pb2.LoginReply(statusCode=200, message=OK_MESSAGE, content=content, role=role)
+                except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="Login", status_code=401).inc()
+                    response = homework2_pb2.LoginReply(statusCode=401, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
+                except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="Login", status_code=500).inc()
+                    response = homework2_pb2.LoginReply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
+                finally:
+                    self.__StoreInCache(user_email, request_id, op_code, response)
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Login", response_type="processed").inc()
+                return response
     
 
-    def Register(self, request, context):      
-        user_email, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_email, request_id, op_code)
-        if cached_response is not None:
-            logging.info("Register cached response")
-            return cached_response
-        else:
-            try:
-                user_write_service = UserWriteService()
-                user_write_service.handle_register_user(RegisterCommand(request))
-                message = homework2_pb2.Reply(statusCode=204, message=OK_MESSAGE, content="User registered successfully")
-            except ValueError as e:
-                message = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
-            except Exception as e:
-                message = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
-            finally:
-                self.__StoreInCache(user_email, request_id, op_code, message)
-            return message
+    def Register(self, request, context):   
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="Register").time():
+            user_email, request_id, op_code = self.__GetMetadata(context)
+            cached_response = self.__GetFromCache(user_email, request_id, op_code)
+            if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Register", response_type="cached").inc()
+                logging.info("Register cached response")
+                return cached_response
+            else:
+                try:
+                    user_write_service = UserWriteService()
+                    user_write_service.handle_register_user(RegisterCommand(request))
+                    message = homework2_pb2.Reply(statusCode=204, message=OK_MESSAGE, content="User registered successfully")
+                except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="Register", status_code=404).inc()
+                    message = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+                except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="Register", status_code=500).inc()
+                    message = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+                finally:
+                    self.__StoreInCache(user_email, request_id, op_code, message)
+                    users.labels(service=SERVICE_NAME, node=NODE_NAME).inc()
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Register", response_type="processed").inc()
+                return message
     
-    def Update(self, request, context):        
-        user_email, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_email, request_id, op_code)
-        if cached_response is not None:
-            logging.info("Update cached response")
-            return cached_response
-        if not self.__IsAuthorized(request.email, user_email):
-            response = homework2_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="User updating failed")
-            logging.error("Update failed")
-            return response
-        else:
-            try:
-                user_write_service = UserWriteService()
-                content = user_write_service.handle_update_user(UpdateCommand(request, user_email))
-                message = homework2_pb2.Reply(statusCode=204, message=OK_MESSAGE, content=content)
-            except ValueError as e:
-                message = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
-            except Exception as e:
-                message = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
-            finally:
-                self.__StoreInCache(user_email, request_id, op_code, message)
-            return message
+    def Update(self, request, context):  
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="Update").time():  
+            user_email, request_id, op_code = self.__GetMetadata(context)
+            cached_response = self.__GetFromCache(user_email, request_id, op_code)
+            if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Update", response_type="cached").inc()
+                logging.info("Update cached response")
+                return cached_response
+            if not self.__IsAuthorized(request.email, user_email):
+                response = homework2_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="User updating failed")
+                logging.error("Update failed")
+                return response
+            else:
+                try:
+                    user_write_service = UserWriteService()
+                    content = user_write_service.handle_update_user(UpdateCommand(request, user_email))
+                    message = homework2_pb2.Reply(statusCode=204, message=OK_MESSAGE, content=content)
+                except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="Update", status_code=404).inc()
+                    message = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+                except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="Update", status_code=500).inc()
+                    message = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+                finally:
+                    self.__StoreInCache(user_email, request_id, op_code, message)
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Update", response_type="processed").inc()
+                return message
 
-    def Delete(self, request, context):        
-        user_email, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_email, request_id, op_code)
-        if cached_response is not None:
-            logging.info("Delete cached response")
-            return cached_response
-        if not self.__IsAuthorized(request.email, user_email):
-            response = homework2_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="User updating failed")
-            logging.error("Update failed")
-            return response
-        else:
-            try:
-                user_write_service = UserWriteService()
-                user_write_service.handle_delete_user(DeleteCommand(request=request))
-                message = homework2_pb2.Reply(statusCode=204, message=OK_MESSAGE, content="User deleted successfully")
-            except ValueError as e:
-                message = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
-            except Exception as e:
-                message = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
-            finally:
-                self.__StoreInCache(user_email, request_id, op_code, message)     
-            return message
+    def Delete(self, request, context):      
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="Delete").time():
+            user_email, request_id, op_code = self.__GetMetadata(context)
+            cached_response = self.__GetFromCache(user_email, request_id, op_code)
+            if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Delete", response_type="cached").inc()
+                logging.info("Delete cached response")
+                return cached_response
+            if not self.__IsAuthorized(request.email, user_email):
+                response = homework2_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="User updating failed")
+                logging.error("Update failed")
+                return response
+            else:
+                try:
+                    user_write_service = UserWriteService()
+                    user_write_service.handle_delete_user(DeleteCommand(request=request))
+                    message = homework2_pb2.Reply(statusCode=204, message=OK_MESSAGE, content="User deleted successfully")
+                except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="Delete", status_code=404).inc()
+                    message = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+                except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="Delete", status_code=500).inc()
+                    message = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+                finally:
+                    self.__StoreInCache(user_email, request_id, op_code, message)     
+                    users.labels(service=SERVICE_NAME, node=NODE_NAME).dec()
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="Delete", response_type="processed").inc()
+                return message
             
     def ViewAllUsers(self, request, context):
-        user_email, request_id, op_code = self.__GetMetadata(context)
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllUsers").time():
+            user_email, request_id, op_code = self.__GetMetadata(context)
 
-        if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
-            response = homework2_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Only admin can view all users")
-            logging.error("View all users failed.")
-            return response
+            if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
+                response = homework2_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Only admin can view all users")
+                logging.error("View all users failed.")
+                return response
 
-        cached_response = self.__GetFromCache(user_email, request_id, op_code)
-        if cached_response is not None:
-            logging.info("View all users cached response")
-            return cached_response
-        else:
-            try:
-                user_reader_service = UserReaderService()
-                users = user_reader_service.get_all_users()
-                response_content = json.dumps([user.to_dict() for user in users])
-                response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
-            except ValueError as e:
-                response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
-            except Exception as e:
-                response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
-            finally:   
-                self.__StoreInCache(user_email, request_id, op_code, response)
-            return response
+            cached_response = self.__GetFromCache(user_email, request_id, op_code)
+            if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllUsers", response_type="cached").inc()
+                logging.info("View all users cached response")
+                return cached_response
+            else:
+                try:
+                    user_reader_service = UserReaderService()
+                    users = user_reader_service.get_all_users()
+                    response_content = json.dumps([user.to_dict() for user in users])
+                    response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
+                except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllUsers", status_code=404).inc()
+                    response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+                except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllUsers", status_code=500).inc()
+                    response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+                finally:   
+                    self.__StoreInCache(user_email, request_id, op_code, response)
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllUsers", response_type="processed").inc()
+                return response
 
     def ViewTickerManagement(self, request, context):
-        user_email, request_id, op_code = self.__GetMetadata(context)
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewTickerManagement").time():
+            user_email, request_id, op_code = self.__GetMetadata(context)
 
-        if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
-            response = homework2_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Only admin can view ticker management")
-            logging.error("View ticker management failed.")
-            return response
+            if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
+                response = homework2_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Only admin can view ticker management")
+                logging.error("View ticker management failed.")
+                return response
 
-        cached_response = self.__GetFromCache(user_email, request_id, op_code)
-        if cached_response is not None:
-            logging.info("View ticker management cached response")
-            return cached_response
-        else:
-            try:
-                ticker_management_reader_service = TickerManagementReaderService()
-                ticker_managements = ticker_management_reader_service.get_all_ticker_managements()
-                response_content = json.dumps([ticker_management.to_dict() for ticker_management in ticker_managements])
-                response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
-            except ValueError as e:
-                response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
-            except Exception as e:
-                response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
-            finally:
-                self.__StoreInCache(user_email, request_id, op_code, response)
-            return response
+            cached_response = self.__GetFromCache(user_email, request_id, op_code)
+            if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewTickerManagement", response_type="cached").inc()
+                logging.info("View ticker management cached response")
+                return cached_response
+            else:
+                try:
+                    ticker_management_reader_service = TickerManagementReaderService()
+                    ticker_managements = ticker_management_reader_service.get_all_ticker_managements()
+                    response_content = json.dumps([ticker_management.to_dict() for ticker_management in ticker_managements])
+                    response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
+                except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewTickerManagement", status_code=404).inc()
+                    response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+                except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewTickerManagement", status_code=500).inc()
+                    response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+                finally:
+                    self.__StoreInCache(user_email, request_id, op_code, response)
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewTickerManagement", response_type="processed").inc()
+                return response
                 
     def ViewAllShares(self, request, context):
-        user_email, request_id, op_code = self.__GetMetadata(context)
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllShares").time():
+            user_email, request_id, op_code = self.__GetMetadata(context)
 
-        if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
-            response = homework2_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Only admin can view all shares")
-            logging.error("View all shares failed.")
-            return response
+            if not self.__IsAuthorized(request_email=None, user_email=user_email, required_role="admin"):
+                response = homework2_pb2.Reply(statusCode=401, message=UNOTHORIZED_MESSAGE, content="Only admin can view all shares")
+                logging.error("View all shares failed.")
+                return response
 
-        cached_response = self.__GetFromCache(user_email, request_id, op_code)
-        if cached_response is not None:
-            logging.info("View all shares cached response")
-            return cached_response
-        else:
-            try:
-                share_reader_service = ShareReaderService()
-                shares = share_reader_service.get_all_shares()
-                logging.info(f"Shares: {shares}")
-                response_content = json.dumps([share.to_dict() for share in shares])
-                response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
-            except ValueError as e:
-                response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
-            except Exception as e:
-                response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
-            finally:
-                self.__StoreInCache(user_email, request_id, op_code, response)
-            return response
+            cached_response = self.__GetFromCache(user_email, request_id, op_code)
+            if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllShares", response_type="cached").inc()
+                logging.info("View all shares cached response")
+                return cached_response
+            else:
+                try:
+                    share_reader_service = ShareReaderService()
+                    shares = share_reader_service.get_all_shares()
+                    logging.info(f"Shares: {shares}")
+                    response_content = json.dumps([share.to_dict() for share in shares])
+                    response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
+                except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllShares", status_code=404).inc()
+                    response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+                except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllShares", status_code=500).inc()
+                    response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+                finally:
+                    self.__StoreInCache(user_email, request_id, op_code, response)
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllShares", response_type="processed").inc()
+                return response
             
     def GetValueShare(self, request, context):
-        user_email, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_email, request_id, op_code)
-        if cached_response is not None:
-            logging.info("Get value share cached response")
-            return cached_response
-        else:
-            try:
-                share_reader_service = ShareReaderService()
-                share = share_reader_service.get_values_share(user_email)
-                response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Value of " + str(share.share_name) + " share: " + "{:.3f}".format(share.value))
-            except ValueError as e:
-                response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve share failed")
-                logging.error("Get value share failed")
-            except Exception as e:
-                response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
-            finally:
-                self.__StoreInCache(user_email, request_id, op_code, response)
-            return response
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetValueShare").time():
+            user_email, request_id, op_code = self.__GetMetadata(context)
+            cached_response = self.__GetFromCache(user_email, request_id, op_code)
+            if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetValueShare", response_type="cached").inc()
+                logging.info("Get value share cached response")
+                return cached_response
+            else:
+                try:
+                    share_reader_service = ShareReaderService()
+                    share = share_reader_service.get_values_share(user_email)
+                    response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Value of " + str(share.share_name) + " share: " + "{:.3f}".format(share.value))
+                except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetValueShare", status_code=404).inc()
+                    response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve share failed")
+                    logging.error("Get value share failed")
+                except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetValueShare", status_code=500).inc()
+                    response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+                finally:
+                    self.__StoreInCache(user_email, request_id, op_code, response)
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetValueShare", response_type="processed").inc()
+                return response
     
     def GetMeanShare(self, request, context):
-        user_email, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_email, request_id, op_code)
-        if cached_response is not None:
-            logging.info("Get mean share cached response")
-            return cached_response
-        else:
-            try:
-                share_reader_service = ShareReaderService()
-                content = share_reader_service.get_mean_share(request, user_email)
-                response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=content)
-            except ValueError as e:
-                response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
-            except Exception as e:
-                response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
-            finally:
-                self.__StoreInCache(user_email, request_id, op_code, response)
-            return response
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetMeanShare").time():
+            user_email, request_id, op_code = self.__GetMetadata(context)
+            cached_response = self.__GetFromCache(user_email, request_id, op_code)
+            if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetMeanShare", response_type="cached").inc()
+                logging.info("Get mean share cached response")
+                return cached_response
+            else:
+                try:
+                    share_reader_service = ShareReaderService()
+                    content = share_reader_service.get_mean_share(request, user_email)
+                    response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=content)
+                except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetMeanShare", status_code=404).inc()
+                    response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
+                except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetMeanShare", status_code=500).inc()
+                    response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
+                finally:
+                    self.__StoreInCache(user_email, request_id, op_code, response)
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetMeanShare", response_type="processed").inc()
+                return response
             
     def TestAtMostOncePolicy(self, request, context):
-        user_email, request_id, op_code = self.__GetMetadata(context)
-        cached_response = self.__GetFromCache(user_email, request_id, op_code)
-        if cached_response is not None:
-            logging.info("Returning cached response")
-            del request_attempts[request_id]
-            return cached_response
+        with request_duration.labels(service=SERVICE_NAME, node=NODE_NAME, method="TestAtMostOncePolicy").time():
+            user_email, request_id, op_code = self.__GetMetadata(context)
+            cached_response = self.__GetFromCache(user_email, request_id, op_code)
+            if cached_response is not None:
+                requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="TestAtMostOncePolicy", response_type="cached").inc()
+                logging.info("Returning cached response")
+                del request_attempts[request_id]
+                return cached_response
 
-        if request_id not in request_attempts:
-            request_attempts[request_id] = 0
-        
-        request_attempts[request_id] += 1
-        attempt_count = request_attempts[request_id]
+            if request_id not in request_attempts:
+                request_attempts[request_id] = 0
+            
+            request_attempts[request_id] += 1
+            attempt_count = request_attempts[request_id]
 
-        if attempt_count == 1:
-            logging.info(f"Simulating delay for attempt {attempt_count}")
-            time.sleep(10) 
-        elif attempt_count == 2:
-            logging.info(f"Simulating delay for attempt {attempt_count}")
-            time.sleep(5)
+            if attempt_count == 1:
+                logging.info(f"Simulating delay for attempt {attempt_count}")
+                time.sleep(10) 
+            elif attempt_count == 2:
+                logging.info(f"Simulating delay for attempt {attempt_count}")
+                time.sleep(5)
 
-        response = homework2_pb2.Reply(
-            statusCode=200,
-            message="Processed successfully",
-            content=f"Hello {user_email}, your request {request_id} has been processed."
-        )
-        self.__StoreInCache(user_email, request_id, op_code, response)
-        return response
+            response = homework2_pb2.Reply(
+                statusCode=200,
+                message="Processed successfully",
+                content=f"Hello {user_email}, your request {request_id} has been processed."
+            )
+            self.__StoreInCache(user_email, request_id, op_code, response)
+            requests.labels(service=SERVICE_NAME, node=NODE_NAME, method="TestAtMostOncePolicy", response_type="processed").inc()
+            return response
 
     def __GetMetadata(self, context): 
         meta = dict(context.invocation_metadata())
@@ -278,9 +329,12 @@ class Server(homework2_pb2_grpc.ServerServicer):
 
             
     def __StoreInCache(self, user_email, request_id, op_code, response):
+        global cache_count
         user_request_id = user_email + "_" + request_id
         with cache_lock:
             request_cache[op_code][user_request_id] = {'response': response, 'timestamp': time.time()}
+            cache_count += 1
+            cache_size.labels(service=SERVICE_NAME, node=NODE_NAME).set(cache_count)
 
     def __IsAuthorized(self, request_email, user_email, required_role=None):
         user_reader_service = UserReaderService()
@@ -291,6 +345,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
     
 
 def clean_cache():
+    global cache_count
     current_time = time.time()
     threshold = 120
     logging.info("Pulizia cache...")
@@ -304,6 +359,8 @@ def clean_cache():
             ]
             for key in keys_to_delete:
                 del request_cache[op_code][key]
+                cache_count -= 1
+        cache_size.labels(service=SERVICE_NAME, node=NODE_NAME).set(cache_count)
     logging.info("\nCache dopo pulizia:")
     logging.info(request_cache)
 
