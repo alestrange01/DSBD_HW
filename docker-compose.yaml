@@ -152,15 +152,15 @@ services:
     ports: 
       - 53120:9090
 
-  alertmanager:
-    image: prom/alertmanager:v0.21.0
-    container_name: alertmanager
+  alert_manager:
+    image: prom/alert_manager:v0.21.0
+    container_name: alert_manager
     ports:
       - "9093:9093"
     volumes:
-      - ./alertmanager:/etc/alertmanager
+      - ./alert_manager:/etc/alert_manager
     command:
-      - '--config.file=/etc/alertmanager/config.yml'
+      - '--config.file=/etc/alert_manager/config.yml'
     environment:
       EMAIL_SENDER_USER: "fraromeo69@gmail.com"
       EMAIL_SENDER_PASSWORD: "nxis zslg ywts rpyj"
