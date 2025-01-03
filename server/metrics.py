@@ -22,3 +22,14 @@ request_duration = Histogram(
     ['service', 'node', 'method']
 )
  
+errors = Counter(
+    'errors_total',
+    'Total number of errors, categorized by method and error type',
+    ['service', 'node', 'method', 'status_code']
+)
+
+cache_size = Gauge(
+    'cache_size',
+    'Current size of the cache',
+    ['service', 'node']
+)

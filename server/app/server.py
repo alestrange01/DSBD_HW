@@ -10,13 +10,13 @@ from services.user_write_service import RegisterCommand, UpdateCommand, DeleteCo
 from services.user_reader_service import UserReaderService
 from services.ticker_management_reader_service import TickerManagementReaderService
 from services.share_reader_service import ShareReaderService
-from metrics import users, requests , request_duration, SERVICE_NAME, NODE_NAME
-
+from metrics import users, requests , request_duration, errors, cache_size, SERVICE_NAME, NODE_NAME
 logging = logging.getLogger(__name__)
 
 request_cache = {'GET': {}, 'POST': {}, 'PUT': {}, 'DEL': {}}
 request_attempts = {}
 cache_lock = Lock()
+cache_count = 0
 BAD_REQUEST_MESSAGE = "Bad request"
 UNOTHORIZED_MESSAGE = "Unauthorized"
 OK_MESSAGE = "OK"
@@ -39,8 +39,10 @@ class Server(homework2_pb2_grpc.ServerServicer):
                     content, role = user_reader_service.login(request)
                     response = homework2_pb2.LoginReply(statusCode=200, message=OK_MESSAGE, content=content, role=role)
                 except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="Login", status_code=401).inc()
                     response = homework2_pb2.LoginReply(statusCode=401, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
                 except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="Login", status_code=500).inc()
                     response = homework2_pb2.LoginReply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e), role="unknown")
                 finally:
                     self.__StoreInCache(user_email, request_id, op_code, response)
@@ -62,8 +64,10 @@ class Server(homework2_pb2_grpc.ServerServicer):
                     user_write_service.handle_register_user(RegisterCommand(request))
                     message = homework2_pb2.Reply(statusCode=204, message=OK_MESSAGE, content="User registered successfully")
                 except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="Register", status_code=404).inc()
                     message = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
                 except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="Register", status_code=500).inc()
                     message = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
                 finally:
                     self.__StoreInCache(user_email, request_id, op_code, message)
@@ -89,8 +93,10 @@ class Server(homework2_pb2_grpc.ServerServicer):
                     content = user_write_service.handle_update_user(UpdateCommand(request, user_email))
                     message = homework2_pb2.Reply(statusCode=204, message=OK_MESSAGE, content=content)
                 except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="Update", status_code=404).inc()
                     message = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
                 except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="Update", status_code=500).inc()
                     message = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
                 finally:
                     self.__StoreInCache(user_email, request_id, op_code, message)
@@ -115,8 +121,10 @@ class Server(homework2_pb2_grpc.ServerServicer):
                     user_write_service.handle_delete_user(DeleteCommand(request=request))
                     message = homework2_pb2.Reply(statusCode=204, message=OK_MESSAGE, content="User deleted successfully")
                 except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="Delete", status_code=404).inc()
                     message = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
                 except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="Delete", status_code=500).inc()
                     message = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
                 finally:
                     self.__StoreInCache(user_email, request_id, op_code, message)     
@@ -145,8 +153,10 @@ class Server(homework2_pb2_grpc.ServerServicer):
                     response_content = json.dumps([user.to_dict() for user in users])
                     response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
                 except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllUsers", status_code=404).inc()
                     response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
                 except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllUsers", status_code=500).inc()
                     response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
                 finally:   
                     self.__StoreInCache(user_email, request_id, op_code, response)
@@ -174,8 +184,10 @@ class Server(homework2_pb2_grpc.ServerServicer):
                     response_content = json.dumps([ticker_management.to_dict() for ticker_management in ticker_managements])
                     response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
                 except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewTickerManagement", status_code=404).inc()
                     response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
                 except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewTickerManagement", status_code=500).inc()
                     response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
                 finally:
                     self.__StoreInCache(user_email, request_id, op_code, response)
@@ -204,8 +216,10 @@ class Server(homework2_pb2_grpc.ServerServicer):
                     response_content = json.dumps([share.to_dict() for share in shares])
                     response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=response_content)
                 except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllShares", status_code=404).inc()
                     response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
                 except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="ViewAllShares", status_code=500).inc()
                     response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
                 finally:
                     self.__StoreInCache(user_email, request_id, op_code, response)
@@ -226,9 +240,11 @@ class Server(homework2_pb2_grpc.ServerServicer):
                     share = share_reader_service.get_values_share(user_email)
                     response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content="Value of " + str(share.share_name) + " share: " + "{:.3f}".format(share.value))
                 except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetValueShare", status_code=404).inc()
                     response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content="Retrieve share failed")
                     logging.error("Get value share failed")
                 except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetValueShare", status_code=500).inc()
                     response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
                 finally:
                     self.__StoreInCache(user_email, request_id, op_code, response)
@@ -249,8 +265,10 @@ class Server(homework2_pb2_grpc.ServerServicer):
                     content = share_reader_service.get_mean_share(request, user_email)
                     response = homework2_pb2.Reply(statusCode=200, message=OK_MESSAGE, content=content)
                 except ValueError as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetMeanShare", status_code=404).inc()
                     response = homework2_pb2.Reply(statusCode=404, message=BAD_REQUEST_MESSAGE, content=str(e))
                 except Exception as e:
+                    errors.labels(service=SERVICE_NAME, node=NODE_NAME, method="GetMeanShare", status_code=500).inc()
                     response = homework2_pb2.Reply(statusCode=500, message=BAD_REQUEST_MESSAGE, content=str(e))
                 finally:
                     self.__StoreInCache(user_email, request_id, op_code, response)
@@ -311,9 +329,12 @@ class Server(homework2_pb2_grpc.ServerServicer):
 
             
     def __StoreInCache(self, user_email, request_id, op_code, response):
+        global cache_count
         user_request_id = user_email + "_" + request_id
         with cache_lock:
             request_cache[op_code][user_request_id] = {'response': response, 'timestamp': time.time()}
+            cache_count += 1
+            cache_size.labels(service=SERVICE_NAME, node=NODE_NAME).set(cache_count)
 
     def __IsAuthorized(self, request_email, user_email, required_role=None):
         user_reader_service = UserReaderService()
@@ -324,6 +345,7 @@ class Server(homework2_pb2_grpc.ServerServicer):
     
 
 def clean_cache():
+    global cache_count
     current_time = time.time()
     threshold = 120
     logging.info("Pulizia cache...")
@@ -337,6 +359,8 @@ def clean_cache():
             ]
             for key in keys_to_delete:
                 del request_cache[op_code][key]
+                cache_count -= 1
+        cache_size.labels(service=SERVICE_NAME, node=NODE_NAME).set(cache_count)
     logging.info("\nCache dopo pulizia:")
     logging.info(request_cache)
 

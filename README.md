@@ -188,6 +188,8 @@ Per il monitoraggio del sistema, abbiamo scelto di integrare **Prometheus**. Que
     - **`users`**: Conta il numero totale di utenti gestiti dal sistema, fornendo una misura della crescita del database utenti e dell'interazione con il sistema.
     - **`requests_total`**: Conta il numero di richieste ricevute dal server, distinguendo per metodo (`Login`, `Register`, ecc.) e tipo di risposta (`cached`, `processed`). Questa metrica permette di analizzare il carico del server e il comportamento delle risposte.
     - **`request_duration`**: Misura il tempo impiegato per completare richieste specifiche, distinte per metodo (`Login`, `Register`, ecc.). Forniscono una panoramica delle prestazioni per endpoint critici.
+    - **`errors`**: Conta il numero di errori verificatisi durante l'elaborazione delle richieste, classificati per tipo di errore (es. `401 Unauthorized`, `500 Internal Server Error`). Aiuta a monitorare la stabilità del sistema e a identificare problemi ricorrenti.
+    - **`cache_size`**: Misura il numero di elementi attualmente presenti nella cache del server. Questa metrica consente di valutare l'efficienza della gestione della cache e di rilevare eventuali sovraccarichi o inefficienze.
 
 
   - **Data Collector**:
