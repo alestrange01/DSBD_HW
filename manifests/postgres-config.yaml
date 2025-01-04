@@ -18,6 +18,7 @@ spec:
       containers:
       - name: postgres-container
         image: postgres:15
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
             cpu: "500m"
@@ -60,7 +61,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres-service
+  name: postgres
   labels:
     app: postgres
 spec:

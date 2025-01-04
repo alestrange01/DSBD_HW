@@ -17,7 +17,8 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: server-container
-        image: dsbd_hw1-server:latest
+        image: dsbd_hw-server:latest
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
             memory: "256Mi"

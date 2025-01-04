@@ -17,7 +17,11 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: prometheus-container
-        image: dsbd_hw1-prometheus:latest
+        image: dsbd_hw-prometheus:latest
+        args:
+          - "--config.file=/etc/prometheus/config.yml"
+          - "--storage.tsdb.path=/prometheus"
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
             cpu: "500m"
@@ -29,13 +33,25 @@ spec:
             ephemeral-storage: "2Gi"
         volumeMounts:
         - name: prometheus-config
-          mountPath: /etc/prometheus/
+          mountPath: /etc/prometheus/config.yml
+          subPath: config.yml
+        - name: prometheus-rules
+          mountPath: /etc/prometheus/alert.rules
+          subPath: alert.rules
+        - name: prometheus-data 
+          mountPath: /prometheus
         ports:
         - containerPort: 9090
       volumes:
       - name: prometheus-config
         configMap:
           name: prometheus-config
+      - name: prometheus-rules
+        configMap:
+          name: prometheus-rules
+      - name: prometheus-data
+        persistentVolumeClaim:
+          claimName: prometheus-pvc
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -45,10 +61,16 @@ metadata:
     app: prometheus
   namespace: default
 data:
-  prometheus.yml: |
+  config.yml: |
     global:
       scrape_interval: 15s
-
+    alerting:
+      alertmanagers:
+      - static_configs:
+        - targets:
+          - "alertmanager-service:9093"
+    rule_files:
+      - /etc/prometheus/alert.rules
     scrape_configs:
       - job_name: 'prometheus'
         static_configs:
@@ -70,6 +92,64 @@ data:
           - targets: ['alert-notification-service:50059']
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-rules
+  labels:
+    app: prometheus
+  namespace: default
+data:
+  alert.rules: |
+    groups:
+    - name: prometheus-alerts
+      rules:
+      - alert: service_down  
+        expr: up == 0        
+        for: 30s             
+        labels:               
+          severity: page      
+        annotations:          
+          summary: "Instance {{ $labels.instance }} down"
+          description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 30 seconds."
+
+      - alert: high_load
+        expr: node_load1 > 0.8
+        for: 30s
+        labels:
+          severity: page
+        annotations:
+          summary: "Instance {{ $labels.instance }} under high load"
+          description: "{{ $labels.instance }} of job {{ $labels.job }} is under high load."
+
+      - alert: site_down
+        expr: probe_success < 1
+        for: 30s
+        labels:
+          severity: page
+        annotations:
+          summary: "Site Down: {{$labels.instance}}"
+          description: "Site Down: {{$labels.instance}} for more than 30 seconds"
+
+      - alert: HighRequestDuration
+        expr: histogram_quantile(0.8, rate(request_duration_seconds_bucket[10m])) > 2
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High request duration for service: {{ $labels.service }}, method: {{ $labels.method }}."
+          description: "The 80th percentile of request duration for method {{ $labels.method }} has exceeded 2 seconds over the last 10 minutes for the service running on node: {{ $labels.node }}."
+      
+      - alert: TestAlert
+        expr: vector(1)
+        for: 30s
+        labels:
+          severity: page
+        annotations:
+          summary: "This is a test alert"
+          description: "This is a test alert for testing purposes"
+
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: prometheus-service
@@ -83,3 +163,16 @@ spec:
     protocol: TCP
     port: 9090
     targetPort: 9090
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-pvc
+  labels:
+    app: prometheus
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi

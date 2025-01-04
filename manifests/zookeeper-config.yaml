@@ -18,6 +18,7 @@ spec:
       containers:
       - name: zookeeper
         image: confluentinc/cp-zookeeper:latest
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
             cpu: "500m"

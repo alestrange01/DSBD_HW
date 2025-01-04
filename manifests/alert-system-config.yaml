@@ -17,7 +17,8 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: alert-system-container
-        image: dsbd_hw1-alert_system:latest
+        image: dsbd_hw-alert_system:latest
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
             cpu: "500m"

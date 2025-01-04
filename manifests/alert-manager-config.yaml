@@ -17,7 +17,8 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: alertmanager-container
-        image: dsbd_hw1-alert_manager:latest
+        image: dsbd_hw-alert_manager:latest
+        imagePullPolicy: IfNotPresent
         args:
         - "--config.file=/etc/alertmanager/config.yml"
         - "--storage.path=/alertmanager"
@@ -53,11 +54,7 @@ metadata:
 data:
   config.yml: |
     global:
-      smtp_smarthost: 'smtp.gmail.com:587'
-      smtp_from: '${EMAIL_SENDER_USER}'
-      smtp_auth_username: '${EMAIL_SENDER_USER}'
-      smtp_auth_password: '${EMAIL_SENDER_PASSWORD}'
-      smtp_require_tls: true
+      resolve_timeout: 5m
 
     route:
       receiver: 'default-receiver'
@@ -65,7 +62,12 @@ data:
     receivers:
       - name: 'default-receiver'
         email_configs:
-          - to: 'recipient@example.com'
+          - to: 'alessandrostrano21@gmail.com'
+            from: 'fraromeo69@gmail.com'
+            smarthost: 'smtp.gmail.com:587'
+            auth_username: 'fraromeo69@gmail.com'
+            auth_password: 'nxis zslg ywts rpyj'
+            auth_identity: 'fraromeo69@gmail.com'
 ---
 apiVersion: v1
 kind: Service
@@ -81,3 +83,16 @@ spec:
     protocol: TCP
     port: 9093
     targetPort: 9093
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: alertmanager-pvc
+  labels:
+    app: alertmanager
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

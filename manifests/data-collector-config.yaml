@@ -17,7 +17,8 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: data-collector-container
-        image: dsbd_hw1-data_collector:latest
+        image: dsbd_hw-data_collector:latest
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
             cpu: "500m"
