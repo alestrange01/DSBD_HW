@@ -14,9 +14,18 @@ spec:
       labels:
         app: kafka-broker
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: kafka-broker-container
         image: confluentinc/cp-kafka:latest
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+            ephemeral-storage: "1Gi"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
         env:
         - name: KAFKA_BROKER_ID
           value: "1"

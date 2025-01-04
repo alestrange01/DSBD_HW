@@ -14,9 +14,19 @@ spec:
       labels:
         app: prometheus
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: prometheus-container
-        image: prom/prometheus:latest
+        image: dsbd_hw1-prometheus:latest
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "256Mi"
+            ephemeral-storage: "1Gi"
+          limits:
+            cpu: "1"
+            memory: "512Mi"
+            ephemeral-storage: "2Gi"
         volumeMounts:
         - name: prometheus-config
           mountPath: /etc/prometheus/

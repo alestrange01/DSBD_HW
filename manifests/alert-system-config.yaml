@@ -14,9 +14,18 @@ spec:
       labels:
         app: alert-system
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: alert-system-container
         image: dsbd_hw1-alert_system:latest
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "256Mi"
+            ephemeral-storage: "1Gi"
+          limits:
+            cpu: "1"
+            memory: "512Mi"
         env:
         - name: POSTGRES_USER
           value: "root"

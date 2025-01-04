@@ -14,9 +14,19 @@ spec:
       labels:
         app: postgres
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: postgres-container
         image: postgres:15
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+            ephemeral-storage: "1Gi"
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+            ephemeral-storage: "2Gi"
         env:
         - name: POSTGRES_USER
           value: "root"

@@ -14,9 +14,18 @@ spec:
       labels:
         app: server
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: server-container
         image: dsbd_hw1-server:latest
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "500m"
+            ephemeral-storage: "1Gi"
+          limits:
+            memory: "512Mi"
+            cpu: "1000m"
         env:
         - name: POSTGRES_USER
           value: "root"

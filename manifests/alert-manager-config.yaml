@@ -14,12 +14,22 @@ spec:
       labels:
         app: alertmanager
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: alertmanager-container
-        image: prom/alertmanager:latest
+        image: dsbd_hw1-alert_manager:latest
         args:
         - "--config.file=/etc/alertmanager/config.yml"
         - "--storage.path=/alertmanager"
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+            ephemeral-storage: "1Gi"
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+            ephemeral-storage: "500Mi"
         volumeMounts:
         - name: alertmanager-config
           mountPath: /etc/alertmanager/
@@ -29,6 +39,9 @@ spec:
       - name: alertmanager-config
         configMap:
           name: alertmanager-config
+      - name: alertmanager-storage
+        persistentVolumeClaim:
+          claimName: alertmanager-pvc
 ---
 apiVersion: v1
 kind: ConfigMap

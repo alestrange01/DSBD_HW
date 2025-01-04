@@ -14,9 +14,18 @@ spec:
       labels:
         app: data-cleaner
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: data-cleaner-container
         image: dsbd_hw1-data_cleaner:latest
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "256Mi"
+            ephemeral-storage: "1Gi"
+          limits:
+            cpu: "1"
+            memory: "512Mi"
         env:
         - name: POSTGRES_USER
           value: "root"

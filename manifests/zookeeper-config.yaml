@@ -14,9 +14,19 @@ spec:
       labels:
         app: zookeeper
     spec:
+      automountServiceAccountToken: false
       containers:
-      - name: zookeeper-container
+      - name: zookeeper
         image: confluentinc/cp-zookeeper:latest
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "256Mi"
+            ephemeral-storage: "1Gi"
+          limits:
+            cpu: "1"
+            memory: "512Mi"
+            ephemeral-storage: "2Gi"
         env:
         - name: ZOOKEEPER_CLIENT_PORT
           value: "2181"
