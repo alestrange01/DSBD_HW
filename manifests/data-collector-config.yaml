@@ -16,8 +16,8 @@ spec:
     spec:
       automountServiceAccountToken: false
       containers:
-      - name: data-cleaner-container
-        image: dsbd_hw1-data_cleaner:latest
+      - name: data-collector-container
+        image: dsbd_hw1-data_collector:latest
         resources:
           requests:
             cpu: "500m"
