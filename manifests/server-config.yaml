@@ -47,10 +47,16 @@ metadata:
   labels:
     app: server
 spec:
+  type: NodePort
   selector:
     app: server
   ports:
-  - name: grpc
-    protocol: TCP
-    port: 50051
-    targetPort: 50051
+    - name: grpc-server-port
+      protocol: TCP
+      port: 50051
+      targetPort: 50051
+      nodePort: 30001
+    - name: prometheus-server-port
+      protocol: TCP
+      port: 50055
+      targetPort: 50055
