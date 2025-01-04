@@ -17,7 +17,7 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: prometheus-container
-        image: dsbd_hw-prometheus:latest
+        image: francescoromeo/dsbd_hw_prometheus:latest
         args:
           - "--config.file=/etc/prometheus/config.yml"
           - "--storage.tsdb.path=/prometheus"

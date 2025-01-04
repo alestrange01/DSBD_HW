@@ -17,7 +17,7 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: alertmanager-container
-        image: dsbd_hw-alert_manager:latest
+        image: francescoromeo/dsbd_hw_alert_manager:latest
         imagePullPolicy: IfNotPresent
         args:
         - "--config.file=/etc/alertmanager/config.yml"
