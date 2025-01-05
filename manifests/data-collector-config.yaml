@@ -24,8 +24,9 @@ spec:
         command: ['sh', '-c', 'until nc -z -v -w30 kafka-broker 9092; do echo "Waiting for Kafka..."; sleep 5; done']
       containers:
       - name: data-collector-container
+        #image: francescoromeo/dsbd_hw_data_collector_minutes:latest 
+        #image: francescoromeo/dsbd_hw_data_collector_test_circuit_breaker:latest
         image: francescoromeo/dsbd_hw_data_collector:latest
-        imagePullPolicy: IfNotPresent
         resources:
           requests:
             cpu: "500m"

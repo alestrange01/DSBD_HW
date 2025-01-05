@@ -21,7 +21,6 @@ spec:
         args:
         - "--config.file=/etc/alertmanager/config.yml"
         - "--storage.path=/alertmanager"
-        imagePullPolicy: IfNotPresent
         resources:
           requests:
             memory: "256Mi"

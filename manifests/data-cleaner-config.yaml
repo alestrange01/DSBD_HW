@@ -25,7 +25,6 @@ spec:
       containers:
       - name: data-cleaner-container
         image: francescoromeo/dsbd_hw_data_cleaner:latest
-        imagePullPolicy: IfNotPresent
         resources:
           requests:
             cpu: "500m"

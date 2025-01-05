@@ -18,7 +18,6 @@ spec:
       containers:
       - name: postgres-container
         image: postgres:15
-        imagePullPolicy: IfNotPresent
         resources:
           requests:
             cpu: "500m"

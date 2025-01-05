@@ -22,7 +22,6 @@ spec:
       containers:
       - name: alert-notification-container
         image: francescoromeo/dsbd_hw_alert_notification_system:latest
-        imagePullPolicy: IfNotPresent
         resources:
           limits:
             memory: "512Mi"

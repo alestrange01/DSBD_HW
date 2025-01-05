@@ -25,7 +25,6 @@ spec:
       containers:
       - name: alert-system-container
         image: francescoromeo/dsbd_hw_alert_system:latest
-        imagePullPolicy: IfNotPresent
         resources:
           requests:
             cpu: "500m"

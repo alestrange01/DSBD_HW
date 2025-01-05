@@ -18,7 +18,6 @@ spec:
       containers:
       - name: kafka-broker-container
         image: confluentinc/cp-kafka:latest
-        imagePullPolicy: IfNotPresent
         resources:
           requests:
             memory: "512Mi"

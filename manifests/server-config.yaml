@@ -25,7 +25,6 @@ spec:
       containers:
       - name: server-container
         image: francescoromeo/dsbd_hw_server:latest
-        imagePullPolicy: IfNotPresent
         resources:
           requests:
             memory: "256Mi"
