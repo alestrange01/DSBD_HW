@@ -7,7 +7,7 @@ from decimal import Decimal
 import app.homework2_pb2 as homework2_pb2
 import app.homework2_pb2_grpc as homework2_pb2_grpc
 
-target = 'localhost:50051'
+target = 'localhost:60386'  # TODO: modificare con l'indirizzo del server
 INSERT_YOUR_CHOICE = "Inserisci la tua scelta: "
 NOT_VALID_CHOICE = "Scelta non valida"
 RESPONSE_RECEIVED = "Response received: "
