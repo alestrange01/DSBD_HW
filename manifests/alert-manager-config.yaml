@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager-deployment
+  labels:
+    app: alertmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: alertmanager-container
+        image: francescoromeo/dsbd_hw_alert_manager:latest
+        args:
+        - "--config.file=/etc/alertmanager/config.yml"
+        - "--storage.path=/alertmanager"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+            ephemeral-storage: "500Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+            ephemeral-storage: "1Gi"
+        volumeMounts:
+        - name: alertmanager-config
+          mountPath: /etc/alertmanager/config.yml
+          subPath: config.yml
+        ports:
+        - containerPort: 9093
+      volumes:
+      - name: alertmanager-config
+        configMap:
+          name: alertmanager-config
+      - name: alertmanager-storage
+        persistentVolumeClaim:
+          claimName: alertmanager-pvc
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  labels:
+    app: alertmanager
+  namespace: default
+data:
+  config.yml: |
+    global:
+      resolve_timeout: 5m
+
+    route:
+      receiver: 'default-receiver'
+
+    receivers:
+      - name: 'default-receiver'
+        email_configs:
+          - to: 'alessandrostrano21@gmail.com'
+            from: 'dsbd.romeo.strano@gmail.com'
+            smarthost: 'smtp.gmail.com:587'
+            auth_username: 'dsbd.romeo.strano@gmail.com'
+            auth_password: 'vekp tjaq tnsa iqbf'
+            auth_identity: 'dsbd.romeo.strano@gmail.com'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager-service
+  labels:
+    app: alertmanager
+spec:
+  selector:
+    app: alertmanager
+  ports:
+  - name: http
+    protocol: TCP
+    port: 9093
+    targetPort: 9093
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: alertmanager-pvc
+  labels:
+    app: alertmanager
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+

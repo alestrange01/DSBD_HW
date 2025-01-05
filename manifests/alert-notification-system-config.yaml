@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-notification-deployment
+  labels:
+    app: alert-notification
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alert-notification
+  template:
+    metadata:
+      labels:
+        app: alert-notification
+    spec:
+      automountServiceAccountToken: false
+      initContainers:
+      - name: init-kafka 
+        image: busybox 
+        command: ['sh', '-c', 'until nc -z -v -w30 kafka-broker 9092; do echo "Waiting for Kafka..."; sleep 5; done']
+      containers:
+      - name: alert-notification-container
+        image: francescoromeo/dsbd_hw_alert_notification_system:latest
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+            ephemeral-storage: "1Gi"
+        env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka-broker:9092"
+        - name: EMAIL_SENDER_USER
+          valueFrom:
+            secretKeyRef:
+              name: email-credentials
+              key: EMAIL_SENDER_USER
+        - name: EMAIL_SENDER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: email-credentials
+              key: EMAIL_SENDER_PASSWORD
+        ports:
+        - containerPort: 50059
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alert-notification-service
+  labels:
+    app: alert-notification
+spec:
+  selector:
+    app: alert-notification
+  ports:
+  - name: http
+    protocol: TCP
+    port: 50059
+    targetPort: 50059

@@ -345,6 +345,8 @@ Assicurarsi che siano installati i seguenti elementi:
 
 - **Docker**
 - **Docker Compose**
+- **Minikube**
+- **Kubectl**
 
 ### **Passi**
 
@@ -355,25 +357,46 @@ Assicurarsi che siano installati i seguenti elementi:
  cd root/project
 ```
 
-2. **Costruire le immagini Docker**
-   Eseguire il seguente comando per costruire tutti i servizi:
+2. **Spostarsi all'interno della cartella "manifests"**
+   Eseguire il seguente comando per spostarsi all'interno della cartella manifests:
 
 ```bash
- docker compose build
+ cd manifests
 ```
 
-3. **Avviare l'applicazione**
-   Avviare tutti i microservizi e il database:
+3. **Avviare minikube**
+   Avviare minikube con il seguente comando:
 
 ```bash
- docker compose up
+ minikube start
+```
+4. **Creare i secrets all'interno di minikube**
+   Eseguire il seguente comando per creare i secrets necessari all'invio delle email:
+
+```bash
+ kubectl create secret generic email-credentials   --from-literal=EMAIL_SENDER_USER=dsbd.romeo.strano@gmail.com   --from-literal=EMAIL_SENDER_PASSWORD='vekp tjaq tnsa iqbf'
 ```
 
-4. **Eseguire il client**
+5. **Avvio dell'applicativo**
+   Eseguire il seguente comando per avviare l'applicativo:
+
+```bash
+  kubectl apply -f .
+```
+
+6. **Esposizione del server**
+   Eseguire il seguente comando per esporre una porta del server all'esterno del cluster:
+
+```bash
+  minikube service server-service --url
+```
+  Copiare l'output del comando all'interno della variabile "target" del file /server/app/client.py
+
+7. **Eseguire il client**
    Navigare nella directory del server ed eseguire lo script del client:
 
 ```bash
- cd server/
+ cd ../server/
  python client_main.py
 ```
 
@@ -390,4 +413,4 @@ Il sistema comprende:
 - **Alert Notification System**: Si occupa di inviare le notifiche via email agli utenti.
 - **Database**: Istanza PostgreSQL per la persistenza dei dati.
 
-Tutti i microservizi sono orchestrati utilizzando **Docker Compose** e la comunicazione tra client e server avviene tramite **gRPC**.
+Tutti i microservizi sono orchestrati utilizzando **k8s** e la comunicazione tra client e server avviene tramite **gRPC**.
