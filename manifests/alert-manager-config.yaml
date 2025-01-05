@@ -63,11 +63,11 @@ data:
       - name: 'default-receiver'
         email_configs:
           - to: 'alessandrostrano21@gmail.com'
-            from: 'fraromeo69@gmail.com'
+            from: 'dsbd.romeo.strano@gmail.com'
             smarthost: 'smtp.gmail.com:587'
-            auth_username: 'fraromeo69@gmail.com'
-            auth_password: 'nxis zslg ywts rpyj'
-            auth_identity: 'fraromeo69@gmail.com'
+            auth_username: 'dsbd.romeo.strano@gmail.com'
+            auth_password: 'vekp tjaq tnsa iqbf'
+            auth_identity: 'dsbd.romeo.strano@gmail.com'
 ---
 apiVersion: v1
 kind: Service

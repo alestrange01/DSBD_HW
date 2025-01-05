@@ -106,8 +106,8 @@ services:
     command: python main.py
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka-broker:9092
-      EMAIL_SENDER_USER: "fraromeo69@gmail.com"
-      EMAIL_SENDER_PASSWORD: "nxis zslg ywts rpyj"
+      EMAIL_SENDER_USER: "dsbd.romeo.strano@gmail.com"
+      EMAIL_SENDER_PASSWORD: "vekp tjaq tnsa iqbf"
     depends_on:
       - postgres
       - kafka-broker
@@ -156,8 +156,8 @@ services:
     volumes:
       - ./alert_manager:/etc/alertmanager
     environment:
-      EMAIL_SENDER_USER: "fraromeo69@gmail.com"
-      EMAIL_SENDER_PASSWORD: "nxis zslg ywts rpyj"
+      EMAIL_SENDER_USER: "dsbd.romeo.strano@gmail.com"
+      EMAIL_SENDER_PASSWORD: "vekp tjaq tnsa iqbf"
 
 volumes:
   pg_data:
