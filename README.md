@@ -357,34 +357,27 @@ Assicurarsi che siano installati i seguenti elementi:
  cd root/project
 ```
 
-2. **Spostarsi all'interno della cartella "manifests"**
-   Eseguire il seguente comando per spostarsi all'interno della cartella manifests:
-
-```bash
- cd manifests
-```
-
-3. **Avviare minikube**
+2. **Avviare minikube**
    Avviare minikube con il seguente comando:
 
 ```bash
  minikube start
 ```
-4. **Creare i secrets all'interno di minikube**
+3. **Creare i secrets all'interno di minikube**
    Eseguire il seguente comando per creare i secrets necessari all'invio delle email:
 
 ```bash
  kubectl create secret generic email-credentials   --from-literal=EMAIL_SENDER_USER=dsbd.romeo.strano@gmail.com   --from-literal=EMAIL_SENDER_PASSWORD='vekp tjaq tnsa iqbf'
 ```
 
-5. **Avvio dell'applicativo**
+4. **Avvio dell'applicativo**
    Eseguire il seguente comando per avviare l'applicativo:
 
 ```bash
-  kubectl apply -f .
+  kubectl apply -f manifests/
 ```
 
-6. **Esposizione del server**
+5. **Esposizione del server**
    Eseguire il seguente comando per esporre una porta del server all'esterno del cluster:
 
 ```bash
@@ -392,12 +385,11 @@ Assicurarsi che siano installati i seguenti elementi:
 ```
   Copiare l'output del comando all'interno della variabile "target" del file /server/app/client.py
 
-7. **Eseguire il client**
-   Navigare nella directory del server ed eseguire lo script del client:
+6. **Eseguire il client**
+   Eseguire lo script del client:
 
 ```bash
- cd ../server/
- python client_main.py
+ python server/client_main.py
 ```
 
 ---
