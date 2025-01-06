@@ -383,13 +383,19 @@ Assicurarsi che siano installati i seguenti elementi:
 ```bash
   minikube service server-service --url
 ```
-  Copiare l'output del comando all'interno della variabile "target" del file /server/app/client.py
 
 6. **Eseguire il client**
-   Eseguire lo script del client:
+   Eseguire lo script del client passando la porta restituita dall'endpoint generato da minikube:
 
 ```bash
- python server/client_main.py
+ python server/client_main.py <port_number>
+```
+
+7. **Esposizione di Prometheus**
+   Se si vuole accedere all’interfaccia web di prometheus per visualizzare le metriche raccolte è possibile farlo andando ad aprire un nuovo terminale ed eseguendo:
+
+```bash
+  minikube service prometheus-service --url
 ```
 
 ---
