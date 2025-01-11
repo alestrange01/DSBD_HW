@@ -9,11 +9,12 @@ from repositories.share_repository_reader import ShareRepositoryReader
 from metrics import alerts_sent, alert_send_latency, messages_consumed, processing_errors, messages_produced_for_notifications, delivery_failures, SERVICE_NAME, NODE_NAME
 
 logging = logging.getLogger(__name__)
+bootstrap_servers = ['kafka-broker-1:9092', 'kafka-broker-2:9092', 'kafka-broker-3:9092']
 
 class Alerts:
     def __init__(self):
         producer_config = {
-            'bootstrap.servers': 'kafka-broker:9092',  
+            'bootstrap.servers': ','.join(bootstrap_servers),  
             'acks': 'all',  
             'batch.size': 500,  
             'linger.ms': 500,
@@ -24,7 +25,7 @@ class Alerts:
         self.topic = "to-notifier"
 
         consumer_config = {
-            'bootstrap.servers': 'kafka-broker:9092',  
+            'bootstrap.servers': ','.join(bootstrap_servers),
             'group.id': 'group1', 
             'auto.offset.reset': 'earliest',  
             'enable.auto.commit': False

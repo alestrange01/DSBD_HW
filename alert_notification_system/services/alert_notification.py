@@ -8,7 +8,8 @@ import logging
 import os
 from metrics import emails_sent, email_send_errors, email_send_latency, messages_consumed, SERVICE_NAME, NODE_NAME
 
-logging = logging.getLogger(__name__) 
+logging = logging.getLogger(__name__)
+bootstrap_servers = ['kafka-broker-1:9092', 'kafka-broker-2:9092', 'kafka-broker-3:9092']
 
 class AlertNotification:
     def __init__(self):
@@ -17,7 +18,7 @@ class AlertNotification:
         self.email_sender_password = os.getenv('EMAIL_SENDER_PASSWORD', "")
 
         consumer_config = {
-            'bootstrap.servers': 'kafka-broker:9092',  
+            'bootstrap.servers': ','.join(bootstrap_servers),
             'group.id': 'group2', 
             'auto.offset.reset': 'earliest',  
             'enable.auto.commit': True
