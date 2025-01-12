@@ -19,14 +19,29 @@ spec:
       - name: init-postgres 
         image: busybox 
         command: ['sh', '-c', 'until nc -z -v -w30 postgres 5432; do echo "Waiting for PostgreSQL..."; sleep 5; done'] 
-      - name: init-kafka 
-        image: busybox 
-        command: ['sh', '-c', 'until nc -z -v -w30 kafka-broker 9092; do echo "Waiting for Kafka..."; sleep 5; done']
+      - name: init-kafka
+        image: busybox
+        command:
+          - "sh"
+          - "-c"
+          - |
+            # Attempt to connect to the 3 Kafka brokers. Runs until it connects to one of them
+            for kafka_broker in "kafka-broker-1:9092" "kafka-broker-2:9092" "kafka-broker-3:9092"; do
+              echo "Trying to connect to $kafka_broker..."
+              until nc -zv $kafka_broker; do
+                echo "Waiting for $kafka_broker to be available..."
+                sleep 3
+              done
+              echo "$kafka_broker is now available!"
+              break
+            done
       containers:
       - name: data-collector-container
         #image: francescoromeo/dsbd_hw_data_collector_minutes:latest 
         #image: francescoromeo/dsbd_hw_data_collector_test_circuit_breaker:latest
-        image: francescoromeo/dsbd_hw_data_collector:latest
+        #image: francescoromeo/dsbd_hw_data_collector:latest
+        #image: alestrange01/dsbd_hw_data_collector:latest
+        image: alestrange01/dsbd_hw_data_collector_30_seconds:latest
         resources:
           requests:
             cpu: "500m"
@@ -45,7 +60,7 @@ spec:
         - name: POSTGRES_PORT
           value: "5432"
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka-broker:9092"
+          value: "kafka-broker-1:9092,kafka-broker-2:9092,kafka-broker-3:9092"
         ports:
         - containerPort: 50056
 ---

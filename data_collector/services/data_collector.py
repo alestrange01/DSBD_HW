@@ -61,9 +61,11 @@ class DataCollector:
         tickers_count.labels(service=SERVICE_NAME, node=NODE_NAME).set(len(tickers))
 
         message = {"msg" : "Share value updated"}
+        logging.info(f"Producing message {message} to topic {self.topic}")
         self.producer.produce(self.topic, json.dumps(message), callback=self.__delivery_report)
         self.producer.flush() 
         print(f"Produced: {message}")
+        logging.info(f"Produced message {message} to topic {self.topic}")
         
     def __retrieve_share_value(self, share):
         msft = yf.Ticker(share)

@@ -36,7 +36,7 @@ spec:
         - containerPort: 2181
         volumeMounts:
         - name: zookeeper-data
-          mountPath: /var/lib/zookeeper
+          mountPath: /var/lib/zookeeper/data
         securityContext:
           runAsUser: 0
           runAsGroup: 0

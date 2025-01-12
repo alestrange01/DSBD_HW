@@ -25,7 +25,8 @@ if __name__ == "__main__":
         kafka_manager.create_topic_if_not_exists(topic_list, num_partitions=num_partitions, replication_factor=replication_factor)
         logger.info("Stampa dei dettagli dei topic...")
         kafka_manager.list_topics_and_details()     
-        schedule.every(3).minutes.do(kafka_manager.get_metadata)   
+        schedule.every(30).seconds.do(kafka_manager.get_metadata) 
+        #schedule.every(3).minutes.do(kafka_manager.get_metadata)
     except Exception as e:
         logger.error(f"Errore: {e}")
         exit(1)

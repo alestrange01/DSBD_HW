@@ -25,13 +25,13 @@ services:
       POSTGRES_PASSWORD: toor
       POSTGRES_DB: postgres
       POSTGRES_PORT: 5432
-      KAFKA_BOOTSTRAP_SERVERS: kafka-broker:9092
+      KAFKA_BOOTSTRAP_SERVERS: kafka-broker:9092 #TODO: perchè kafka?
     restart: always
     ports:
       - "50051:50051"
     depends_on:
       - postgres
-      - kafka-broker
+      - kafka-broker #TODO: perchè kafka?
       
   data_collector:
     build:
@@ -67,10 +67,10 @@ services:
       POSTGRES_PASSWORD: toor
       POSTGRES_DB: postgres
       POSTGRES_PORT: 5432
-      KAFKA_BOOTSTRAP_SERVERS: kafka-broker:9092
+      KAFKA_BOOTSTRAP_SERVERS: kafka-broker:9092 #TODO: perchè kafka?
     depends_on:
       - postgres
-      - kafka-broker
+      - kafka-broker #TODO: perchè kafka?
       - server
       - data_collector
 

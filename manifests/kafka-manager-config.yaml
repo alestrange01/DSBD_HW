@@ -15,7 +15,7 @@ spec:
         app: kafka-manager
     spec:
       initContainers:
-        - name: init-container
+        - name: init-kafka
           image: busybox
           command:
             - "sh"
@@ -33,4 +33,4 @@ spec:
               done
       containers:
         - name: kafka-manager-container
-          image: francescoromeo/dsbd_hw_kafka_manager:latest
+          image: alestrange01/dsbd_hw_kafka_manager_30_seconds:latest

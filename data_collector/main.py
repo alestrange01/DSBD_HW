@@ -20,7 +20,8 @@ if __name__ == '__main__':
     DB.initialize_database()   
     data_collector = DataCollector()
     #data_collector.test_circuit_breaker_behavior() 
-    schedule.every(10).minutes.do(data_collector.collect) 
+    #schedule.every(10).minutes.do(data_collector.collect) 
+    schedule.every(30).seconds.do(data_collector.collect)
     start_http_server(50056)
 
     while True:

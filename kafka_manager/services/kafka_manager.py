@@ -74,7 +74,7 @@ class KafkaManager:
         consumer.close()
 
     def create_topic_if_not_exists(self,topic_list, num_partitions, replication_factor):
-        with closing(KafkaAdminClient(bootstrap_servers=self.bootstrap_servers, client_id='kafka-admin-container')) as admin_client:
+        with closing(KafkaAdminClient(bootstrap_servers=self.bootstrap_servers, client_id='kafka-manager-container')) as admin_client:
             with closing(KafkaConsumer(bootstrap_servers=self.bootstrap_servers)) as consumer:
                 for topic in topic_list:
                     if topic not in consumer.topics():
