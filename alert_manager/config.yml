@@ -7,9 +7,9 @@ route:
 receivers:
   - name: 'default-receiver'
     email_configs:
-      - to: 'fraromeo14@gmail.com'
+      - to: 'alessandrostrano21@gmail.com'
         from: 'dsbd.romeo.strano@gmail.com'
         smarthost: 'smtp.gmail.com:587'
         auth_username: 'dsbd.romeo.strano@gmail.com'
-        auth_password: 'vekp tjaq tnsa iqbf'
+        auth_password: 'xfdk wfzp gyju yvfu'
         auth_identity: 'dsbd.romeo.strano@gmail.com'

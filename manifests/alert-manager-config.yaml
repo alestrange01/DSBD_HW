@@ -17,7 +17,7 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: alertmanager-container
-        image: francescoromeo/dsbd_hw_alert_manager:latest
+        image: alestrange01/dsbd_hw_alert_manager:latest
         args:
         - "--config.file=/etc/alertmanager/config.yml"
         - "--storage.path=/alertmanager"
